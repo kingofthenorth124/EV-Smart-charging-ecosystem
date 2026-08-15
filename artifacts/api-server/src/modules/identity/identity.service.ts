@@ -157,7 +157,14 @@ export class IdentityService {
 
     const user = await this.prisma.user.update({
       where: { id },
-      data: { status: dto.status },
+      data: {
+        status: dto.status,
+        // Activating a user clears any lockout so they can log in immediately
+        ...(dto.status === 'ACTIVE' && {
+          failedLoginAttempts: 0,
+          lockedUntil: null,
+        }),
+      },
     });
 
     // Revoke all refresh tokens when suspending or deactivating
