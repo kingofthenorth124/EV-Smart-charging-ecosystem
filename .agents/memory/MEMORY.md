@@ -1,0 +1,1 @@
+- [Prisma v7 + pnpm monorepo](prisma-v7-pnpm.md) — v7 requires driver adapter, no URL in schema, custom postinstall.cjs for generate resolution.

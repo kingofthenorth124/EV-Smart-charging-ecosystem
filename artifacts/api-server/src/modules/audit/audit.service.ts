@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 
 export interface CreateAuditLogInput {
@@ -45,14 +46,15 @@ export class AuditService {
           correlationId: input.correlationId,
           ipAddress: input.ipAddress,
           userAgent: input.userAgent,
-          metadata: input.metadata ?? undefined,
+          // Prisma v7 JSON type cast
+          metadata: input.metadata as Prisma.InputJsonValue | undefined,
         },
       });
     } catch (error) {
       // Audit failures must not disrupt the calling operation
       this.logger.error(
         { error, action: input.action, actorId: input.actorId },
-        'Failed to write audit log — this should never happen in production',
+        'Failed to write audit log — investigate immediately in production',
       );
     }
   }

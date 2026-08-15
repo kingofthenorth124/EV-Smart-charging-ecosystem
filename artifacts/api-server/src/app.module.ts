@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
+import type { IncomingMessage, ServerResponse } from 'http';
 import { configuration, validate } from './common/config/app.config';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { CorrelationIdInterceptor } from './common/interceptors/correlation-id.interceptor';
@@ -37,9 +38,10 @@ import { AuthModule } from './modules/auth/auth.module';
             'req.headers.cookie',
             'res.headers["set-cookie"]',
           ],
-          customProps: (req: { headers: Record<string, string> }) => ({
-            correlationId: req.headers['x-correlation-id'],
-          }),
+          customProps: (req: IncomingMessage, _res: ServerResponse) => {
+            const id = req.headers['x-correlation-id'];
+            return { correlationId: Array.isArray(id) ? id[0] : id };
+          },
           transport:
             config.get<string>('nodeEnv') !== 'production'
               ? {
@@ -67,6 +69,8 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
 
     // ── JWT (global — shared by JwtAuthGuard and AuthService) ─────────────────
+    // @nestjs/jwt v11 expiresIn uses the branded ms.StringValue type.
+    // We cast to satisfy the type without importing ms directly.
     JwtModule.registerAsync({
       global: true,
       imports: [ConfigModule],
@@ -74,7 +78,8 @@ import { AuthModule } from './modules/auth/auth.module';
       useFactory: (config: ConfigService) => ({
         secret: config.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: config.get<string>('JWT_ACCESS_EXPIRES_IN') ?? '15m',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          expiresIn: (config.get<string>('JWT_ACCESS_EXPIRES_IN') ?? '15m') as any,
         },
       }),
     }),
@@ -88,19 +93,10 @@ import { AuthModule } from './modules/auth/auth.module';
   ],
 
   providers: [
-    // Global exception filter — formats all errors per platform contract
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
-
-    // Correlation ID — injected on every request/response
     { provide: APP_INTERCEPTOR, useClass: CorrelationIdInterceptor },
-
-    // Rate limiting (runs before auth)
     { provide: APP_GUARD, useClass: ThrottlerGuard },
-
-    // JWT auth — all routes protected by default; use @Public() to opt out
     { provide: APP_GUARD, useClass: JwtAuthGuard },
-
-    // RBAC — enforces @Roles() decorator
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
