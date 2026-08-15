@@ -16,6 +16,12 @@ const EMAIL = `acceptance.${TS}@camel.test`;
 const PHONE = `+2348090${String(TS).slice(-6)}`;
 const PASS  = 'AcceptPass123!';
 
+// Acceptance-test throttle-bypass header (non-production only).
+// Set ACCEPTANCE_TEST_KEY env var on the server to enable this.
+const BYPASS_HEADER = process.env.ACCEPTANCE_TEST_KEY
+  ? { 'x-acceptance-test': process.env.ACCEPTANCE_TEST_KEY }
+  : {};
+
 let passed = 0;
 let failed = 0;
 
@@ -30,6 +36,7 @@ async function req(method, path, body, token) {
       hostname: 'localhost', port: 8080,
       path: `/api${path}`, method,
       headers: {
+        ...BYPASS_HEADER,
         ...(payload ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload) } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
@@ -183,6 +190,73 @@ async function main() {
     });
   });
   cid ? ok(`X-Correlation-ID: ${cid}`) : bad('X-Correlation-ID header missing');
+
+  // ── 13. Password reset — full confirm flow ─────────────────────────────────
+  section('13. Password reset — confirm new password (full flow)');
+  try {
+    const crypto = require('crypto');
+    const { Pool } = require('pg');
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+    // Register a dedicated reset-flow user
+    const resetEmail = `reset.confirm.${TS}@camel.test`;
+    const resetPhone = `+2348092${String(TS).slice(-6)}`;
+    const resetPass  = 'OldResetPass123!';
+    const newPass    = 'NewResetPass456!';
+
+    const regR = await req('POST', '/v1/auth/register', {
+      firstName: 'Reset', lastName: 'Confirm',
+      email: resetEmail, phone: resetPhone, password: resetPass,
+    });
+    const resetUserId = regR.body?.id;
+    regR.status === 201 ? ok('reset-flow user registered') : bad('register failed', regR.body?.message);
+
+    // Admin activates the user so they can log in after reset
+    await req('PATCH', `/v1/users/${resetUserId}/status`, { status: 'ACTIVE' }, adminTok);
+
+    // Insert a known raw token directly into the DB (bypasses email delivery)
+    const rawToken   = crypto.randomBytes(32).toString('hex');
+    const tokenHash  = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt  = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await pool.query(
+      `INSERT INTO password_reset_tokens (id, "userId", "tokenHash", "expiresAt", "createdAt")
+       VALUES (gen_random_uuid(), $1, $2, $3, NOW())`,
+      [resetUserId, tokenHash, expiresAt],
+    );
+    ok('reset token seeded into DB');
+
+    // Call confirm endpoint with raw token + new password
+    const confirmR = await req('POST', '/v1/auth/password/reset/confirm', {
+      token: rawToken, newPassword: newPass,
+    });
+    confirmR.status === 204
+      ? ok('POST /password/reset/confirm → 204 No Content')
+      : bad('confirm failed', `${confirmR.status} — ${JSON.stringify(confirmR.body)}`);
+
+    // Old password must now be rejected
+    const oldLogin = await req('POST', '/v1/auth/login', { email: resetEmail, password: resetPass });
+    oldLogin.status === 401
+      ? ok('old password rejected after reset (401)')
+      : bad('old password still accepted', `status ${oldLogin.status}`);
+
+    // New password must work
+    const newLogin = await req('POST', '/v1/auth/login', { email: resetEmail, password: newPass });
+    newLogin.status === 200
+      ? ok('new password accepted after reset (200)')
+      : bad('new password rejected', `status ${newLogin.status}`);
+
+    // Same token must not be reusable (single-use)
+    const reuse = await req('POST', '/v1/auth/password/reset/confirm', {
+      token: rawToken, newPassword: 'AnotherPass789!',
+    });
+    reuse.status === 400
+      ? ok('token reuse rejected (400 — single-use enforced)')
+      : bad('token reuse not rejected', `status ${reuse.status}`);
+
+    await pool.end();
+  } catch (err) {
+    bad('password reset confirm flow crashed', err.message);
+  }
 
   // ── Result ─────────────────────────────────────────────────────────────────
   console.log('\n╔══════════════════════════════════════════════╗');

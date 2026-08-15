@@ -21,3 +21,12 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.development]
+FRONTEND_URL = "https://cee75cbb-579c-4bed-8d64-24f9d99a61b3-00-3kkgoqlypa4be.janeway.replit.dev/web"
+ACCEPTANCE_TEST_KEY = "camel-acceptance-bypass-2026"
+
+[userenv.shared]
+EMAIL_FROM = "noreply@camel-wallet.app"

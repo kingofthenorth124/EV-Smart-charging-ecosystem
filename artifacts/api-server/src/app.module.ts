@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { ExecutionContext, Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -66,6 +66,16 @@ import { EmailModule } from './common/email/email.module';
             limit: config.get<number>('RATE_LIMIT_MAX') ?? 100,
           },
         ],
+        // Allow acceptance tests to bypass rate limiting in non-production.
+        // Requires X-Acceptance-Test header matching ACCEPTANCE_TEST_KEY env var.
+        // Never active when NODE_ENV=production, even if the header is present.
+        skipIf: (context: ExecutionContext) => {
+          if (process.env.NODE_ENV === 'production') return false;
+          const secret = process.env.ACCEPTANCE_TEST_KEY;
+          if (!secret) return false;
+          const req = context.switchToHttp().getRequest<{ headers: Record<string, string> }>();
+          return req.headers['x-acceptance-test'] === secret;
+        },
       }),
     }),
 
