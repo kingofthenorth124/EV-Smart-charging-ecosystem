@@ -8,8 +8,5 @@
     "emitDeclarationOnly": true,
     "outDir": "dist",
     "rootDir": "src"
-  },
-  "references": [
-    { "path": "../shared-types" }
-  ]
+  }
 }

@@ -1,0 +1,438 @@
+# Module 3 — Shared Libraries & Common Components
+
+# Purpose
+
+Build the production-ready shared library and common-component foundation for the Smart EV Charging Payment Platform.
+
+Module 3 establishes reusable packages that can be consumed consistently by the React frontend, NestJS backend, integration services, automated tests, and future platform modules.
+
+The objective is to eliminate duplicated contracts, validation logic, UI components, configuration utilities, API client logic, authentication helpers, and general-purpose utilities.
+
+Module 3 must integrate with the enterprise foundation established by Module 1 and the authentication and authorization capabilities established by Module 2.
+
+Do not rebuild Module 1 or Module 2.
+
+Do not introduce duplicate implementations.
+
+# Preconditions
+
+Module 1 and Module 2 must have successfully passed their complete acceptance gates.
+
+Verify:
+
+- Repository builds successfully.
+- Frontend builds successfully.
+- Backend builds successfully.
+- Authentication works.
+- Authorization works.
+- Shared package tooling is operational.
+- CI/CD passes.
+- Security checks pass.
+- Tests pass.
+- Required documentation is current.
+
+If either prerequisite module has not passed, STOP and report the blocking issue.
+
+# Scope
+
+Implement and validate the following shared packages:
+
+- packages/shared-types
+- packages/ui
+- packages/config
+- packages/utils
+- packages/auth
+- packages/validation
+- packages/sdk
+
+Use the existing monorepo structure.
+
+Do not create alternative duplicate packages.
+
+# Shared Types
+
+The shared-types package shall contain stable TypeScript contracts shared between applications and services.
+
+Examples include:
+
+- API response contracts
+- API error contracts
+- Pagination contracts
+- Authentication contracts
+- Authorization contracts
+- User contracts
+- Role contracts
+- Permission contracts
+- Session contracts
+- Event envelope contracts
+- Common identifiers
+- Common status types
+
+Contracts must be platform-neutral where practical.
+
+Do not place frontend-specific implementation details in shared-types.
+
+Do not place database-specific Prisma models in shared-types.
+
+# UI Package
+
+Build reusable React components that conform to the Camel Mobility Wallet UI/UX Reference.
+
+Components must be:
+
+- Accessible
+- Responsive
+- Typed
+- Reusable
+- Composable
+- Testable
+- Consistent
+
+Examples include:
+
+- Buttons
+- Inputs
+- Selects
+- Forms
+- Cards
+- Tables
+- Badges
+- Alerts
+- Modals
+- Dialogs
+- Tabs
+- Navigation components
+- Loading states
+- Empty states
+- Error states
+- Toasts
+- Pagination
+- Data display components
+
+Do not reproduce the raw HTML implementation directly.
+
+Convert the design language into reusable production components.
+
+Do not introduce business logic into reusable UI components.
+
+# Configuration Package
+
+Create centralized, typed configuration utilities.
+
+Configuration must:
+
+- Read environment variables safely.
+- Validate required variables.
+- Provide typed configuration.
+- Distinguish development, test, sandbox, staging, and production environments where applicable.
+- Prevent accidental use of production configuration in development or tests.
+- Never hardcode secrets.
+
+The configuration package must remain compatible with AWS Secrets Manager and CI/CD secret injection.
+
+# Utilities Package
+
+Provide genuinely reusable, framework-independent utilities.
+
+Examples may include:
+
+- Date/time utilities
+- ID utilities
+- formatting utilities
+- safe parsing utilities
+- common result helpers
+- pagination helpers
+- serialization helpers where appropriate
+
+Do not move domain-specific business rules into the utilities package.
+
+Avoid creating generic utilities that are used only once.
+
+# Authentication Package
+
+Create reusable authentication-related client and shared helpers where appropriate.
+
+Authentication functionality must remain compatible with Module 2.
+
+Do not move server-side security enforcement into a frontend package.
+
+Never expose secrets through frontend packages.
+
+Do not duplicate authentication logic between applications.
+
+# Validation Package
+
+Create shared validation schemas where appropriate.
+
+Validation must support synchronization between frontend and backend without weakening backend validation.
+
+Validation shall cover:
+
+- Shared request schemas
+- Common field formats
+- Common identifiers
+- Common pagination parameters
+- Common API input structures
+
+Backend validation remains authoritative for security and business rules.
+
+Frontend validation provides immediate user feedback but never replaces backend validation.
+
+# SDK Package
+
+Create the foundation for a typed platform SDK.
+
+The SDK shall provide centralized access to documented platform APIs.
+
+It must:
+
+- Use shared contracts.
+- Centralize HTTP/API communication.
+- Handle standardized API responses.
+- Handle standardized API errors.
+- Support authentication/session handling consistently with Module 2.
+- Support correlation/request identifiers where required.
+- Be testable.
+- Avoid business logic.
+
+The SDK must be suitable for future internal applications and approved external developer integrations.
+
+# API Contract Management
+
+The shared SDK and contracts must support the platform API lifecycle:
+
+Design API
+→ Define contract
+→ Build
+→ Sandbox
+→ Test
+→ Approve
+→ Version
+→ Publish
+→ Monitor
+→ Deprecate
+
+Do not hardcode undocumented APIs.
+
+Do not create SDK methods for APIs that do not have approved contracts.
+
+# Event Contract Foundation
+
+Shared event contracts shall support:
+
+Define event
+→ Version schema
+→ Publish
+→ Consume
+→ Monitor
+→ Retry
+→ Dead-letter
+→ Deprecate
+
+Create reusable event-envelope types without coupling shared packages to a specific event broker implementation.
+
+# Package Boundaries
+
+Maintain strict package boundaries.
+
+Shared packages must not:
+
+- Import application-specific modules.
+- Import NestJS controllers.
+- Import React application pages.
+- Import Prisma application infrastructure.
+- Contain business-domain implementation.
+- Contain secrets.
+- Create circular dependencies.
+
+Application-specific functionality must remain inside the appropriate application/domain package.
+
+# Dependency Management
+
+Use the existing package manager and workspace configuration.
+
+Dependencies must be:
+
+- Explicit
+- Minimal
+- Justified
+- Version-controlled
+- Security-scanned
+
+Avoid unnecessary third-party dependencies.
+
+Prevent circular package dependencies.
+
+# TypeScript
+
+All shared packages must use strict TypeScript configuration.
+
+Avoid:
+
+- any
+- unsafe type assertions
+- duplicated interfaces
+- implicit contracts
+
+Use explicit, reusable types.
+
+# Testing
+
+Every shared package must have appropriate automated tests.
+
+Test:
+
+- Shared types where runtime behavior exists
+- Validation schemas
+- Utility functions
+- UI components
+- Authentication helpers
+- SDK behavior
+- Error handling
+- Configuration validation
+- Package boundaries
+
+UI components must include accessibility and interaction tests where applicable.
+
+# Frontend Integration
+
+Update the React application to consume shared:
+
+- UI components
+- Types
+- Validation
+- Authentication helpers
+- SDK functionality
+
+Remove duplicate implementations where the shared packages now provide the authoritative version.
+
+The frontend must continue to use live backend APIs.
+
+No mock business data may be introduced.
+
+# Backend Integration
+
+Update NestJS applications to consume appropriate shared:
+
+- Types
+- Validation contracts
+- Authentication helpers
+- Configuration utilities
+- SDK/shared API abstractions where applicable
+
+Do not force frontend-specific dependencies into the backend.
+
+# Authentication Compatibility
+
+Module 3 must preserve all Module 2 authentication functionality.
+
+Verify:
+
+- Login
+- Logout
+- Session refresh
+- Protected routes
+- Authorization
+- Token handling
+- API authentication
+
+No regression is acceptable.
+
+# UI/UX Compatibility
+
+All reusable UI components must follow:
+
+- Camel Mobility Wallet visual language
+- Existing color system
+- Typography
+- Spacing
+- Borders
+- Radius
+- Interaction patterns
+- Responsive behavior
+- Accessibility requirements
+
+Do not copy the supplied raw HTML/CSS/JavaScript directly.
+
+The raw source remains a visual and interaction reference only.
+
+# Accessibility
+
+Reusable UI components shall target appropriate WCAG accessibility practices.
+
+Include:
+
+- Keyboard accessibility
+- Focus management
+- Semantic HTML
+- Accessible labels
+- Appropriate ARIA usage
+- Sufficient contrast
+- Screen-reader-compatible states
+
+# Documentation
+
+Update:
+
+- Architecture documentation
+- ADRs
+- API Catalog
+- Event Catalog
+- Data Dictionary where applicable
+- Package documentation
+- Developer documentation
+- UI component documentation
+- SDK documentation
+- Environment-variable documentation
+- Release notes
+
+Document package ownership and boundaries.
+
+# CI/CD
+
+The module must pass:
+
+- TypeScript compilation
+- Build
+- Lint
+- Formatting
+- Unit tests
+- Integration tests
+- Frontend tests
+- API contract tests
+- Dependency vulnerability scanning
+- SAST
+- Secret scanning
+- Package dependency validation
+- Container validation
+- Existing CI/CD quality gates
+
+# Deployment
+
+Module 3 must not introduce deployment requirements that conflict with the AWS architecture.
+
+Validate:
+
+- Docker builds
+- Application builds
+- Package builds
+- Dependency resolution
+- Production builds
+- CI/CD execution
+
+# Completion Rule
+
+Module 3 is incomplete until:
+
+- All required shared packages are production-ready.
+- Package boundaries are enforced.
+- Frontend and backend use the appropriate shared functionality.
+- Authentication remains operational.
+- Authorization remains operational.
+- No critical duplication remains.
+- Tests pass.
+- CI/CD passes.
+- Documentation is synchronized.
+- Deployment readiness is confirmed.
+
+Do not begin Module 4 until Module 3 passes its complete acceptance gate.

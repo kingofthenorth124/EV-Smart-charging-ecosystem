@@ -10,6 +10,8 @@
     { "path": "./packages/config" },
     { "path": "./packages/validation" },
     { "path": "./packages/utils" },
-    { "path": "./packages/auth" }
+    { "path": "./packages/auth" },
+    { "path": "./packages/ui" },
+    { "path": "./packages/sdk" }
   ]
 }

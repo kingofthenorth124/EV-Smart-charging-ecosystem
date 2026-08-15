@@ -2,6 +2,9 @@
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
 
+/* Scan @workspace/ui so Tailwind picks up its component classes */
+@source "../../../packages/ui/src";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

@@ -66,6 +66,7 @@ catalog:
   vite: ^7.3.2
   wouter: ^3.3.5
   zod: ^3.25.76
+  vitest: ^3.2.4
 
 autoInstallPeers: false
 

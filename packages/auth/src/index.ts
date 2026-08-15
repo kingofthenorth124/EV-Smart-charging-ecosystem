@@ -1,33 +1,27 @@
 /**
  * @workspace/auth
  *
- * Shared authentication and authorization interfaces.
- * Implementation lives in the backend domain.
- * Frontend uses these types to consume auth contracts correctly.
+ * Shared authentication and authorization contracts and helpers.
+ * Implementation (JWT signing, bcrypt, guards) lives in the backend.
+ * Frontend consumes these types and helpers to interact with auth correctly.
+ *
+ * Auth types that are shared platform-wide are re-exported from
+ * @workspace/shared-types to keep a single authoritative source.
  */
-import type { UserStatus } from '@workspace/shared-types';
 
-// ─── JWT Payload ──────────────────────────────────────────────────────────────
+// Re-export auth-related platform types — single source of truth
+export type {
+  UserRole,
+  UserStatus,
+  UserProfile,
+  AuthTokens,
+  LoginResponse,
+  JwtPayload,
+} from '@workspace/shared-types';
 
-export interface JwtPayload {
-  sub: string; // Customer ID
-  email: string;
-  role: UserRole;
-  iat: number;
-  exp: number;
-}
+import type { UserRole, UserStatus } from '@workspace/shared-types';
 
-// ─── Roles ────────────────────────────────────────────────────────────────────
-
-export type UserRole =
-  | 'CUSTOMER'
-  | 'ADMIN_OFFICER'
-  | 'SUPER_ADMIN'
-  | 'OPERATIONS'
-  | 'SUPPORT'
-  | 'FINANCE'
-  | 'TECHNICAL'
-  | 'DEVELOPER';
+// ─── Role registry ────────────────────────────────────────────────────────────
 
 export const USER_ROLES: Record<UserRole, UserRole> = {
   CUSTOMER: 'CUSTOMER',
@@ -40,7 +34,7 @@ export const USER_ROLES: Record<UserRole, UserRole> = {
   DEVELOPER: 'DEVELOPER',
 };
 
-// ─── Auth Context ─────────────────────────────────────────────────────────────
+// ─── Auth context ─────────────────────────────────────────────────────────────
 
 export interface AuthUser {
   id: string;
@@ -51,8 +45,9 @@ export interface AuthUser {
   status: UserStatus;
 }
 
-// ─── Token Storage ────────────────────────────────────────────────────────────
+// ─── Token storage keys ───────────────────────────────────────────────────────
 
+/** localStorage key for the persisted refresh token. */
 export const AUTH_TOKEN_KEY = 'camel_access_token' as const;
 export const AUTH_REFRESH_TOKEN_KEY = 'camel_refresh_token' as const;
 
@@ -114,4 +109,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 
 export function hasPermission(role: UserRole, permission: Permission): boolean {
   return ROLE_PERMISSIONS[role]?.includes(permission) ?? false;
+}
+
+export function isAdminRole(role: UserRole): boolean {
+  return role === 'SUPER_ADMIN' || role === 'ADMIN_OFFICER';
+}
+
+export function isCustomerRole(role: UserRole): boolean {
+  return role === 'CUSTOMER';
 }

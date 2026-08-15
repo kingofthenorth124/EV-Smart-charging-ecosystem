@@ -12,13 +12,16 @@
     }
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@workspace/shared-types": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "vitest": "catalog:"
   }
 }
