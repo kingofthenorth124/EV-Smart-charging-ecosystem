@@ -2,6 +2,9 @@ import { createRoot } from 'react-dom/client';
 
 import App from './App';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { configureApiClient } from '@/lib/api-setup';
+
+configureApiClient();
 
 import './index.css';
 

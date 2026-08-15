@@ -16,8 +16,10 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { HealthStatusStatus } from './healthStatusStatus';
 
-export interface HealthStatus {
-  status: HealthStatusStatus;
-}
+export type AuthTokensTokenType = typeof AuthTokensTokenType[keyof typeof AuthTokensTokenType];
+
+
+export const AuthTokensTokenType = {
+  Bearer: 'Bearer',
+} as const;

@@ -16,8 +16,11 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { HealthStatusStatus } from './healthStatusStatus';
+import type { UserProfile } from './userProfile';
 
-export interface HealthStatus {
-  status: HealthStatusStatus;
+export interface PaginatedUsers {
+  data: UserProfile[];
+  total: number;
+  page: number;
+  limit: number;
 }

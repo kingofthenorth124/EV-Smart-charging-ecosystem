@@ -16,8 +16,14 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { HealthStatusStatus } from './healthStatusStatus';
+import type { AuthTokensTokenType } from './authTokensTokenType';
 
-export interface HealthStatus {
-  status: HealthStatusStatus;
+export interface AuthTokens {
+  /** Short-lived JWT access token (15 minutes) */
+  accessToken: string;
+  /** Opaque long-lived refresh token (7 days) */
+  refreshToken: string;
+  /** Access token TTL in seconds */
+  expiresIn: number;
+  tokenType: AuthTokensTokenType;
 }

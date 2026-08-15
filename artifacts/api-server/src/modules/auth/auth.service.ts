@@ -16,6 +16,7 @@ import { AuditService } from '../audit/audit.service';
 import { IdentityService } from '../identity/identity.service';
 import { AUTH_AUDIT_ACTIONS } from './audit-actions';
 import type { AuthTokensDto, LoginResponseDto } from './dto/auth-tokens.dto';
+import { UserResponseDto } from '../identity/dto/user-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -125,15 +126,11 @@ export class AuthService {
       ...auditMeta,
     });
 
+    // Return the canonical full profile (contract: LoginResponse.user is UserProfile).
+    // Re-read so lastLoginAt reflects the login recorded above.
+    const freshUser = await this.identityService.findByEmailInternal(email);
     return {
-      user: {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-      },
+      user: UserResponseDto.from(freshUser ?? user),
       tokens,
     };
   }

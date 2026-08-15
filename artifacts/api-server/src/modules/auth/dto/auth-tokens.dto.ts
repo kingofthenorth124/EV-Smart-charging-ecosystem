@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { UserResponseDto } from '../../identity/dto/user-response.dto';
 
 export class AuthTokensDto {
   @ApiProperty({ description: 'Short-lived JWT access token (15 min)' })
@@ -15,15 +16,8 @@ export class AuthTokensDto {
 }
 
 export class LoginResponseDto {
-  @ApiProperty()
-  user: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
-    status: string;
-  };
+  @ApiProperty({ type: UserResponseDto })
+  user: UserResponseDto;
 
   @ApiProperty()
   tokens: AuthTokensDto;

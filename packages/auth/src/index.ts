@@ -5,7 +5,7 @@
  * Implementation lives in the backend domain.
  * Frontend uses these types to consume auth contracts correctly.
  */
-import type { CustomerStatus } from '@workspace/shared-types';
+import type { UserStatus } from '@workspace/shared-types';
 
 // ─── JWT Payload ──────────────────────────────────────────────────────────────
 
@@ -48,7 +48,7 @@ export interface AuthUser {
   firstName: string;
   lastName: string;
   role: UserRole;
-  status: CustomerStatus;
+  status: UserStatus;
 }
 
 // ─── Token Storage ────────────────────────────────────────────────────────────

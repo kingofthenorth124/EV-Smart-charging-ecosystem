@@ -16,8 +16,17 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { HealthStatusStatus } from './healthStatusStatus';
 
-export interface HealthStatus {
-  status: HealthStatusStatus;
-}
+export type UserRole = typeof UserRole[keyof typeof UserRole];
+
+
+export const UserRole = {
+  CUSTOMER: 'CUSTOMER',
+  ADMIN_OFFICER: 'ADMIN_OFFICER',
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  OPERATIONS: 'OPERATIONS',
+  SUPPORT: 'SUPPORT',
+  FINANCE: 'FINANCE',
+  TECHNICAL: 'TECHNICAL',
+  DEVELOPER: 'DEVELOPER',
+} as const;

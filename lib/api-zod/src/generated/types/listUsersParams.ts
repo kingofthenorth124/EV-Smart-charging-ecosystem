@@ -16,8 +16,23 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { HealthStatusStatus } from './healthStatusStatus';
+import type { UserRole } from './userRole';
+import type { UserStatus } from './userStatus';
 
-export interface HealthStatus {
-  status: HealthStatusStatus;
-}
+export type ListUsersParams = {
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+status?: UserStatus;
+role?: UserRole;
+/**
+ * Search by name or email (partial match)
+ */
+search?: string;
+};

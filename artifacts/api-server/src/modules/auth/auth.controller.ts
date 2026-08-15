@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Headers,
   HttpCode,
   HttpStatus,
@@ -111,11 +112,25 @@ export class AuthController {
   }
 
   /**
-   * POST /api/v1/auth/change-password
+   * GET /api/v1/auth/me
+   * Current authenticated user's profile
+   */
+  @ApiBearerAuth('BearerAuth')
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get the current authenticated user profile' })
+  @ApiResponse({ status: 200, description: 'Current user profile' })
+  @ApiResponse({ status: 401, description: 'Not authenticated' })
+  async me(@CurrentUser() user: JwtPayload) {
+    return this.identityService.findById(user.sub);
+  }
+
+  /**
+   * POST /api/v1/auth/password/change
    * Change password for authenticated user
    */
   @ApiBearerAuth('BearerAuth')
-  @Post('change-password')
+  @Post('password/change')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Change password (requires current password)' })
   @ApiResponse({ status: 204, description: 'Password changed — all sessions revoked' })
@@ -134,12 +149,12 @@ export class AuthController {
   }
 
   /**
-   * POST /api/v1/auth/forgot-password
+   * POST /api/v1/auth/password/reset/request
    * Request a password reset (always returns 202 to prevent enumeration)
    */
   @Public()
   @Throttle({ default: { limit: 5, ttl: 900000 } })
-  @Post('forgot-password')
+  @Post('password/reset/request')
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOperation({ summary: 'Request password reset email' })
   @ApiResponse({ status: 202, description: 'Reset email sent (if account exists)' })
@@ -152,12 +167,12 @@ export class AuthController {
   }
 
   /**
-   * POST /api/v1/auth/reset-password
+   * POST /api/v1/auth/password/reset/confirm
    * Confirm password reset with the token from the email
    */
   @Public()
   @Throttle({ default: { limit: 10, ttl: 900000 } })
-  @Post('reset-password')
+  @Post('password/reset/confirm')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Reset password using email token' })
   @ApiResponse({ status: 204, description: 'Password reset — all sessions revoked' })

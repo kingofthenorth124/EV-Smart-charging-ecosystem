@@ -1,6 +1,6 @@
-# [Project name]
+# Camel Mobility Wallet
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A smart EV-charging payment platform for Nigerian operators: customers manage a prepaid wallet, tap an NFC card to charge, and pay from balance.
 
 ## Run & Operate
 
@@ -22,11 +22,17 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/api-server/` — NestJS backend (auth, identity, JWT, RBAC, audit); global prefix `/api`, routes under `/api/v1/*`
+- `artifacts/web/` — React + Vite frontend; auth pages in `src/pages/`, auth context in `src/hooks/use-auth.tsx`, token management in `src/lib/auth-tokens.ts`
+- `lib/api-spec/openapi.yaml` — authoritative API contract; `pnpm --filter @workspace/api-spec run codegen` regenerates `lib/api-client-react` hooks and `lib/api-zod`
+- `artifacts/web/src/index.css` — Camel Mobility theme (deep green 157 67% 18%, amber 41 100% 47%); design reference in `docs/ui-ux-reference.md`
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The OpenAPI spec (`lib/api-spec/openapi.yaml`) is the contract source of truth; the NestJS controllers were aligned to it (e.g. `/v1/auth/password/*` paths, `GET /v1/auth/me`)
+- Frontend auth: access token in memory only; opaque refresh token in localStorage; silent refresh ~60s before expiry with single-flight rotation (`src/lib/auth-tokens.ts`)
+- Every frontend API call carries a fresh `X-Correlation-ID` via `setDefaultHeadersGetter` in `@workspace/api-client-react`
+- Self-registered users start as `PENDING` (login is allowed in PENDING; full activation is an admin action)
 
 ## Product
 

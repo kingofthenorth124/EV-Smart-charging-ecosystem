@@ -16,8 +16,10 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { HealthStatusStatus } from './healthStatusStatus';
+import type { AuthTokens } from './authTokens';
+import type { UserProfile } from './userProfile';
 
-export interface HealthStatus {
-  status: HealthStatusStatus;
+export interface LoginResponse {
+  user: UserProfile;
+  tokens: AuthTokens;
 }

@@ -16,8 +16,12 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { HealthStatusStatus } from './healthStatusStatus';
+import type { ValidationErrorDetail } from './validationErrorDetail';
 
-export interface HealthStatus {
-  status: HealthStatusStatus;
+export interface ApiErrorResponse {
+  statusCode: number;
+  message: string;
+  error?: string;
+  correlationId?: string;
+  details?: ValidationErrorDetail[];
 }

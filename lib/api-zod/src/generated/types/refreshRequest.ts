@@ -16,8 +16,7 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { HealthStatusStatus } from './healthStatusStatus';
 
-export interface HealthStatus {
-  status: HealthStatusStatus;
+export interface RefreshRequest {
+  refreshToken: string;
 }

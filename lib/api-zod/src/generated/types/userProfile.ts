@@ -16,8 +16,19 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import type { HealthStatusStatus } from './healthStatusStatus';
+import type { UserRole } from './userRole';
+import type { UserStatus } from './userStatus';
 
-export interface HealthStatus {
-  status: HealthStatusStatus;
+export interface UserProfile {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  role: UserRole;
+  status: UserStatus;
+  registrationSource: string;
+  lastLoginAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }

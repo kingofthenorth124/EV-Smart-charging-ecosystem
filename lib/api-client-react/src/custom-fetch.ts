@@ -1,5 +1,12 @@
 export type CustomFetchOptions = RequestInit & {
   responseType?: "json" | "text" | "blob" | "auto";
+  /**
+   * Skip the configured auth-token getter for this request. Required for
+   * token-refresh calls themselves: if the refresh request consulted the
+   * getter, an expired access token would trigger a nested refresh that
+   * awaits the already in-flight one — a deadlock.
+   */
+  skipAuth?: boolean;
 };
 
 export type ErrorType<T = unknown> = ApiError<T>;
@@ -17,6 +24,18 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _defaultHeadersGetter: DefaultHeadersGetter | null = null;
+
+export type DefaultHeadersGetter = () => Record<string, string>;
+
+/**
+ * Register a getter that supplies default headers attached to every request
+ * (e.g. a per-request correlation ID). Explicit per-call headers win over
+ * defaults. Pass `null` to clear the getter.
+ */
+export function setDefaultHeadersGetter(getter: DefaultHeadersGetter | null): void {
+  _defaultHeadersGetter = getter;
+}
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -327,7 +346,7 @@ export async function customFetch<T = unknown>(
   options: CustomFetchOptions = {},
 ): Promise<T> {
   input = applyBaseUrl(input);
-  const { responseType = "auto", headers: headersInit, ...init } = options;
+  const { responseType = "auto", skipAuth = false, headers: headersInit, ...init } = options;
 
   const method = resolveMethod(input, init.method);
 
@@ -335,7 +354,11 @@ export async function customFetch<T = unknown>(
     throw new TypeError(`customFetch: ${method} requests cannot have a body.`);
   }
 
-  const headers = mergeHeaders(isRequest(input) ? input.headers : undefined, headersInit);
+  const headers = mergeHeaders(
+    _defaultHeadersGetter ? _defaultHeadersGetter() : undefined,
+    isRequest(input) ? input.headers : undefined,
+    headersInit,
+  );
 
   if (
     typeof init.body === "string" &&
@@ -351,7 +374,7 @@ export async function customFetch<T = unknown>(
 
   // Attach bearer token when an auth getter is configured and no
   // Authorization header has been explicitly provided.
-  if (_authTokenGetter && !headers.has("authorization")) {
+  if (!skipAuth && _authTokenGetter && !headers.has("authorization")) {
     const token = await _authTokenGetter();
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
