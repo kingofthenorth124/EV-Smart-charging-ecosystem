@@ -16,29 +16,26 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
-import { ApiErrorResponse } from "@workspace/api-client-react";
+import type { ApiErrorResponse } from "@workspace/api-client-react";
+import { registerSchema } from "@workspace/validation";
 
-const registerSchema = z
-  .object({
-    firstName: z.string().min(1, "First name is required").max(100, "Too long"),
-    lastName: z.string().min(1, "Last name is required").max(100, "Too long"),
-    email: z.string().email("Please enter a valid email").max(255),
-    phone: z.string().regex(/^\+?[0-9\s\-()]{10,20}$/, "Please enter a valid phone number"),
-    password: z.string().min(8, "Password must be at least 8 characters").max(128, "Too long"),
-    confirmPassword: z.string(),
-  })
+// Extend the shared schema with the UI-only confirmPassword field.
+const registerFormSchema = registerSchema
+  .extend({ confirmPassword: z.string() })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
+
+type RegisterFormInput = z.infer<typeof registerFormSchema>;
 
 export default function Register() {
   const { register } = useAuth();
   const [, setLocation] = useLocation();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const form = useForm<z.infer<typeof registerSchema>>({
-    resolver: zodResolver(registerSchema),
+  const form = useForm<RegisterFormInput>({
+    resolver: zodResolver(registerFormSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -49,7 +46,7 @@ export default function Register() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof registerSchema>) => {
+  const onSubmit = async (values: RegisterFormInput) => {
     try {
       setErrorMsg(null);
       await register({
@@ -60,8 +57,8 @@ export default function Register() {
         password: values.password,
       });
       setLocation("/");
-    } catch (err: any) {
-      const apiErr = err.data as ApiErrorResponse | undefined;
+    } catch (err) {
+      const apiErr = (err as { data?: ApiErrorResponse }).data;
       if (apiErr?.statusCode === 409) {
         if (apiErr.message.toLowerCase().includes("email")) {
           form.setError("email", { message: "Email is already registered" });
@@ -71,7 +68,7 @@ export default function Register() {
           setErrorMsg(apiErr.message);
         }
       } else {
-        setErrorMsg(apiErr?.message || "Failed to register.");
+        setErrorMsg(apiErr?.message ?? "Failed to register.");
       }
     }
   };

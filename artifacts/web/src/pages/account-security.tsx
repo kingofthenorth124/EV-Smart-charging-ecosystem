@@ -14,21 +14,31 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useChangePassword, ApiErrorResponse } from "@workspace/api-client-react";
+import { useChangePassword } from "@workspace/api-client-react";
+import type { ApiErrorResponse } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { passwordSchema } from "@workspace/validation";
 
-const securitySchema = z
+// Extend the shared password rules with form-level confirmPassword and
+// an extra refine that prevents reusing the current password.
+const securityFormSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z.string().min(8, "Password must be at least 8 characters").max(128, "Too long"),
+    newPassword: passwordSchema,
     confirmPassword: z.string(),
   })
-  .refine((data) => data.newPassword === data.confirmPassword, {
+  .refine((d) => d.currentPassword !== d.newPassword, {
+    message: "New password must differ from current password",
+    path: ["newPassword"],
+  })
+  .refine((d) => d.newPassword === d.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
+
+type SecurityFormInput = z.infer<typeof securityFormSchema>;
 
 export default function AccountSecurity() {
   const { clearSession } = useAuth();
@@ -36,12 +46,12 @@ export default function AccountSecurity() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof securitySchema>>({
-    resolver: zodResolver(securitySchema),
+  const form = useForm<SecurityFormInput>({
+    resolver: zodResolver(securityFormSchema),
     defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
   });
 
-  const onSubmit = async (values: z.infer<typeof securitySchema>) => {
+  const onSubmit = async (values: SecurityFormInput) => {
     try {
       await changePassword.mutateAsync({
         data: {
@@ -49,18 +59,18 @@ export default function AccountSecurity() {
           newPassword: values.newPassword,
         },
       });
-      
+
       toast({
         title: "Password Updated",
         description: "Your password has been changed successfully. Please sign in again.",
       });
-      
+
       clearSession();
       setLocation("/login");
-    } catch (err: any) {
-      const apiErr = err.data as ApiErrorResponse | undefined;
+    } catch (err) {
+      const apiErr = (err as { data?: ApiErrorResponse }).data;
       form.setError("root", {
-        message: apiErr?.message || "Failed to change password. Please verify your current password.",
+        message: apiErr?.message ?? "Failed to change password. Please verify your current password.",
       });
     }
   };
@@ -93,14 +103,12 @@ export default function AccountSecurity() {
                 <FormItem>
                   <FormLabel>Current Password</FormLabel>
                   <FormControl>
-                    <Input type="password" autoComplete="current-password" placeholder="••••••••" {...field} data-testid="input-currentpassword" />
+                    <Input type="password" autoComplete="current-password" placeholder="••••••••" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <div className="pt-4" />
 
             <FormField
               control={form.control}
@@ -109,7 +117,7 @@ export default function AccountSecurity() {
                 <FormItem>
                   <FormLabel>New Password</FormLabel>
                   <FormControl>
-                    <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} data-testid="input-newpassword" />
+                    <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -123,26 +131,20 @@ export default function AccountSecurity() {
                 <FormItem>
                   <FormLabel>Confirm New Password</FormLabel>
                   <FormControl>
-                    <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} data-testid="input-confirmpassword" />
+                    <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="pt-4 border-t border-border">
-              <Button
-                type="submit"
-                className="w-full bg-[#f0a500] hover:bg-[#d99400] text-[#4a3000] hover:text-[#4a3000]"
-                disabled={changePassword.isPending}
-                data-testid="button-submit-changepassword"
-              >
-                {changePassword.isPending ? "Updating..." : "Update Password"}
-              </Button>
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                Changing your password will sign you out of all devices.
-              </p>
-            </div>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={changePassword.isPending}
+            >
+              {changePassword.isPending ? "Updating..." : "Update Password"}
+            </Button>
           </form>
         </Form>
       </div>

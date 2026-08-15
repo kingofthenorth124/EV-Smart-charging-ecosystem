@@ -659,6 +659,9 @@ importers:
       '@workspace/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@workspace/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1

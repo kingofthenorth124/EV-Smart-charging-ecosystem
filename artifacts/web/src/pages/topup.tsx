@@ -7,7 +7,7 @@ import {
   getGetDashboardQueryKey,
   getListTransactionsQueryKey
 } from "@workspace/api-client-react";
-import type { TopUpMethod } from "@workspace/api-client-react";
+import type { TopUpMethod, WalletTransaction } from "@workspace/api-client-react";
 import { Spinner } from "@/components/ui/spinner";
 import { QueryError } from "@/components/query-error";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export default function TopUp() {
   const [customMode, setCustomMode] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<TopUpMethod>("CARD");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [successTx, setSuccessTx] = useState<any>(null);
+  const [successTx, setSuccessTx] = useState<WalletTransaction | null>(null);
 
   const {
     data: walletData,
@@ -69,10 +69,10 @@ export default function TopUp() {
       
       setSuccessTx(res.transaction);
       
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Top up failed",
-        description: error?.message || "An unexpected error occurred. Please try again.",
+        description: (error as { message?: string }).message ?? "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {

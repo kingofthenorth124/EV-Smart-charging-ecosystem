@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation } from "wouter";
+import { useState } from "react";
+import { Link } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,41 +16,42 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2 } from "lucide-react";
-import { useConfirmPasswordReset, ApiErrorResponse } from "@workspace/api-client-react";
+import { useConfirmPasswordReset } from "@workspace/api-client-react";
+import type { ApiErrorResponse } from "@workspace/api-client-react";
+import { passwordResetConfirmSchema } from "@workspace/validation";
 
-const resetSchema = z
-  .object({
-    token: z.string().min(1, "Reset token is required"),
-    newPassword: z.string().min(8, "Password must be at least 8 characters").max(128, "Too long"),
-    confirmPassword: z.string(),
-  })
+// Extend the shared schema with the UI-only confirmPassword field.
+const resetFormSchema = passwordResetConfirmSchema
+  .extend({ confirmPassword: z.string() })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
 
+type ResetFormInput = z.infer<typeof resetFormSchema>;
+
 export default function ResetPassword() {
   const [success, setSuccess] = useState(false);
   const confirmReset = useConfirmPasswordReset();
-  
-  // Parse token from URL if available
-  const tokenParams = new URLSearchParams(window.location.search).get("token") || "";
 
-  const form = useForm<z.infer<typeof resetSchema>>({
-    resolver: zodResolver(resetSchema),
-    defaultValues: { token: tokenParams, newPassword: "", confirmPassword: "" },
+  // Parse token from URL if available
+  const tokenParam = new URLSearchParams(window.location.search).get("token") ?? "";
+
+  const form = useForm<ResetFormInput>({
+    resolver: zodResolver(resetFormSchema),
+    defaultValues: { token: tokenParam, newPassword: "", confirmPassword: "" },
   });
 
-  const onSubmit = async (values: z.infer<typeof resetSchema>) => {
+  const onSubmit = async (values: ResetFormInput) => {
     try {
       await confirmReset.mutateAsync({
         data: { token: values.token, newPassword: values.newPassword },
       });
       setSuccess(true);
-    } catch (err: any) {
-      const apiErr = err.data as ApiErrorResponse | undefined;
+    } catch (err) {
+      const apiErr = (err as { data?: ApiErrorResponse }).data;
       form.setError("root", {
-        message: apiErr?.message || "Failed to reset password. The token may be invalid or expired.",
+        message: apiErr?.message ?? "Failed to reset password. The token may be invalid or expired.",
       });
     }
   };
@@ -87,7 +88,7 @@ export default function ResetPassword() {
             </Alert>
           )}
 
-          {!tokenParams && (
+          {!tokenParam && (
             <FormField
               control={form.control}
               name="token"

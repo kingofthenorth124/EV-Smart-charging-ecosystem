@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AuthLayout } from "@/components/auth-layout";
@@ -17,21 +16,18 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2 } from "lucide-react";
 import { useRequestPasswordReset } from "@workspace/api-client-react";
-
-const forgotPasswordSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-});
+import { passwordResetRequestSchema, type PasswordResetRequestInput } from "@workspace/validation";
 
 export default function ForgotPassword() {
   const [success, setSuccess] = useState(false);
   const requestReset = useRequestPasswordReset();
 
-  const form = useForm<z.infer<typeof forgotPasswordSchema>>({
-    resolver: zodResolver(forgotPasswordSchema),
+  const form = useForm<PasswordResetRequestInput>({
+    resolver: zodResolver(passwordResetRequestSchema),
     defaultValues: { email: "" },
   });
 
-  const onSubmit = async (values: z.infer<typeof forgotPasswordSchema>) => {
+  const onSubmit = async (values: PasswordResetRequestInput) => {
     try {
       await requestReset.mutateAsync({ data: { email: values.email } });
       setSuccess(true);

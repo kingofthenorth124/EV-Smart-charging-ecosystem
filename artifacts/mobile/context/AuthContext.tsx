@@ -11,7 +11,7 @@ import {
   logout as apiLogout,
   register as apiRegister,
 } from '@workspace/api-client-react';
-import type { UserProfile } from '@workspace/api-client-react';
+import type { UserProfile, RegisterRequest } from '@workspace/api-client-react';
 import {
   beginLogout,
   clearTokens,
@@ -22,20 +22,12 @@ import {
   storeTokens,
 } from '@/lib/auth-tokens';
 
-interface RegisterData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  password: string;
-}
-
 interface AuthContextValue {
   user: UserProfile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<UserProfile>;
+  register: (data: RegisterRequest) => Promise<UserProfile>;
   logout: () => Promise<void>;
 }
 
@@ -84,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(response.user);
   }, []);
 
-  const register = useCallback(async (data: RegisterData): Promise<UserProfile> => {
+  const register = useCallback(async (data: RegisterRequest): Promise<UserProfile> => {
     const profile = await apiRegister(data);
     // Registration creates a PENDING account — no tokens issued yet.
     // Admin must activate before the customer can log in.

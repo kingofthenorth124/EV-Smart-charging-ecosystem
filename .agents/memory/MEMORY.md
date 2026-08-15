@@ -1,5 +1,6 @@
 - [Prisma v7 + pnpm monorepo](prisma-v7-pnpm.md) — v7 requires driver adapter, no URL in schema, custom postinstall.cjs for generate resolution.
 - [Zod version hoisting hazard](zod-version-hoisting.md) — never add zod v4 as a dep; use the `zod/v4` subpath or pnpm's hidden hoist poisons v3 consumers' typechecks.
+- [Zod resolver compatibility](zod-resolver-compat.md) — @workspace/validation uses zod v3 (not zod/v4); zodResolver reads error.errors (v3), v4 uses .issues and silently fails.
 - [Orval zod index overwrite](orval-zod-index.md) — api-spec codegen appends a types re-export to lib/api-zod/src/index.ts; revert it or typecheck fails with TS2308.
 - [api-client-react dist rebuild](api-client-dist-rebuild.md) — web app typecheck uses project references to dist/; after codegen, remove duplicate exports in index.ts then run tsc -b in lib/api-client-react.
 - [UI package variant split](ui-variant-split.md) — buttonVariants/badgeVariants live in packages/ui/src/lib/variants.ts (no JSX); vitest node env can't import JSX files, so variant logic must stay in a pure TS module.

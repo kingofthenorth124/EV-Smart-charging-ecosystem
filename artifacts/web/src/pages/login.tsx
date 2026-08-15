@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useLocation, Link } from "wouter";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AuthLayout } from "@/components/auth-layout";
@@ -16,31 +15,26 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
-import { ApiErrorResponse } from "@workspace/api-client-react";
-
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
-});
+import type { ApiErrorResponse } from "@workspace/api-client-react";
+import { loginSchema, type LoginInput } from "@workspace/validation";
 
 export default function Login() {
   const { login } = useAuth();
   const [, setLocation] = useLocation();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const form = useForm<z.infer<typeof loginSchema>>({
+  const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  const onSubmit = async (values: z.infer<typeof loginSchema>) => {
+  const onSubmit = async (values: LoginInput) => {
     try {
       setErrorMsg(null);
       await login(values.email, values.password);
-      // login success -> auth context triggers router update automatically
       setLocation("/");
-    } catch (err: any) {
-      const apiErr = err.data as ApiErrorResponse | undefined;
+    } catch (err) {
+      const apiErr = (err as { data?: ApiErrorResponse }).data;
       if (apiErr) {
         if (apiErr.statusCode === 401) {
           setErrorMsg("Invalid email or password.");

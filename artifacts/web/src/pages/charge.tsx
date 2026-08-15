@@ -96,10 +96,10 @@ export default function Charge() {
         title: "Session Started",
         description: "Your charging session has begun successfully.",
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Failed to start session",
-        description: error?.message || "An unexpected error occurred.",
+        description: (error as { message?: string }).message ?? "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {
@@ -127,10 +127,10 @@ export default function Charge() {
         title: "Session Stopped",
         description: "Your charging session has ended.",
       });
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Failed to stop session",
-        description: error?.message || "An unexpected error occurred.",
+        description: (error as { message?: string }).message ?? "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {

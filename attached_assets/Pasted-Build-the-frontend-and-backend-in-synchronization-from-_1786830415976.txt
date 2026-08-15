@@ -1,0 +1,103 @@
+Build the frontend and backend in synchronization from the beginning. They must understand and agree with each other through a shared TypeScript contract.
+
+Core Requirement
+
+The frontend and backend must use the same source of truth for:
+
+API request types
+API response types
+Database-facing domain types where appropriate
+Authentication/user types
+Form/input types
+Validation schemas
+Error response structures
+Enums and constants
+Pagination and filtering structures
+Webhook/event payloads
+
+Do not create duplicate TypeScript interfaces separately in the frontend and backend.
+
+Shared Contract
+
+Create a dedicated shared contract/types layer, for example:
+
+/shared
+  /types
+  /schemas
+  /api
+  index.ts
+
+The frontend and backend should both import their types and validation schemas from this shared layer.
+
+Where practical, use a schema-first approach such as Zod so that the same schema can provide:
+
+Runtime validation on the backend
+Type inference for TypeScript
+Consistent validation on the frontend
+A single source of truth for API contracts
+
+For example:
+
+export const CreateUserSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+});
+
+export type CreateUserInput = z.infer<typeof CreateUserSchema>;
+
+The frontend should consume CreateUserInput, while the backend validates incoming data with CreateUserSchema.
+
+API Contract
+
+Every API endpoint should have an explicit contract defining:
+
+Request
+Response
+Errors
+Authentication requirements
+
+The frontend must consume the API according to that contract rather than guessing the response structure.
+
+If an API response changes, update the shared contract first and then update both frontend and backend together.
+
+Type Safety
+
+TypeScript strict mode should be enabled wherever possible.
+
+Avoid:
+
+any
+
+unless there is a documented and justified reason.
+
+Do not use frontend-only or backend-only versions of the same domain type when a shared type is appropriate.
+
+Development Workflow
+
+Build features vertically and synchronously:
+
+Shared Contract
+      ↓
+Backend Implementation
+      ↓
+Frontend Integration
+      ↓
+End-to-End Verification
+
+For every new feature:
+
+Define the shared data contract.
+Define request/response schemas.
+Implement the backend against the contract.
+Implement the frontend against the same contract.
+Test the complete frontend → API → backend → database → API → frontend flow.
+Fix type or contract mismatches before considering the feature complete.
+Important
+
+Do not build a frontend based on assumptions about what the backend will eventually return.
+
+Do not build a backend independently and expect the frontend to adapt later.
+
+The frontend and backend are one system and must evolve together through shared TypeScript contracts.
+
+Before completing any feature, verify that the actual runtime API behavior matches the shared TypeScript contract.
