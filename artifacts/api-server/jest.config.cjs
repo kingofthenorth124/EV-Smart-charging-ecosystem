@@ -1,6 +1,10 @@
-import type { Config } from 'jest';
+// @ts-check
+'use strict';
 
-const config: Config = {
+const path = require('path');
+
+/** @type {import('jest').Config} */
+const config = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: 'src',
   testRegex: '.*\\.integration\\.spec\\.ts$',
@@ -17,7 +21,11 @@ const config: Config = {
     ],
   },
   collectCoverageFrom: ['**/*.(t|j)s'],
-  testEnvironment: 'node',
+  // Pin to an absolute path so jest-config always resolves the 30.x version
+  // installed in this package — not the jest-environment-node@29.7.0 that
+  // react-native pulls into the pnpm hoisted store, which lacks the
+  // clearMocksOnScope() method required by jest-runtime@30.4.2.
+  testEnvironment: path.resolve(__dirname, 'node_modules', 'jest-environment-node'),
   setupFiles: ['<rootDir>/test/jest.setup.ts'],
   // Each spec file gets its own worker so in-memory throttler state is isolated
   maxWorkers: 1,
@@ -29,4 +37,4 @@ const config: Config = {
   openHandlesTimeout: 3000,
 };
 
-export default config;
+module.exports = config;

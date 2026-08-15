@@ -20,6 +20,8 @@ import { cleanupTestUsers, uniqueEmail, uniquePhone } from '../../test/db-cleane
 import { PrismaService } from '../database/prisma.service';
 import { AuthService } from './auth.service';
 import { IdentityService } from '../identity/identity.service';
+import { AUTH_AUDIT_ACTIONS } from './audit-actions';
+import { AUDIT_ACTIONS } from '../identity/audit-actions';
 
 // ─── Shared state ─────────────────────────────────────────────────────────────
 
@@ -778,7 +780,299 @@ describe('Concurrent load behavior', () => {
 });
 
 // =============================================================================
-// 12. RATE LIMITING  (isolated app with real throttler)
+// 12. AUDIT LOG PERSISTENCE
+// Verifies that every security event is permanently written to the audit_logs
+// table — even though AuditService.log() swallows its own errors, we must
+// confirm the happy path actually persists rows.
+// =============================================================================
+
+describe('Audit log persistence', () => {
+  /**
+   * Helper: fetch all audit rows for a given actorId + action, ordered by
+   * createdAt descending so the most-recent row is first.
+   */
+  async function getAuditRows(actorId: string, action: string) {
+    return prisma.auditLog.findMany({
+      where: { actorId, action },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  it('writes USER_LOGIN_SUCCESS row after a successful login', async () => {
+    const { email, password } = await registerUser();
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email, password });
+
+    const dbUser = await prisma.user.findUniqueOrThrow({ where: { email } });
+    const rows = await getAuditRows(dbUser.id, AUTH_AUDIT_ACTIONS.LOGIN_SUCCESS);
+
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+    expect(rows[0]).toMatchObject({
+      actorId: dbUser.id,
+      actorEmail: email,
+      action: AUTH_AUDIT_ACTIONS.LOGIN_SUCCESS,
+      resource: 'user',
+      result: 'SUCCESS',
+    });
+  });
+
+  it('writes USER_LOGIN_FAILED row after a bad-password attempt', async () => {
+    const { email } = await registerUser();
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email, password: 'WrongPassword1!' });
+
+    const dbUser = await prisma.user.findUniqueOrThrow({ where: { email } });
+    const rows = await getAuditRows(dbUser.id, AUTH_AUDIT_ACTIONS.LOGIN_FAILED);
+
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+    expect(rows[0]).toMatchObject({
+      actorId: dbUser.id,
+      action: AUTH_AUDIT_ACTIONS.LOGIN_FAILED,
+      result: 'FAILURE',
+    });
+  });
+
+  it('writes USER_LOGIN_ACCOUNT_LOCKED row after the account is locked and another attempt is made', async () => {
+    const { email } = await registerUser();
+    const dbUser = await prisma.user.findUniqueOrThrow({ where: { email } });
+
+    // 5 wrong-password attempts — these write LOGIN_FAILED rows and atomically
+    // set lockedUntil on the 5th via incrementAndMaybeLock.
+    for (let i = 0; i < 5; i++) {
+      await request(app.getHttpServer())
+        .post('/api/v1/auth/login')
+        .send({ email, password: 'WrongPassword!' });
+    }
+
+    // 6th attempt: account is already locked, so the lockout pre-check at the
+    // top of login() fires and writes a LOGIN_LOCKED audit entry before the 403.
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email, password: 'WrongPassword!' });
+
+    const rows = await getAuditRows(dbUser.id, AUTH_AUDIT_ACTIONS.LOGIN_LOCKED);
+
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+    expect(rows[0]).toMatchObject({
+      actorId: dbUser.id,
+      action: AUTH_AUDIT_ACTIONS.LOGIN_LOCKED,
+      result: 'FAILURE',
+    });
+  });
+
+  it('writes USER_TOKEN_THEFT_DETECTED row when a revoked refresh token is reused', async () => {
+    const { body: loginBody } = await registerAndLogin();
+    const originalRefreshToken = loginBody.tokens.refreshToken as string;
+    const userId = loginBody.user.id as string;
+
+    // Legitimate first rotation — originalRefreshToken is now revoked
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .send({ refreshToken: originalRefreshToken });
+
+    // Attacker re-presents the revoked token — theft detection fires
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .send({ refreshToken: originalRefreshToken });
+
+    const rows = await getAuditRows(userId, AUTH_AUDIT_ACTIONS.TOKEN_THEFT_DETECTED);
+
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+    expect(rows[0]).toMatchObject({
+      actorId: userId,
+      action: AUTH_AUDIT_ACTIONS.TOKEN_THEFT_DETECTED,
+      result: 'FAILURE',
+    });
+  });
+
+  it('writes PASSWORD_RESET_REQUESTED and PASSWORD_RESET_COMPLETED rows', async () => {
+    const { email } = await registerUser();
+    const dbUser = await prisma.user.findUniqueOrThrow({ where: { email } });
+
+    // Capture the plain reset token via the notifyPasswordReset spy
+    const authService = app.get(AuthService);
+    let capturedToken = '';
+    const spy = jest
+      .spyOn(authService as unknown as Record<string, (...args: unknown[]) => void>, 'notifyPasswordReset')
+      .mockImplementation((_email: unknown, token: unknown) => {
+        capturedToken = token as string;
+      });
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/password/reset/request')
+      .send({ email });
+
+    spy.mockRestore();
+    expect(capturedToken).toBeTruthy();
+
+    // Assert PASSWORD_RESET_REQUESTED was written
+    const requestedRows = await getAuditRows(
+      dbUser.id,
+      AUTH_AUDIT_ACTIONS.PASSWORD_RESET_REQUESTED,
+    );
+    expect(requestedRows.length).toBeGreaterThanOrEqual(1);
+    expect(requestedRows[0]).toMatchObject({
+      actorId: dbUser.id,
+      action: AUTH_AUDIT_ACTIONS.PASSWORD_RESET_REQUESTED,
+      result: 'SUCCESS',
+    });
+
+    // Complete the reset
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/password/reset/confirm')
+      .send({ token: capturedToken, newPassword: 'NewPassword3#' });
+
+    // Assert PASSWORD_RESET_COMPLETED was written
+    const completedRows = await getAuditRows(
+      dbUser.id,
+      AUTH_AUDIT_ACTIONS.PASSWORD_RESET_COMPLETED,
+    );
+    expect(completedRows.length).toBeGreaterThanOrEqual(1);
+    expect(completedRows[0]).toMatchObject({
+      actorId: dbUser.id,
+      action: AUTH_AUDIT_ACTIONS.PASSWORD_RESET_COMPLETED,
+      result: 'SUCCESS',
+    });
+  });
+
+  it('writes USER_REGISTERED row after a new account is created', async () => {
+    const { res, email } = await registerUser();
+    expect(res.status).toBe(201);
+
+    const dbUser = await prisma.user.findUniqueOrThrow({ where: { email } });
+    const rows = await getAuditRows(dbUser.id, AUDIT_ACTIONS.USER_REGISTERED);
+
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+    expect(rows[0]).toMatchObject({
+      actorId: dbUser.id,
+      actorEmail: email,
+      action: AUDIT_ACTIONS.USER_REGISTERED,
+      resource: 'user',
+      result: 'SUCCESS',
+    });
+  });
+
+  it('writes USER_LOGOUT row after a successful logout', async () => {
+    const { body: loginBody } = await registerAndLogin();
+    const { accessToken, refreshToken } = loginBody.tokens;
+    const userId = loginBody.user.id as string;
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/logout')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ refreshToken });
+
+    const rows = await getAuditRows(userId, AUTH_AUDIT_ACTIONS.LOGOUT);
+
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+    expect(rows[0]).toMatchObject({
+      actorId: userId,
+      action: AUTH_AUDIT_ACTIONS.LOGOUT,
+      resource: 'refresh_token',
+      result: 'SUCCESS',
+    });
+  });
+
+  it('writes USER_TOKEN_REFRESHED row after a successful token rotation', async () => {
+    const { body: loginBody } = await registerAndLogin();
+    const { refreshToken } = loginBody.tokens;
+    const userId = loginBody.user.id as string;
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .send({ refreshToken });
+
+    const rows = await getAuditRows(userId, AUTH_AUDIT_ACTIONS.TOKEN_REFRESHED);
+
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+    expect(rows[0]).toMatchObject({
+      actorId: userId,
+      action: AUTH_AUDIT_ACTIONS.TOKEN_REFRESHED,
+      resource: 'refresh_token',
+      result: 'SUCCESS',
+    });
+  });
+
+  it('writes USER_PASSWORD_CHANGED row after a successful in-session password change', async () => {
+    const { password, body: loginBody } = await registerAndLogin();
+    const { accessToken } = loginBody.tokens;
+    const userId = loginBody.user.id as string;
+
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/auth/password/change')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ currentPassword: password, newPassword: 'Changed1#New' });
+    expect(res.status).toBe(204);
+
+    const rows = await getAuditRows(userId, AUTH_AUDIT_ACTIONS.PASSWORD_CHANGED);
+
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+    expect(rows[0]).toMatchObject({
+      actorId: userId,
+      action: AUTH_AUDIT_ACTIONS.PASSWORD_CHANGED,
+      result: 'SUCCESS',
+    });
+  });
+
+  it('writes USER_PASSWORD_CHANGE_FAILED row when the current password is wrong', async () => {
+    const { body: loginBody } = await registerAndLogin();
+    const { accessToken } = loginBody.tokens;
+    const userId = loginBody.user.id as string;
+
+    const res = await request(app.getHttpServer())
+      .post('/api/v1/auth/password/change')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ currentPassword: 'WrongCurrentPwd1!', newPassword: 'NewPwd2@' });
+    expect(res.status).toBe(401);
+
+    const rows = await getAuditRows(userId, AUTH_AUDIT_ACTIONS.PASSWORD_CHANGE_FAILED);
+
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+    expect(rows[0]).toMatchObject({
+      actorId: userId,
+      action: AUTH_AUDIT_ACTIONS.PASSWORD_CHANGE_FAILED,
+      result: 'FAILURE',
+    });
+  });
+
+  it('writes PASSWORD_RESET_INVALID_TOKEN row when an expired/bad reset token is submitted', async () => {
+    const { email } = await registerUser();
+    const dbUser = await prisma.user.findUniqueOrThrow({ where: { email } });
+
+    // Submit a bogus token — the service can't link this to a user, so the
+    // actorId falls back to 'system'.
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/password/reset/confirm')
+      .send({
+        token: 'invalidtoken1234567890abcdef1234567890abcdef1234567890abcdef12',
+        newPassword: 'NewPassword1!',
+      });
+
+    // The invalid-token path records actorId as 'system' because no user is
+    // resolved. Verify the row exists without constraining actorId.
+    const rows = await prisma.auditLog.findMany({
+      where: { action: AUTH_AUDIT_ACTIONS.PASSWORD_RESET_INVALID_TOKEN },
+      orderBy: { createdAt: 'desc' },
+      take: 1,
+    });
+
+    expect(rows.length).toBeGreaterThanOrEqual(1);
+    expect(rows[0]).toMatchObject({
+      action: AUTH_AUDIT_ACTIONS.PASSWORD_RESET_INVALID_TOKEN,
+      result: 'FAILURE',
+    });
+
+    // Suppress unused-var warning — dbUser is declared for clarity
+    void dbUser;
+  });
+});
+
+// =============================================================================
+// 13. RATE LIMITING  (isolated app with real throttler)
 // =============================================================================
 
 describe('Rate limiting', () => {
