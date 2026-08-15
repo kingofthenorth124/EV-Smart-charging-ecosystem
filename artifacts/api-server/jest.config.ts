@@ -23,6 +23,10 @@ const config: Config = {
   maxWorkers: 1,
   testTimeout: 30000,
   verbose: true,
+  // Allow up to 3 s for async handles (pg pool sockets) to drain naturally
+  // before Jest force-exits. With allowExitOnIdle:true on the Pool this
+  // should never be reached, but it acts as a belt-and-suspenders safety net.
+  openHandlesTimeout: 3000,
 };
 
 export default config;

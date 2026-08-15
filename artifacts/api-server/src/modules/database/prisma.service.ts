@@ -32,6 +32,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       max: 10,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 5_000,
+      // Allows the Node.js event loop to exit when all connections are idle,
+      // so Jest (and other test runners) do not hang after pool.end() resolves.
+      allowExitOnIdle: true,
     });
     const adapter = new PrismaPg(pool);
 
