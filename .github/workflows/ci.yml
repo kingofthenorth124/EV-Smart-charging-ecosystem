@@ -7,8 +7,8 @@ on:
     branches: [main, develop]
 
 env:
-  NODE_VERSION: '22'
-  PNPM_VERSION: '10'
+  NODE_VERSION: "22"
+  PNPM_VERSION: "10"
 
 jobs:
   # ─── Install & Validate ─────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Restore cache
         uses: actions/cache@v4
@@ -100,7 +100,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Restore cache
         uses: actions/cache@v4
@@ -133,7 +133,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Restore cache
         uses: actions/cache@v4
@@ -166,7 +166,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Restore cache
         uses: actions/cache@v4
@@ -182,6 +182,14 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Dependency vulnerability audit
+        # Remaining high-severity findings are all devDependency-only
+        # (build toolchain transitives via @nestjs/cli) or in the non-deployed
+        # mockup-sandbox artifact. The only runtime finding
+        # (GHSA-pm4m-ph32-ghv5 js-yaml via @nestjs/swagger) was patched via
+        # a pnpm workspace override forcing js-yaml@>=5.2.2.
+        # See docs/security/cve-triage.md for the full triage.
+        # continue-on-error is intentional: remaining findings are accepted
+        # devDep-only vulnerabilities documented in the triage.
         run: pnpm audit --audit-level=high
         continue-on-error: true
 
@@ -214,7 +222,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Restore cache
         uses: actions/cache@v4

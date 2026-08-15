@@ -2,12 +2,12 @@
  * Camel Mobility Wallet — API Server Bootstrap
  * NestJS entry point for the Identity & Access Management backend.
  */
-import 'reflect-metadata';
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Logger } from 'nestjs-pino';
-import { AppModule } from './app.module';
+import "reflect-metadata";
+import { NestFactory } from "@nestjs/core";
+import { ValidationPipe } from "@nestjs/common";
+import { Logger } from "nestjs-pino";
+import helmet from "helmet";
+import { AppModule } from "./app.module";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -18,15 +18,21 @@ async function bootstrap(): Promise<void> {
   // ── Global prefix ─────────────────────────────────────────────────────────
   // All controller routes served under /api.
   // Swagger docs configured separately at /api/docs (absolute path).
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix("api");
+
+  // ── Security headers (Helmet) ─────────────────────────────────────────────
+  // Sets Content-Security-Policy, X-Frame-Options, X-Content-Type-Options,
+  // Referrer-Policy, Strict-Transport-Security, and other defence-in-depth
+  // headers on every response.
+  app.use(helmet());
 
   // ── CORS ──────────────────────────────────────────────────────────────────
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',') ?? true,
+    origin: process.env.CORS_ORIGIN?.split(",") ?? true,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-ID'],
-    exposedHeaders: ['X-Correlation-ID'],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Correlation-ID"],
+    exposedHeaders: ["X-Correlation-ID"],
   });
 
   // ── Validation ────────────────────────────────────────────────────────────
@@ -41,44 +47,55 @@ async function bootstrap(): Promise<void> {
   );
 
   // ── Swagger (development only) ────────────────────────────────────────────
-  if (process.env.NODE_ENV !== 'production') {
+  // Dynamic import ensures @nestjs/swagger (and its js-yaml transitive) are
+  // never loaded in production — not just skipped at runtime, but genuinely
+  // absent from the module graph executed by the production process.
+  if (process.env.NODE_ENV !== "production") {
+    const { DocumentBuilder, SwaggerModule } = await import("@nestjs/swagger");
+
     const config = new DocumentBuilder()
-      .setTitle('Camel Mobility Wallet API')
+      .setTitle("Camel Mobility Wallet API")
       .setDescription(
-        '**Module 1**: Enterprise Foundation, Identity & Access Management\n\n' +
-          'Correlation ID (`X-Correlation-ID`) is included in every response.\n\n' +
-          'Use POST `/api/v1/auth/login` to obtain a Bearer token.',
+        "**Module 1**: Enterprise Foundation, Identity & Access Management\n\n" +
+          "Correlation ID (`X-Correlation-ID`) is included in every response.\n\n" +
+          "Use POST `/api/v1/auth/login` to obtain a Bearer token.",
       )
-      .setVersion('1.0.0')
-      .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'BearerAuth')
-      .addTag('health', 'Platform health and operational status')
-      .addTag('system', 'System information')
-      .addTag('auth', 'Authentication, registration, and password management')
-      .addTag('users', 'User identity and account management (admin)')
+      .setVersion("1.0.0")
+      .addBearerAuth(
+        { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+        "BearerAuth",
+      )
+      .addTag("health", "Platform health and operational status")
+      .addTag("system", "System information")
+      .addTag("auth", "Authentication, registration, and password management")
+      .addTag("users", "User identity and account management (admin)")
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document, {
+    SwaggerModule.setup("api/docs", app, document, {
       swaggerOptions: {
         persistAuthorization: true,
         displayRequestDuration: true,
-        tagsSorter: 'alpha',
+        tagsSorter: "alpha",
       },
     });
   }
 
   // ── Listen ────────────────────────────────────────────────────────────────
-  const port = parseInt(process.env.PORT ?? '3000', 10);
-  await app.listen(port, '0.0.0.0');
+  const port = parseInt(process.env.PORT ?? "3000", 10);
+  await app.listen(port, "0.0.0.0");
 
   const logger = app.get(Logger);
-  logger.log(`🐪 Camel Mobility API listening on port ${port}`, 'Bootstrap');
-  if (process.env.NODE_ENV !== 'production') {
-    logger.log(`📖 Swagger UI → http://localhost:${port}/api/docs`, 'Bootstrap');
+  logger.log(`🐪 Camel Mobility API listening on port ${port}`, "Bootstrap");
+  if (process.env.NODE_ENV !== "production") {
+    logger.log(
+      `📖 Swagger UI → http://localhost:${port}/api/docs`,
+      "Bootstrap",
+    );
   }
 }
 
 bootstrap().catch((error: unknown) => {
-  console.error('Fatal bootstrap error:', error);
+  console.error("Fatal bootstrap error:", error);
   process.exit(1);
 });
