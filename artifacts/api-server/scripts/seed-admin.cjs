@@ -71,11 +71,9 @@ if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ADMIN_EMAIL)) {
   process.exit(1);
 }
 
-// E.164 phone check
-if (!/^\+[1-9]\d{7,14}$/.test(ADMIN_PHONE)) {
-  console.error(
-    '\n[seed-admin] ❌ ADMIN_PHONE must be in E.164 format, e.g. +2348012345678\n',
-  );
+// Phone: must be non-empty (any format accepted; uniqueness enforced by DB)
+if (!ADMIN_PHONE || ADMIN_PHONE.trim().length < 4) {
+  console.error('\n[seed-admin] ❌ ADMIN_PHONE must be a non-empty phone number.\n');
   process.exit(1);
 }
 
