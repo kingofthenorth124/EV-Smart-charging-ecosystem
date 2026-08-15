@@ -1,69 +1,92 @@
 /**
- * @workspace/validation
+ * @workspace/validation — Module 1: Identity & Auth Validation Schemas
  *
- * Shared Zod validation schemas.
- * Frontend: improves user experience (immediate feedback).
- * Backend: authoritative enforcement point.
- * Never rely on frontend validation alone for security or business rule enforcement.
+ * Shared Zod validation schemas for Module 1 (Identity & Access Management).
+ * Frontend: immediate user feedback.
+ * Backend: authoritative enforcement via class-validator DTOs.
+ *
+ * Scope: Module 1 only. Future module schemas added when those modules
+ * are implemented.
  */
 import { z } from 'zod';
-import { MIN_TOP_UP_AMOUNT_KOBO } from '@workspace/config';
 
-// ─── Auth ─────────────────────────────────────────────────────────────────────
+// ─── Primitive schemas ────────────────────────────────────────────────────────
 
 export const emailSchema = z
-  .string()
+  .string({ required_error: 'Email is required' })
   .min(1, 'Email is required')
-  .email('Enter a valid email address');
+  .email('Enter a valid email address')
+  .toLowerCase();
 
 export const passwordSchema = z
-  .string()
-  .min(8, 'Password must be at least 8 characters');
+  .string({ required_error: 'Password is required' })
+  .min(8, 'Password must be at least 8 characters')
+  .max(128, 'Password must not exceed 128 characters');
 
 export const phoneSchema = z
-  .string()
+  .string({ required_error: 'Phone number is required' })
   .min(10, 'Enter a valid phone number')
-  .regex(/^\+?[0-9\s\-()]{10,15}$/, 'Enter a valid phone number');
+  .max(20, 'Phone number is too long')
+  .regex(/^\+?[0-9\s\-()]{10,20}$/, 'Enter a valid phone number');
 
-export const loginSchema = z.object({
-  email: emailSchema,
-  password: z.string().min(1, 'Password is required'),
-});
+export const nameSchema = z
+  .string({ required_error: 'This field is required' })
+  .min(1, 'This field is required')
+  .max(100, 'Must not exceed 100 characters')
+  .trim();
 
-export const registrationSchema = z.object({
-  firstName: z.string().min(1, 'First name is required').max(100),
-  lastName: z.string().min(1, 'Last name is required').max(100),
+// ─── Auth schemas ─────────────────────────────────────────────────────────────
+
+export const registerSchema = z.object({
+  firstName: nameSchema,
+  lastName: nameSchema,
   email: emailSchema,
   phone: phoneSchema,
   password: passwordSchema,
-  vehicleMake: z.string().max(100).optional().nullable(),
-  vehicleModel: z.string().max(100).optional().nullable(),
-  vehicleLicensePlate: z.string().max(20).optional().nullable(),
 });
 
-// ─── Wallet ───────────────────────────────────────────────────────────────────
-
-export const topUpSchema = z.object({
-  amountKobo: z
-    .number()
-    .int('Amount must be a whole number of kobo')
-    .min(
-      MIN_TOP_UP_AMOUNT_KOBO,
-      `Minimum top-up amount is ₦${MIN_TOP_UP_AMOUNT_KOBO / 100}`,
-    ),
-  channel: z.enum(['CARD', 'BANK_TRANSFER', 'USSD', 'MOBILE_MONEY']),
+export const loginSchema = z.object({
+  email: emailSchema,
+  password: z.string({ required_error: 'Password is required' }).min(1, 'Password is required'),
 });
 
-// ─── NFC Card ─────────────────────────────────────────────────────────────────
-
-export const nfcCardLinkSchema = z.object({
-  cardIdentifier: z.string().min(1, 'Card identifier is required').max(100),
-  label: z.string().max(100).optional().nullable(),
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string({ required_error: 'Refresh token is required' }).min(1),
 });
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z
+      .string({ required_error: 'Current password is required' })
+      .min(1, 'Current password is required'),
+    newPassword: passwordSchema,
+  })
+  .refine((data) => data.currentPassword !== data.newPassword, {
+    message: 'New password must differ from current password',
+    path: ['newPassword'],
+  });
 
+export const passwordResetRequestSchema = z.object({
+  email: emailSchema,
+});
+
+export const passwordResetConfirmSchema = z.object({
+  token: z.string({ required_error: 'Reset token is required' }).min(1),
+  newPassword: passwordSchema,
+});
+
+// ─── Admin schemas ─────────────────────────────────────────────────────────────
+
+export const updateUserStatusSchema = z.object({
+  status: z.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED']),
+});
+
+// ─── Inferred types ───────────────────────────────────────────────────────────
+
+export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
-export type RegistrationInput = z.infer<typeof registrationSchema>;
-export type TopUpInput = z.infer<typeof topUpSchema>;
-export type NfcCardLinkInput = z.infer<typeof nfcCardLinkSchema>;
+export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type PasswordResetRequestInput = z.infer<typeof passwordResetRequestSchema>;
+export type PasswordResetConfirmInput = z.infer<typeof passwordResetConfirmSchema>;
+export type UpdateUserStatusInput = z.infer<typeof updateUserStatusSchema>;

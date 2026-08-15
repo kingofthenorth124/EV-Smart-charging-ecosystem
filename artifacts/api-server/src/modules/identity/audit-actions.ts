@@ -1,0 +1,7 @@
+/** Audit action constants for the Identity domain */
+export const AUDIT_ACTIONS = {
+  USER_REGISTERED: 'USER_REGISTERED',
+  USER_STATUS_CHANGED: 'USER_STATUS_CHANGED',
+  ADMIN_USERS_LISTED: 'ADMIN_USERS_LISTED',
+  ADMIN_USER_VIEWED: 'ADMIN_USER_VIEWED',
+} as const;

@@ -1,584 +1,83 @@
 openapi: 3.1.0
+
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
-  title: Api
+  title: Camel Mobility Wallet API
+  description: |
+    ## Module 1 — Enterprise Foundation, Identity & Access Management
+
+    This specification covers **only** the APIs implemented in Module 1.
+    Future domain APIs (Wallet, Charging Sessions, NFC, Stations) are added
+    when those modules are implemented.
+
+    ### Conventions
+    - All endpoints are versioned under `/api/v1/`
+    - Authentication uses JWT Bearer tokens
+    - Error responses follow a consistent contract
+    - Correlation IDs (`X-Correlation-ID`) are included in every response
   version: 1.0.0
-  description: Camel Mobility Wallet — Smart EV Charging Payment Platform API
+  contact:
+    name: Camel Mobility
+
 servers:
   - url: /api
-    description: Base API path
+    description: API root (reverse-proxied)
+
+security:
+  - BearerAuth: []
+
 tags:
   - name: health
-    description: Health and system operations
+    description: Platform health and operational status
+  - name: system
+    description: System information
   - name: auth
-    description: Authentication and identity
-  - name: dashboard
-    description: Customer dashboard
-  - name: wallet
-    description: Wallet and balance operations
-  - name: nfc-cards
-    description: NFC/RFID card management
-  - name: stations
-    description: Charging station discovery
-  - name: sessions
-    description: Charging session management
-
-paths:
-  # ─── Health ────────────────────────────────────────────────────────────────
-  /healthz:
-    get:
-      operationId: healthCheck
-      tags: [health]
-      summary: Health check
-      responses:
-        "200":
-          description: Healthy
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HealthStatus"
-
-  /system/info:
-    get:
-      operationId: getSystemInfo
-      tags: [health]
-      summary: Platform version and environment info
-      responses:
-        "200":
-          description: System information
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SystemInfo"
-
-  # ─── Auth ──────────────────────────────────────────────────────────────────
-  /auth/register:
-    post:
-      operationId: registerCustomer
-      tags: [auth]
-      summary: Register a new customer account
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CustomerRegistrationInput"
-      responses:
-        "201":
-          description: Customer registered
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CustomerProfile"
-        "400":
-          $ref: "#/components/responses/ValidationError"
-        "409":
-          $ref: "#/components/responses/ConflictError"
-
-  /auth/login:
-    post:
-      operationId: loginCustomer
-      tags: [auth]
-      summary: Authenticate with email and password
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LoginInput"
-      responses:
-        "200":
-          description: Authenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthTokens"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-
-  /auth/logout:
-    post:
-      operationId: logoutCustomer
-      tags: [auth]
-      summary: Invalidate current session
-      security:
-        - bearerAuth: []
-      responses:
-        "204":
-          description: Logged out
-
-  /auth/refresh:
-    post:
-      operationId: refreshToken
-      tags: [auth]
-      summary: Refresh access token
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RefreshTokenInput"
-      responses:
-        "200":
-          description: New tokens issued
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthTokens"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-
-  /auth/me:
-    get:
-      operationId: getCurrentCustomer
-      tags: [auth]
-      summary: Get current authenticated customer profile
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Customer profile
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CustomerProfile"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-
-  # ─── Dashboard ─────────────────────────────────────────────────────────────
-  /dashboard/summary:
-    get:
-      operationId: getDashboardSummary
-      tags: [dashboard]
-      summary: Customer dashboard summary
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Dashboard data
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DashboardSummary"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-
-  # ─── Wallet ────────────────────────────────────────────────────────────────
-  /wallet:
-    get:
-      operationId: getWallet
-      tags: [wallet]
-      summary: Get current customer wallet
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Wallet data
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Wallet"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-
-  /wallet/transactions:
-    get:
-      operationId: getWalletTransactions
-      tags: [wallet]
-      summary: List wallet transactions
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 1
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 20
-        - name: type
-          in: query
-          schema:
-            type: string
-            enum: [CREDIT, DEBIT, HOLD, RELEASE, REFUND]
-      responses:
-        "200":
-          description: Paginated transaction list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedWalletTransactions"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-
-  /wallet/topup/initiate:
-    post:
-      operationId: initiateTopUp
-      tags: [wallet]
-      summary: Initiate a wallet top-up via payment provider
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/TopUpInput"
-      responses:
-        "200":
-          description: Payment initiation data (redirect URL or USSD code)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TopUpInitiation"
-        "400":
-          $ref: "#/components/responses/ValidationError"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-
-  /wallet/topup/verify/{reference}:
-    post:
-      operationId: verifyTopUp
-      tags: [wallet]
-      summary: Verify and confirm a top-up payment
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: reference
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Top-up result
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TopUpResult"
-        "400":
-          $ref: "#/components/responses/ValidationError"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
-
-  # ─── NFC Cards ─────────────────────────────────────────────────────────────
-  /nfc-cards:
-    get:
-      operationId: getNfcCards
-      tags: [nfc-cards]
-      summary: List customer NFC/RFID cards
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: List of NFC cards
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/NfcCard"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-
-    post:
-      operationId: linkNfcCard
-      tags: [nfc-cards]
-      summary: Link a new NFC/RFID card to the customer account
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/NfcCardInput"
-      responses:
-        "201":
-          description: Card linked
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/NfcCard"
-        "400":
-          $ref: "#/components/responses/ValidationError"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "409":
-          $ref: "#/components/responses/ConflictError"
-
-  /nfc-cards/{id}:
-    get:
-      operationId: getNfcCard
-      tags: [nfc-cards]
-      summary: Get a specific NFC card
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: NFC card details
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/NfcCard"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
-
-    patch:
-      operationId: updateNfcCard
-      tags: [nfc-cards]
-      summary: Update NFC card status (suspend, activate, report lost)
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/NfcCardUpdate"
-      responses:
-        "200":
-          description: Updated NFC card
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/NfcCard"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
-
-  # ─── Stations ──────────────────────────────────────────────────────────────
-  /stations:
-    get:
-      operationId: getStations
-      tags: [stations]
-      summary: List available charging stations
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: available
-          in: query
-          schema:
-            type: boolean
-        - name: latitude
-          in: query
-          schema:
-            type: number
-        - name: longitude
-          in: query
-          schema:
-            type: number
-        - name: radiusKm
-          in: query
-          schema:
-            type: number
-      responses:
-        "200":
-          description: List of charging stations
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ChargingStation"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-
-  /stations/{id}:
-    get:
-      operationId: getStation
-      tags: [stations]
-      summary: Get a specific charging station
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Charging station details
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ChargingStation"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
-
-  # ─── Sessions ──────────────────────────────────────────────────────────────
-  /sessions:
-    get:
-      operationId: getSessions
-      tags: [sessions]
-      summary: List customer charging sessions
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 1
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 20
-        - name: status
-          in: query
-          schema:
-            type: string
-            enum: [PENDING, AUTHORIZED, ACTIVE, COMPLETED, FAILED, CANCELLED]
-      responses:
-        "200":
-          description: Paginated sessions
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedChargingSessions"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-
-  /sessions/{id}:
-    get:
-      operationId: getSession
-      tags: [sessions]
-      summary: Get a specific charging session
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Charging session details
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ChargingSession"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
-
-  /sessions/authorize:
-    post:
-      operationId: authorizeSession
-      tags: [sessions]
-      summary: Request authorization for a charging session
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SessionAuthorizationInput"
-      responses:
-        "200":
-          description: Authorization result
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SessionAuthorizationResult"
-        "400":
-          $ref: "#/components/responses/ValidationError"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "402":
-          description: Insufficient wallet balance
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-
-  /sessions/{id}/stop:
-    post:
-      operationId: stopSession
-      tags: [sessions]
-      summary: Request to stop an active charging session
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Session stop initiated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ChargingSession"
-        "401":
-          $ref: "#/components/responses/UnauthorizedError"
-        "404":
-          $ref: "#/components/responses/NotFoundError"
+    description: Authentication, registration, and password management
+  - name: users
+    description: User identity and account management (admin)
 
 components:
   securitySchemes:
-    bearerAuth:
+    BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-
-  responses:
-    ValidationError:
-      description: Input validation failed
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ApiError"
-    UnauthorizedError:
-      description: Authentication required
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ApiError"
-    NotFoundError:
-      description: Resource not found
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ApiError"
-    ConflictError:
-      description: Resource conflict
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ApiError"
+      description: JWT access token obtained from POST /v1/auth/login
 
   schemas:
-    # ─── System ───────────────────────────────────────────────────────────────
+    # ── Errors ────────────────────────────────────────────────────────────────
+    ValidationErrorDetail:
+      type: object
+      required: [field, message]
+      properties:
+        field:
+          type: string
+          example: email
+        message:
+          type: string
+          example: Enter a valid email address
+
+    ApiErrorResponse:
+      type: object
+      required: [statusCode, message]
+      properties:
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Validation failed
+        error:
+          type: string
+          example: Bad Request
+        correlationId:
+          type: string
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationErrorDetail'
+
+    # ── Health / System ───────────────────────────────────────────────────────
     HealthStatus:
       type: object
       required: [status]
@@ -586,111 +85,74 @@ components:
         status:
           type: string
           enum: [ok, degraded, down]
+          example: ok
 
     SystemInfo:
       type: object
-      required: [version, environment, timestamp]
+      required: [version, environment, timestamp, uptime]
       properties:
         version:
           type: string
+          example: 1.0.0
         environment:
           type: string
+          example: development
         timestamp:
           type: string
           format: date-time
         uptime:
           type: number
+          description: Process uptime in seconds
+          example: 3600.5
 
-    ApiError:
-      type: object
-      required: [statusCode, message]
-      properties:
-        statusCode:
-          type: integer
-        message:
-          type: string
-        error:
-          type: string
-        details:
-          type: object
+    # ── User / Identity ───────────────────────────────────────────────────────
+    UserRole:
+      type: string
+      enum:
+        - CUSTOMER
+        - ADMIN_OFFICER
+        - SUPER_ADMIN
+        - OPERATIONS
+        - SUPPORT
+        - FINANCE
+        - TECHNICAL
+        - DEVELOPER
 
-    # ─── Auth ─────────────────────────────────────────────────────────────────
-    CustomerRegistrationInput:
-      type: object
-      required: [firstName, lastName, phone, email, password]
-      properties:
-        firstName:
-          type: string
-          minLength: 1
-        lastName:
-          type: string
-          minLength: 1
-        phone:
-          type: string
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          minLength: 8
-        vehicleMake:
-          type: ["string", "null"]
-        vehicleModel:
-          type: ["string", "null"]
-        vehicleLicensePlate:
-          type: ["string", "null"]
+    UserStatus:
+      type: string
+      enum: [PENDING, ACTIVE, SUSPENDED, DEACTIVATED]
 
-    LoginInput:
+    UserProfile:
       type: object
-      required: [email, password]
-      properties:
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-
-    RefreshTokenInput:
-      type: object
-      required: [refreshToken]
-      properties:
-        refreshToken:
-          type: string
-
-    AuthTokens:
-      type: object
-      required: [accessToken, refreshToken, expiresIn]
-      properties:
-        accessToken:
-          type: string
-        refreshToken:
-          type: string
-        expiresIn:
-          type: integer
-
-    CustomerProfile:
-      type: object
-      required: [id, firstName, lastName, email, phone, status, createdAt]
+      required: [id, firstName, lastName, email, phone, role, status, registrationSource, createdAt, updatedAt]
       properties:
         id:
           type: string
+          example: clxyz123abc
         firstName:
           type: string
+          example: Amara
         lastName:
           type: string
+          example: Okonkwo
         email:
           type: string
+          format: email
+          example: amara@example.com
         phone:
           type: string
+          example: '+2348012345678'
+        role:
+          $ref: '#/components/schemas/UserRole'
         status:
+          $ref: '#/components/schemas/UserStatus'
+        registrationSource:
           type: string
-          enum: [PENDING, ACTIVE, SUSPENDED, DEACTIVATED]
-        vehicleMake:
-          type: ["string", "null"]
-        vehicleModel:
-          type: ["string", "null"]
-        vehicleLicensePlate:
-          type: ["string", "null"]
+          example: SELF_REGISTER
+        lastLoginAt:
+          type: string
+          format: date-time
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -698,325 +160,513 @@ components:
           type: string
           format: date-time
 
-    # ─── Dashboard ────────────────────────────────────────────────────────────
-    DashboardSummary:
-      type: object
-      required: [walletBalance, totalSessions, totalEnergyKwh, totalSpentKobo, activeNfcCard, recentTransactions, recentSessions]
-      properties:
-        walletBalance:
-          type: integer
-          description: Available balance in kobo
-        totalSessions:
-          type: integer
-        totalEnergyKwh:
-          type: number
-        totalSpentKobo:
-          type: integer
-        activeNfcCard:
-          $ref: "#/components/schemas/NfcCard"
-        recentTransactions:
-          type: array
-          items:
-            $ref: "#/components/schemas/WalletTransaction"
-        recentSessions:
-          type: array
-          items:
-            $ref: "#/components/schemas/ChargingSession"
-
-    # ─── Wallet ───────────────────────────────────────────────────────────────
-    Wallet:
-      type: object
-      required: [id, customerId, availableBalanceKobo, heldBalanceKobo, totalCreditedKobo, totalDebitedKobo, status, currency, createdAt]
-      properties:
-        id:
-          type: string
-        customerId:
-          type: string
-        availableBalanceKobo:
-          type: integer
-          description: Available balance in kobo (100 kobo = ₦1)
-        heldBalanceKobo:
-          type: integer
-          description: Amount on hold for active sessions
-        totalCreditedKobo:
-          type: integer
-        totalDebitedKobo:
-          type: integer
-        status:
-          type: string
-          enum: [ACTIVE, SUSPENDED, FROZEN]
-        currency:
-          type: string
-          enum: [NGN]
-        minimumBalanceKobo:
-          type: integer
-          description: Minimum balance required to start charging
-        createdAt:
-          type: string
-          format: date-time
-
-    WalletTransaction:
-      type: object
-      required: [id, walletId, type, amountKobo, balanceAfterKobo, description, status, createdAt]
-      properties:
-        id:
-          type: string
-        walletId:
-          type: string
-        type:
-          type: string
-          enum: [CREDIT, DEBIT, HOLD, RELEASE, REFUND]
-        amountKobo:
-          type: integer
-        balanceAfterKobo:
-          type: integer
-        description:
-          type: string
-        reference:
-          type: ["string", "null"]
-        sessionId:
-          type: ["string", "null"]
-        paymentId:
-          type: ["string", "null"]
-        status:
-          type: string
-          enum: [PENDING, COMPLETED, FAILED, REVERSED]
-        createdAt:
-          type: string
-          format: date-time
-
-    PaginatedWalletTransactions:
+    PaginatedUsers:
       type: object
       required: [data, total, page, limit]
       properties:
         data:
           type: array
           items:
-            $ref: "#/components/schemas/WalletTransaction"
+            $ref: '#/components/schemas/UserProfile'
         total:
           type: integer
+          example: 42
         page:
           type: integer
+          example: 1
         limit:
           type: integer
+          example: 20
 
-    TopUpInput:
+    # ── Auth ──────────────────────────────────────────────────────────────────
+    RegisterRequest:
       type: object
-      required: [amountKobo, channel]
+      required: [firstName, lastName, email, phone, password]
       properties:
-        amountKobo:
-          type: integer
-          minimum: 5000000
-          description: Top-up amount in kobo (minimum ₦50,000 = 5,000,000 kobo)
-        channel:
-          type: string
-          enum: [CARD, BANK_TRANSFER, USSD, MOBILE_MONEY]
-
-    TopUpInitiation:
-      type: object
-      required: [reference, authorizationUrl, status]
-      properties:
-        reference:
-          type: string
-        authorizationUrl:
-          type: ["string", "null"]
-        ussdCode:
-          type: ["string", "null"]
-        accountNumber:
-          type: ["string", "null"]
-        bankName:
-          type: ["string", "null"]
-        status:
-          type: string
-          enum: [PENDING, PROCESSING]
-        expiresAt:
-          type: ["string", "null"]
-          format: date-time
-
-    TopUpResult:
-      type: object
-      required: [reference, status, amountKobo]
-      properties:
-        reference:
-          type: string
-        status:
-          type: string
-          enum: [SUCCESS, PENDING, FAILED]
-        amountKobo:
-          type: integer
-        newBalanceKobo:
-          type: ["integer", "null"]
-        message:
-          type: string
-
-    # ─── NFC Cards ────────────────────────────────────────────────────────────
-    NfcCardInput:
-      type: object
-      required: [cardIdentifier]
-      properties:
-        cardIdentifier:
+        firstName:
           type: string
           minLength: 1
-        label:
-          type: ["string", "null"]
+          maxLength: 100
+          example: Amara
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Okonkwo
+        email:
+          type: string
+          format: email
+          example: amara@example.com
+        phone:
+          type: string
+          example: '+2348012345678'
+        password:
+          type: string
+          minLength: 8
+          format: password
 
-    NfcCardUpdate:
+    AuthTokens:
       type: object
+      required: [accessToken, refreshToken, expiresIn, tokenType]
+      properties:
+        accessToken:
+          type: string
+          description: Short-lived JWT access token (15 minutes)
+        refreshToken:
+          type: string
+          description: Opaque long-lived refresh token (7 days)
+        expiresIn:
+          type: integer
+          description: Access token TTL in seconds
+          example: 900
+        tokenType:
+          type: string
+          enum: [Bearer]
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: amara@example.com
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      required: [user, tokens]
+      properties:
+        user:
+          $ref: '#/components/schemas/UserProfile'
+        tokens:
+          $ref: '#/components/schemas/AuthTokens'
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+
+    PasswordResetRequestBody:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+
+    PasswordResetConfirmBody:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token:
+          type: string
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+
+    UpdateUserStatusRequest:
+      type: object
+      required: [status]
       properties:
         status:
-          type: string
-          enum: [ACTIVE, SUSPENDED, LOST, REPLACED, REVOKED]
-        label:
-          type: ["string", "null"]
+          $ref: '#/components/schemas/UserStatus'
 
-    NfcCard:
-      type: object
-      required: [id, customerId, cardIdentifier, status, createdAt]
-      properties:
-        id:
-          type: string
-        customerId:
-          type: string
-        cardIdentifier:
-          type: string
-        label:
-          type: ["string", "null"]
-        status:
-          type: string
-          enum: [UNASSIGNED, ACTIVE, SUSPENDED, LOST, REPLACED, REVOKED]
-        lastUsedAt:
-          type: ["string", "null"]
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
+paths:
+  # ── Health ──────────────────────────────────────────────────────────────────
+  /healthz:
+    get:
+      operationId: healthCheck
+      summary: Platform health check
+      description: Returns platform health status. Used by load balancers and monitoring.
+      tags: [health]
+      security: []
+      responses:
+        '200':
+          description: Platform is healthy
+          headers:
+            X-Correlation-ID:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: Platform is degraded or down
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
 
-    # ─── Stations ─────────────────────────────────────────────────────────────
-    Connector:
-      type: object
-      required: [id, stationId, connectorId, type, status, powerKw]
-      properties:
-        id:
-          type: string
-        stationId:
-          type: string
-        connectorId:
-          type: integer
-        type:
-          type: string
-          enum: [TYPE_1, TYPE_2, CCS, CHADEMO, GB_T, SCHUKO]
-        status:
-          type: string
-          enum: [AVAILABLE, OCCUPIED, RESERVED, UNAVAILABLE, FAULTED]
-        powerKw:
-          type: number
-        pricePerKwhKobo:
-          type: integer
+  # ── System ──────────────────────────────────────────────────────────────────
+  /v1/system/info:
+    get:
+      operationId: getSystemInfo
+      summary: Platform version and system information
+      tags: [system]
+      security: []
+      responses:
+        '200':
+          description: System information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemInfo'
 
-    ChargingStation:
-      type: object
-      required: [id, name, address, status, connectors, latitude, longitude]
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        address:
-          type: string
-        latitude:
-          type: number
-        longitude:
-          type: number
-        status:
-          type: string
-          enum: [ONLINE, OFFLINE, MAINTENANCE]
-        connectors:
-          type: array
-          items:
-            $ref: "#/components/schemas/Connector"
-        availableConnectors:
-          type: integer
-        totalConnectors:
-          type: integer
-        ocppProtocol:
-          type: string
-          enum: [OCPP_16J, OCPP_201]
-        lastHeartbeatAt:
-          type: ["string", "null"]
-          format: date-time
+  # ── Auth — Registration ──────────────────────────────────────────────────────
+  /v1/auth/register:
+    post:
+      operationId: register
+      summary: Customer self-registration
+      description: |
+        Creates a new customer account with PENDING status.
+        The account must be activated by an administrator before login is permitted.
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Account created successfully (pending activation)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '409':
+          description: Email or phone number already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
 
-    # ─── Sessions ─────────────────────────────────────────────────────────────
-    SessionAuthorizationInput:
-      type: object
-      required: [stationId, connectorId]
-      properties:
-        stationId:
-          type: string
-        connectorId:
-          type: integer
-        nfcCardId:
-          type: ["string", "null"]
+  # ── Auth — Login ──────────────────────────────────────────────────────────────
+  /v1/auth/login:
+    post:
+      operationId: login
+      summary: Authenticate with email and password
+      description: |
+        Returns access and refresh tokens on success.
+        Account must have ACTIVE status.
+        Rate limited: 10 attempts per 15 minutes per IP.
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '403':
+          description: Account not active or locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '429':
+          description: Too many login attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
 
-    SessionAuthorizationResult:
-      type: object
-      required: [authorized, sessionId, message]
-      properties:
-        authorized:
-          type: boolean
-        sessionId:
-          type: ["string", "null"]
-        message:
-          type: string
-        walletBalanceKobo:
-          type: ["integer", "null"]
-        requiredBalanceKobo:
-          type: ["integer", "null"]
+  # ── Auth — Logout ─────────────────────────────────────────────────────────────
+  /v1/auth/logout:
+    post:
+      operationId: logout
+      summary: Revoke current session
+      description: Revokes the provided refresh token. The access token expires naturally.
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Logged out successfully
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
 
-    ChargingSession:
-      type: object
-      required: [id, customerId, stationId, connectorId, status, startedAt]
-      properties:
-        id:
-          type: string
-        customerId:
-          type: string
-        stationId:
-          type: string
-        stationName:
-          type: ["string", "null"]
-        connectorId:
-          type: integer
-        nfcCardId:
-          type: ["string", "null"]
-        status:
-          type: string
-          enum: [PENDING, AUTHORIZED, ACTIVE, COMPLETED, FAILED, CANCELLED]
-        startedAt:
-          type: string
-          format: date-time
-        stoppedAt:
-          type: ["string", "null"]
-          format: date-time
-        energyDeliveredKwh:
-          type: ["number", "null"]
-        costKobo:
-          type: ["integer", "null"]
-        pricePerKwhKobo:
-          type: ["integer", "null"]
-        durationSeconds:
-          type: ["integer", "null"]
+  # ── Auth — Refresh ───────────────────────────────────────────────────────────
+  /v1/auth/refresh:
+    post:
+      operationId: refreshTokens
+      summary: Rotate refresh token and obtain new access token
+      description: |
+        Exchanges a valid refresh token for a new token pair.
+        The old refresh token is immediately revoked (token rotation).
+        Presenting a previously revoked token triggers family-wide revocation (theft detection).
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Tokens refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokens'
+        '401':
+          description: Invalid, expired, or revoked refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
 
-    PaginatedChargingSessions:
-      type: object
-      required: [data, total, page, limit]
-      properties:
-        data:
-          type: array
-          items:
-            $ref: "#/components/schemas/ChargingSession"
-        total:
-          type: integer
-        page:
-          type: integer
-        limit:
-          type: integer
+  # ── Auth — Me ────────────────────────────────────────────────────────────────
+  /v1/auth/me:
+    get:
+      operationId: getCurrentUser
+      summary: Get current authenticated user profile
+      tags: [auth]
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  # ── Auth — Password Change ───────────────────────────────────────────────────
+  /v1/auth/password/change:
+    post:
+      operationId: changePassword
+      summary: Change authenticated user password
+      description: Requires current password verification. All refresh tokens are revoked on success.
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed successfully
+        '400':
+          description: Current password is incorrect
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  # ── Auth — Password Reset ─────────────────────────────────────────────────────
+  /v1/auth/password/reset/request:
+    post:
+      operationId: requestPasswordReset
+      summary: Request a password reset token
+      description: |
+        Sends a password reset token to the user's email address.
+        Always returns 200 regardless of whether the email exists
+        (prevents email enumeration).
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequestBody'
+      responses:
+        '200':
+          description: Reset instructions sent (if account exists)
+
+  /v1/auth/password/reset/confirm:
+    post:
+      operationId: confirmPasswordReset
+      summary: Complete password reset with token
+      description: Verifies the reset token and updates the password. Token is single-use.
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmBody'
+      responses:
+        '200':
+          description: Password reset successful
+        '400':
+          description: Invalid or expired reset token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  # ── Users (Admin) ─────────────────────────────────────────────────────────────
+  /v1/users:
+    get:
+      operationId: listUsers
+      summary: List users (Admin)
+      description: Paginated list of all users. Requires ADMIN_OFFICER or SUPER_ADMIN role.
+      tags: [users]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserStatus'
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserRole'
+        - name: search
+          in: query
+          description: Search by name or email (partial match)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated user list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUsers'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions
+
+  /v1/users/{id}:
+    get:
+      operationId: getUserById
+      summary: Get user by ID (Admin)
+      description: Requires ADMIN_OFFICER or SUPER_ADMIN role.
+      tags: [users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions
+
+  /v1/users/{id}/status:
+    patch:
+      operationId: updateUserStatus
+      summary: Update user account status (Super Admin)
+      description: |
+        Changes the account status of any user.
+        Requires SUPER_ADMIN role.
+        All refresh tokens are revoked when suspending or deactivating an account.
+      tags: [users]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserStatusRequest'
+      responses:
+        '200':
+          description: Status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '401':
+          description: Not authenticated
+        '403':
+          description: Insufficient permissions

@@ -1,9 +1,14 @@
 // Camel Mobility Wallet — Prisma Schema
-// Smart EV Charging Payment Platform
+// Module 1: Enterprise Foundation, Identity & Access Management
 //
-// Authoritative database schema. All migrations must be reviewed and tested.
-// Never modify production schema manually — use versioned migrations.
-// Domain ownership rules apply: each domain owns its tables.
+// This schema covers ONLY Module 1 domain entities.
+// Future domains (Wallet, Sessions, NFC, Stations, etc.) are
+// added in their respective modules via migrations.
+//
+// Rules:
+// - All migrations are version-controlled under prisma/migrations/
+// - Never modify production schema manually
+// - Append-only tables (AuditLog) must never be updated or deleted
 
 generator client {
   provider = "prisma-client-js"
@@ -14,9 +19,114 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─── User Identity ────────────────────────────────────────────────────────────
+
+model User {
+  id                  String     @id @default(cuid())
+  firstName           String
+  lastName            String
+  email               String     @unique
+  phone               String     @unique
+  passwordHash        String
+  role                UserRole   @default(CUSTOMER)
+  status              UserStatus @default(PENDING)
+  /// SELF_REGISTER | ADMIN_REGISTER
+  registrationSource  String     @default("SELF_REGISTER")
+
+  // Security tracking
+  failedLoginAttempts Int        @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+  passwordChangedAt   DateTime?
+
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([email])
+  @@index([status])
+  @@index([role])
+  @@map("users")
+}
+
+// ─── Refresh Token ────────────────────────────────────────────────────────────
+// Opaque refresh tokens are stored as bcrypt hashes, never plaintext.
+// token_family enables detection of refresh token reuse (theft detection):
+// if a revoked token in a family is presented, all tokens in that family
+// are immediately revoked.
+
+model RefreshToken {
+  id         String    @id @default(cuid())
+  userId     String
+  /// bcrypt hash of the opaque random token
+  tokenHash  String    @unique
+  /// Token family identifier for theft detection
+  family     String
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([family])
+  @@map("refresh_tokens")
+}
+
+// ─── Password Reset Token ─────────────────────────────────────────────────────
+// Single-use tokens sent to the user's email for password reset.
+// Stored as bcrypt hash, never plaintext.
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  /// bcrypt hash of the opaque random token
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+// Append-only security and operational audit trail.
+// Records MUST NOT be updated or deleted.
+// actorId is a string (not FK) to accommodate 'system' as actor.
+
+model AuditLog {
+  id            String      @id @default(cuid())
+  /// User ID or 'system'
+  actorId       String
+  /// Denormalized email for readable audit queries without joins
+  actorEmail    String?
+  /// AuditAction constant value (string for extensibility without migrations)
+  action        String
+  /// Entity type, e.g. 'user', 'refresh_token'
+  resource      String
+  resourceId    String?
+  result        AuditResult
+  correlationId String?
+  ipAddress     String?
+  userAgent     String?
+  metadata      Json?
+  createdAt     DateTime    @default(now())
+
+  @@index([actorId])
+  @@index([resource, resourceId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
 // ─── System Configuration ─────────────────────────────────────────────────────
-// Stores configurable business rules managed through Super Admin controls.
-// Example keys: MIN_CHARGING_WALLET_BALANCE_KOBO, MIN_TOP_UP_AMOUNT_KOBO
+// Configurable platform settings managed through Super Admin controls.
+// Provides a controlled override mechanism for business rule constants.
 
 model SystemConfig {
   id          String   @id @default(cuid())
@@ -30,306 +140,27 @@ model SystemConfig {
   @@map("system_configs")
 }
 
-// ─── Audit Log ────────────────────────────────────────────────────────────────
-// Security-sensitive and business-critical operations must produce audit records.
-// Records are append-only — never deleted or modified.
-
-model AuditLog {
-  id            String   @id @default(cuid())
-  actor         String   // userId or 'system'
-  action        String   // e.g. 'CUSTOMER_REGISTERED', 'CARD_SUSPENDED'
-  resource      String   // entity type, e.g. 'customer', 'nfc_card'
-  resourceId    String?
-  result        String   // 'SUCCESS' | 'FAILURE'
-  correlationId String?
-  metadata      Json?
-  ipAddress     String?
-  userAgent     String?
-  createdAt     DateTime @default(now())
-
-  @@index([actor])
-  @@index([resource, resourceId])
-  @@index([createdAt])
-  @@map("audit_logs")
-}
-
-// ─── Placeholder models (populated in subsequent modules) ────────────────────
-// These models are defined here to establish foreign key relationships
-// that later modules will build on. Business functionality is NOT
-// implemented in Module 1 — this is the schema contract only.
-
-model Customer {
-  id                 String         @id @default(cuid())
-  firstName          String
-  lastName           String
-  email              String         @unique
-  phone              String         @unique
-  passwordHash       String
-  status             CustomerStatus @default(PENDING)
-  registrationSource String         @default("SELF_REGISTER")
-  vehicleMake        String?
-  vehicleModel       String?
-  vehicleLicensePlate String?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-
-  wallet             Wallet?
-  nfcCards           NfcCard[]
-  sessions           ChargingSession[]
-  refreshTokens      RefreshToken[]
-
-  @@index([email])
-  @@index([phone])
-  @@map("customers")
-}
-
-model RefreshToken {
-  id         String   @id @default(cuid())
-  customerId String
-  token      String   @unique
-  expiresAt  DateTime
-  revokedAt  DateTime?
-  createdAt  DateTime @default(now())
-
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  @@index([token])
-  @@index([customerId])
-  @@map("refresh_tokens")
-}
-
-model Wallet {
-  id                  String            @id @default(cuid())
-  customerId          String            @unique
-  availableBalanceKobo BigInt           @default(0)
-  heldBalanceKobo     BigInt            @default(0)
-  totalCreditedKobo   BigInt            @default(0)
-  totalDebitedKobo    BigInt            @default(0)
-  status              WalletStatus      @default(ACTIVE)
-  currency            String            @default("NGN")
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-
-  customer            Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  transactions        WalletTransaction[]
-  payments            Payment[]
-
-  @@map("wallets")
-}
-
-model WalletTransaction {
-  id               String                    @id @default(cuid())
-  walletId         String
-  type             WalletTransactionType
-  amountKobo       BigInt
-  balanceAfterKobo BigInt
-  description      String
-  reference        String?                   @unique
-  sessionId        String?
-  paymentId        String?
-  status           WalletTransactionStatus   @default(PENDING)
-  createdAt        DateTime                  @default(now())
-
-  wallet           Wallet                    @relation(fields: [walletId], references: [id])
-
-  @@index([walletId])
-  @@index([reference])
-  @@index([sessionId])
-  @@index([createdAt])
-  @@map("wallet_transactions")
-}
-
-model Payment {
-  id               String        @id @default(cuid())
-  walletId         String
-  providerReference String       @unique
-  provider         String        @default("PAYSTACK")
-  channel          PaymentChannel
-  amountKobo       BigInt
-  status           PaymentStatus @default(INITIATED)
-  idempotencyKey   String        @unique
-  metadata         Json?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-
-  wallet           Wallet        @relation(fields: [walletId], references: [id])
-
-  @@index([walletId])
-  @@index([providerReference])
-  @@index([createdAt])
-  @@map("payments")
-}
-
-model NfcCard {
-  id             String        @id @default(cuid())
-  customerId     String
-  cardIdentifier String        @unique
-  label          String?
-  status         NfcCardStatus @default(UNASSIGNED)
-  lastUsedAt     DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  customer       Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  @@index([cardIdentifier])
-  @@index([customerId])
-  @@map("nfc_cards")
-}
-
-model ChargingStation {
-  id              String         @id @default(cuid())
-  name            String
-  address         String
-  latitude        Float
-  longitude       Float
-  status          StationStatus  @default(OFFLINE)
-  ocppIdentity    String         @unique
-  ocppProtocol    OcppProtocol   @default(OCPP_16J)
-  lastHeartbeatAt DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-
-  connectors      Connector[]
-  sessions        ChargingSession[]
-
-  @@index([status])
-  @@map("charging_stations")
-}
-
-model Connector {
-  id              String          @id @default(cuid())
-  stationId       String
-  connectorId     Int
-  type            ConnectorType
-  status          ConnectorStatus @default(UNAVAILABLE)
-  powerKw         Float
-  pricePerKwhKobo BigInt
-
-  station         ChargingStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
-  sessions        ChargingSession[]
-
-  @@unique([stationId, connectorId])
-  @@index([stationId])
-  @@map("connectors")
-}
-
-model ChargingSession {
-  id               String                 @id @default(cuid())
-  customerId       String
-  stationId        String
-  connectorDbId    String
-  nfcCardId        String?
-  ocppTransactionId Int?
-  status           ChargingSessionStatus  @default(PENDING)
-  startedAt        DateTime               @default(now())
-  stoppedAt        DateTime?
-  energyDeliveredKwh Float?
-  costKobo         BigInt?
-  pricePerKwhKobo  BigInt?
-  durationSeconds  Int?
-  createdAt        DateTime               @default(now())
-  updatedAt        DateTime               @updatedAt
-
-  customer         Customer               @relation(fields: [customerId], references: [id])
-  station          ChargingStation        @relation(fields: [stationId], references: [id])
-  connector        Connector              @relation(fields: [connectorDbId], references: [id])
-
-  @@index([customerId])
-  @@index([stationId])
-  @@index([status])
-  @@index([startedAt])
-  @@map("charging_sessions")
-}
-
 // ─── Enumerations ─────────────────────────────────────────────────────────────
 
-enum CustomerStatus {
+enum UserRole {
+  CUSTOMER
+  ADMIN_OFFICER
+  SUPER_ADMIN
+  OPERATIONS
+  SUPPORT
+  FINANCE
+  TECHNICAL
+  DEVELOPER
+}
+
+enum UserStatus {
   PENDING
   ACTIVE
   SUSPENDED
   DEACTIVATED
 }
 
-enum WalletStatus {
-  ACTIVE
-  SUSPENDED
-  FROZEN
-}
-
-enum WalletTransactionType {
-  CREDIT
-  DEBIT
-  HOLD
-  RELEASE
-  REFUND
-}
-
-enum WalletTransactionStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REVERSED
-}
-
-enum PaymentChannel {
-  CARD
-  BANK_TRANSFER
-  USSD
-  MOBILE_MONEY
-}
-
-enum PaymentStatus {
-  INITIATED
-  PENDING
-  SUCCESSFUL
-  FAILED
-  REVERSED
-  REFUNDED
-}
-
-enum NfcCardStatus {
-  UNASSIGNED
-  ACTIVE
-  SUSPENDED
-  LOST
-  REPLACED
-  REVOKED
-}
-
-enum StationStatus {
-  ONLINE
-  OFFLINE
-  MAINTENANCE
-}
-
-enum ConnectorStatus {
-  AVAILABLE
-  OCCUPIED
-  RESERVED
-  UNAVAILABLE
-  FAULTED
-}
-
-enum ConnectorType {
-  TYPE_1
-  TYPE_2
-  CCS
-  CHADEMO
-  GB_T
-  SCHUKO
-}
-
-enum ChargingSessionStatus {
-  PENDING
-  AUTHORIZED
-  ACTIVE
-  COMPLETED
-  FAILED
-  CANCELLED
-}
-
-enum OcppProtocol {
-  OCPP_16J
-  OCPP_201
+enum AuditResult {
+  SUCCESS
+  FAILURE
 }

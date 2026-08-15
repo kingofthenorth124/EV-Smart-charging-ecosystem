@@ -1,200 +1,63 @@
 /**
- * @workspace/shared-types
+ * @workspace/shared-types — Module 1: Identity & Access Management
  *
- * Authoritative domain type contracts shared between frontend and backend.
- * These types are derived from the OpenAPI specification and business rules.
- * Do not embed business logic here — types only.
+ * Authoritative shared contracts for identity, authentication, and system.
+ * Consumed by both the NestJS backend (type safety) and React frontend (API contracts).
+ *
+ * Scope: Module 1 only. Future domain types (Wallet, Sessions, etc.) are
+ * added when those modules are implemented.
  */
 
-// ─── Enumerations ─────────────────────────────────────────────────────────────
+// ─── User / Identity ─────────────────────────────────────────────────────────
 
-export type CustomerStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
+export type UserRole =
+  | 'CUSTOMER'
+  | 'ADMIN_OFFICER'
+  | 'SUPER_ADMIN'
+  | 'OPERATIONS'
+  | 'SUPPORT'
+  | 'FINANCE'
+  | 'TECHNICAL'
+  | 'DEVELOPER';
 
-export type NfcCardStatus =
-  | 'UNASSIGNED'
-  | 'ACTIVE'
-  | 'SUSPENDED'
-  | 'LOST'
-  | 'REPLACED'
-  | 'REVOKED';
+export type UserStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
 
-export type WalletStatus = 'ACTIVE' | 'SUSPENDED' | 'FROZEN';
-
-export type WalletTransactionType = 'CREDIT' | 'DEBIT' | 'HOLD' | 'RELEASE' | 'REFUND';
-
-export type WalletTransactionStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REVERSED';
-
-export type PaymentChannel = 'CARD' | 'BANK_TRANSFER' | 'USSD' | 'MOBILE_MONEY';
-
-export type PaymentStatus =
-  | 'INITIATED'
-  | 'PENDING'
-  | 'SUCCESSFUL'
-  | 'FAILED'
-  | 'REVERSED'
-  | 'REFUNDED';
-
-export type ChargingSessionStatus =
-  | 'PENDING'
-  | 'AUTHORIZED'
-  | 'ACTIVE'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'CANCELLED';
-
-export type StationStatus = 'ONLINE' | 'OFFLINE' | 'MAINTENANCE';
-
-export type ConnectorStatus =
-  | 'AVAILABLE'
-  | 'OCCUPIED'
-  | 'RESERVED'
-  | 'UNAVAILABLE'
-  | 'FAULTED';
-
-export type ConnectorType =
-  | 'TYPE_1'
-  | 'TYPE_2'
-  | 'CCS'
-  | 'CHADEMO'
-  | 'GB_T'
-  | 'SCHUKO';
-
-export type OcppProtocol = 'OCPP_16J' | 'OCPP_201';
-
-// ─── Domain Entities ──────────────────────────────────────────────────────────
-
-export interface CustomerProfile {
+export interface UserProfile {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
-  status: CustomerStatus;
-  vehicleMake: string | null;
-  vehicleModel: string | null;
-  vehicleLicensePlate: string | null;
+  role: UserRole;
+  status: UserStatus;
+  registrationSource: string;
+  lastLoginAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface Wallet {
-  id: string;
-  customerId: string;
-  /** Balance available for use, in kobo (100 kobo = ₦1) */
-  availableBalanceKobo: number;
-  /** Balance reserved for active charging sessions */
-  heldBalanceKobo: number;
-  totalCreditedKobo: number;
-  totalDebitedKobo: number;
-  status: WalletStatus;
-  currency: 'NGN';
-  /** Minimum balance required to start a charging session */
-  minimumBalanceKobo: number;
-  createdAt: string;
-}
-
-export interface WalletTransaction {
-  id: string;
-  walletId: string;
-  type: WalletTransactionType;
-  amountKobo: number;
-  balanceAfterKobo: number;
-  description: string;
-  reference: string | null;
-  sessionId: string | null;
-  paymentId: string | null;
-  status: WalletTransactionStatus;
-  createdAt: string;
-}
-
-export interface NfcCard {
-  id: string;
-  customerId: string;
-  cardIdentifier: string;
-  label: string | null;
-  status: NfcCardStatus;
-  lastUsedAt: string | null;
-  createdAt: string;
-}
-
-export interface Connector {
-  id: string;
-  stationId: string;
-  connectorId: number;
-  type: ConnectorType;
-  status: ConnectorStatus;
-  powerKw: number;
-  pricePerKwhKobo: number;
-}
-
-export interface ChargingStation {
-  id: string;
-  name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  status: StationStatus;
-  connectors: Connector[];
-  availableConnectors: number;
-  totalConnectors: number;
-  ocppProtocol: OcppProtocol;
-  lastHeartbeatAt: string | null;
-}
-
-export interface ChargingSession {
-  id: string;
-  customerId: string;
-  stationId: string;
-  stationName: string | null;
-  connectorId: number;
-  nfcCardId: string | null;
-  status: ChargingSessionStatus;
-  startedAt: string;
-  stoppedAt: string | null;
-  energyDeliveredKwh: number | null;
-  costKobo: number | null;
-  pricePerKwhKobo: number | null;
-  durationSeconds: number | null;
-}
-
-// ─── Auth ─────────────────────────────────────────────────────────────────────
+// ─── Authentication ───────────────────────────────────────────────────────────
 
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
+  /** Access token TTL in seconds */
   expiresIn: number;
+  tokenType: 'Bearer';
 }
 
-// ─── Dashboard ────────────────────────────────────────────────────────────────
-
-export interface DashboardSummary {
-  walletBalance: number;
-  totalSessions: number;
-  totalEnergyKwh: number;
-  totalSpentKobo: number;
-  activeNfcCard: NfcCard | null;
-  recentTransactions: WalletTransaction[];
-  recentSessions: ChargingSession[];
+export interface LoginResponse {
+  user: UserProfile;
+  tokens: AuthTokens;
 }
 
-// ─── Payments ─────────────────────────────────────────────────────────────────
-
-export interface TopUpInitiation {
-  reference: string;
-  authorizationUrl: string | null;
-  ussdCode: string | null;
-  accountNumber: string | null;
-  bankName: string | null;
-  status: 'PENDING' | 'PROCESSING';
-  expiresAt: string | null;
-}
-
-export interface TopUpResult {
-  reference: string;
-  status: 'SUCCESS' | 'PENDING' | 'FAILED';
-  amountKobo: number;
-  newBalanceKobo: number | null;
-  message: string;
+/** Shape of the decoded JWT access token payload */
+export interface JwtPayload {
+  sub: string;     // User ID
+  email: string;
+  role: UserRole;
+  iat: number;
+  exp: number;
 }
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
@@ -206,34 +69,55 @@ export interface PaginatedResult<T> {
   limit: number;
 }
 
-// ─── Error ────────────────────────────────────────────────────────────────────
+// ─── Error ───────────────────────────────────────────────────────────────────
+
+export interface ValidationErrorDetail {
+  field: string;
+  message: string;
+}
 
 export interface ApiErrorResponse {
   statusCode: number;
   message: string;
   error?: string;
-  details?: Record<string, unknown>;
+  correlationId?: string;
+  details?: ValidationErrorDetail[];
 }
 
-// ─── Session Authorization ────────────────────────────────────────────────────
+// ─── System / Health ─────────────────────────────────────────────────────────
 
-export interface SessionAuthorizationResult {
-  authorized: boolean;
-  sessionId: string | null;
-  message: string;
-  walletBalanceKobo: number | null;
-  requiredBalanceKobo: number | null;
+export type HealthStatusValue = 'ok' | 'degraded' | 'down';
+
+export interface HealthStatus {
+  status: HealthStatusValue;
 }
-
-// ─── System ───────────────────────────────────────────────────────────────────
 
 export interface SystemInfo {
   version: string;
   environment: string;
   timestamp: string;
+  /** Process uptime in seconds */
   uptime: number;
 }
 
-export interface HealthStatus {
-  status: 'ok' | 'degraded' | 'down';
-}
+// ─── Audit ───────────────────────────────────────────────────────────────────
+
+export type AuditResult = 'SUCCESS' | 'FAILURE';
+
+export const AUDIT_ACTIONS = {
+  USER_REGISTERED: 'USER_REGISTERED',
+  USER_LOGIN_SUCCESS: 'USER_LOGIN_SUCCESS',
+  USER_LOGIN_FAILED: 'USER_LOGIN_FAILED',
+  USER_LOGOUT: 'USER_LOGOUT',
+  USER_TOKEN_REFRESHED: 'USER_TOKEN_REFRESHED',
+  USER_TOKEN_REVOKED: 'USER_TOKEN_REVOKED',
+  USER_PASSWORD_CHANGED: 'USER_PASSWORD_CHANGED',
+  USER_PASSWORD_RESET_REQUESTED: 'USER_PASSWORD_RESET_REQUESTED',
+  USER_PASSWORD_RESET_COMPLETED: 'USER_PASSWORD_RESET_COMPLETED',
+  USER_STATUS_CHANGED: 'USER_STATUS_CHANGED',
+  USER_ACCOUNT_LOCKED: 'USER_ACCOUNT_LOCKED',
+  ADMIN_USER_VIEWED: 'ADMIN_USER_VIEWED',
+  ADMIN_USERS_LISTED: 'ADMIN_USERS_LISTED',
+} as const;
+
+export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
