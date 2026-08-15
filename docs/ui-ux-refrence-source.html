@@ -1,0 +1,1633 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Camel Mobility Wallet</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --sol-green: #0f4c35;
+        --sol-green-mid: #1a6b4a;
+        --sol-amber: #f0a500;
+        --surface-0: #f5f5f3;
+        --surface-1: #fff;
+        --surface-2: #f9f9f8;
+        --text-primary: #1a1a18;
+        --text-secondary: #5f5e5a;
+        --text-muted: #888780;
+        --border: rgba(0, 0, 0, 0.1);
+        --border-strong: rgba(0, 0, 0, 0.18);
+        --bg-success: #eaf3de;
+        --text-success: #3b6d11;
+        --bg-accent: #e6f1fb;
+        --text-accent: #185fa5;
+        --border-accent: #85b7eb;
+        --bg-danger: #fcebeb;
+        --text-danger: #a32d2d;
+        --border-danger: #f09595;
+        --bg-warning: #faeeda;
+        --text-warning: #854f0b;
+        --radius: 8px;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--surface-0);
+        color: var(--text-primary);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 2rem 1rem;
+      }
+      .app {
+        width: 100%;
+        max-width: 680px;
+      }
+      .header {
+        background: var(--sol-green);
+        padding: 1.25rem 1.25rem 0;
+        border-radius: 12px 12px 0 0;
+      }
+      .header-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .logo i {
+        color: var(--sol-amber);
+        font-size: 20px;
+      }
+      .nfc-badge {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        padding: 4px 12px;
+        color: #fff;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .tabs {
+        display: flex;
+        gap: 2px;
+      }
+      .tab {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 13px;
+        padding: 9px 14px;
+        cursor: pointer;
+        border-radius: 8px 8px 0 0;
+        transition: all 0.2s;
+        font-family: inherit;
+        font-weight: 500;
+      }
+      .tab.active {
+        background: var(--surface-1);
+        color: var(--text-primary);
+      }
+      .tab:hover:not(.active) {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .content {
+        background: var(--surface-1);
+        padding: 1.5rem;
+        border-radius: 0 0 12px 12px;
+        min-height: 520px;
+      }
+      .panel {
+        display: none;
+      }
+      .panel.active {
+        display: block;
+      }
+
+      /* NFC Card */
+      .nfc-card {
+        width: 100%;
+        height: 200px;
+        background: linear-gradient(
+          135deg,
+          #0f4c35 0%,
+          #1a6b4a 55%,
+          #0a3526 100%
+        );
+        border-radius: 16px;
+        padding: 1.25rem;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 1.25rem;
+        cursor: pointer;
+        user-select: none;
+      }
+      .nfc-card::before {
+        content: "";
+        position: absolute;
+        top: -40px;
+        right: -40px;
+        width: 160px;
+        height: 160px;
+        background: rgba(240, 165, 0, 0.12);
+        border-radius: 50%;
+      }
+      .card-chip {
+        width: 36px;
+        height: 28px;
+        background: var(--sol-amber);
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        position: relative;
+        z-index: 1;
+      }
+      .card-chip::before {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 3px;
+      }
+      .card-balance-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 11px;
+        margin-bottom: 4px;
+        position: relative;
+        z-index: 1;
+        letter-spacing: 0.04em;
+      }
+      .card-balance {
+        color: #fff;
+        font-size: 30px;
+        font-weight: 600;
+        position: relative;
+        z-index: 1;
+        letter-spacing: -0.5px;
+      }
+      .card-balance span.cur {
+        font-size: 15px;
+        font-weight: 400;
+        margin-right: 2px;
+        opacity: 0.85;
+      }
+      .card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        position: absolute;
+        bottom: 1.25rem;
+        left: 1.25rem;
+        right: 1.25rem;
+        z-index: 1;
+      }
+      .card-id {
+        color: rgba(255, 255, 255, 0.45);
+        font-size: 11px;
+        letter-spacing: 3px;
+        font-family: monospace;
+      }
+      .nfc-ring {
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+        width: 48px;
+        height: 48px;
+      }
+      .nfc-ring i {
+        color: var(--sol-amber);
+        font-size: 24px;
+        position: relative;
+        z-index: 2;
+      }
+      .nfc-ring::before,
+      .nfc-ring::after {
+        content: "";
+        position: absolute;
+        border: 1.5px solid rgba(240, 165, 0, 0.35);
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .nfc-ring::before {
+        width: 32px;
+        height: 32px;
+        animation: pulse 2s ease-out infinite;
+      }
+      .nfc-ring::after {
+        width: 52px;
+        height: 52px;
+        animation: pulse 2s ease-out infinite 0.5s;
+      }
+      @keyframes pulse {
+        0% {
+          opacity: 0.7;
+          transform: translate(-50%, -50%) scale(0.8);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(1.5);
+        }
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 1.25rem;
+      }
+      .stat {
+        background: var(--surface-0);
+        border-radius: var(--radius);
+        padding: 0.75rem 1rem;
+        text-align: center;
+      }
+      .stat-val {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      .stat-lbl {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+      .stat-val.amber {
+        color: #854f0b;
+      }
+      .stat-val.green {
+        color: var(--sol-green-mid);
+      }
+
+      .section-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.75rem;
+      }
+
+      .session-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.85rem 0;
+        border-bottom: 0.5px solid var(--border);
+      }
+      .session-row:last-child {
+        border-bottom: none;
+      }
+      .s-icon {
+        width: 36px;
+        height: 36px;
+        background: var(--bg-success);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .s-icon i {
+        color: var(--text-success);
+        font-size: 18px;
+      }
+      .s-info {
+        flex: 1;
+      }
+      .s-name {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .s-meta {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+      .s-amt {
+        text-align: right;
+      }
+      .s-kwh {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .s-cost {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      /* Charge panel */
+      .station-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 1.25rem;
+      }
+      .station-card {
+        background: var(--surface-0);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.85rem;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .station-card.selected {
+        border-color: var(--sol-green-mid);
+        background: var(--bg-success);
+      }
+      .st-name {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .st-power {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+      .st-avail {
+        font-size: 11px;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--text-success);
+      }
+      .dot.busy {
+        background: var(--text-warning);
+      }
+      .limit-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.25rem;
+      }
+      .limit-row label {
+        font-size: 13px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+      }
+      .limit-row input[type="range"] {
+        flex: 1;
+        accent-color: var(--sol-green);
+      }
+      .limit-val {
+        font-size: 14px;
+        font-weight: 600;
+        min-width: 60px;
+        text-align: right;
+      }
+      .tap-btn {
+        width: 100%;
+        background: var(--sol-green);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius);
+        padding: 0.9rem;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: background 0.15s;
+        font-family: inherit;
+      }
+      .tap-btn:hover {
+        background: var(--sol-green-mid);
+      }
+      .tap-btn i {
+        font-size: 22px;
+        color: var(--sol-amber);
+      }
+
+      .charging-view {
+        text-align: center;
+        padding: 1.5rem 0;
+        display: none;
+      }
+      .charge-ring {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        border: 4px solid var(--border);
+        border-top-color: var(--sol-green-mid);
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: spin 2s linear infinite;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--sol-green);
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .live-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 1rem;
+      }
+      .stop-btn {
+        margin-top: 1.25rem;
+        width: 100%;
+        background: var(--bg-danger);
+        border: 0.5px solid var(--border-danger);
+        color: var(--text-danger);
+        border-radius: var(--radius);
+        padding: 0.75rem;
+        font-size: 14px;
+        cursor: pointer;
+        font-family: inherit;
+        font-weight: 500;
+      }
+
+      /* Top up */
+      .amt-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 1.25rem;
+      }
+      .amt-btn {
+        background: var(--surface-0);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.9rem;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.15s;
+        color: var(--text-primary);
+        font-family: inherit;
+      }
+      .amt-btn.active {
+        border-color: var(--sol-amber);
+        background: #fef9ec;
+        color: #7a5200;
+      }
+      .amt-btn:hover:not(.active) {
+        border-color: var(--border-strong);
+      }
+      .custom-field {
+        margin-bottom: 1.25rem;
+        display: none;
+      }
+      .custom-field label {
+        display: block;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+      }
+      .custom-field input {
+        width: 100%;
+        padding: 0.65rem 0.75rem;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: var(--radius);
+        border: 0.5px solid var(--border);
+        background: var(--surface-0);
+        color: var(--text-primary);
+        font-family: inherit;
+      }
+      .pay-methods {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 1.25rem;
+      }
+      .pay-opt {
+        flex: 1;
+        background: var(--surface-0);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.75rem;
+        cursor: pointer;
+        text-align: center;
+        font-size: 13px;
+        color: var(--text-secondary);
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .pay-opt.active {
+        border-color: var(--border-accent);
+        background: var(--bg-accent);
+        color: var(--text-accent);
+      }
+      .summary-box {
+        background: var(--surface-0);
+        border-radius: var(--radius);
+        padding: 1rem;
+        margin-bottom: 1.25rem;
+        border: 0.5px solid var(--border);
+      }
+      .sum-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        margin-bottom: 0.5rem;
+      }
+      .sum-row:last-child {
+        margin-bottom: 0;
+        font-size: 14px;
+        font-weight: 600;
+        border-top: 0.5px solid var(--border);
+        padding-top: 0.5rem;
+        margin-top: 0.25rem;
+      }
+      .pay-btn {
+        width: 100%;
+        background: var(--sol-amber);
+        color: #4a3000;
+        border: none;
+        border-radius: var(--radius);
+        padding: 0.9rem;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        transition: opacity 0.15s;
+      }
+      .pay-btn:hover {
+        opacity: 0.88;
+      }
+
+      /* Transactions */
+      .tx-filters {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+      }
+      .tf-btn {
+        background: var(--surface-0);
+        border: 0.5px solid var(--border);
+        border-radius: 20px;
+        padding: 5px 14px;
+        font-size: 12px;
+        cursor: pointer;
+        color: var(--text-secondary);
+        transition: all 0.15s;
+        font-family: inherit;
+        font-weight: 500;
+      }
+      .tf-btn.active {
+        background: var(--sol-green);
+        color: #fff;
+        border-color: transparent;
+      }
+      .tx-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.85rem 0;
+        border-bottom: 0.5px solid var(--border);
+      }
+      .tx-row:last-child {
+        border-bottom: none;
+      }
+      .tx-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .tx-icon.charge {
+        background: var(--bg-success);
+      }
+      .tx-icon.charge i {
+        color: var(--text-success);
+      }
+      .tx-icon.topup {
+        background: var(--bg-accent);
+      }
+      .tx-icon.topup i {
+        color: var(--text-accent);
+      }
+      .tx-info {
+        flex: 1;
+      }
+      .tx-title {
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .tx-date {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+      .tx-amt {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .tx-amt.debit {
+        color: var(--text-danger);
+      }
+      .tx-amt.credit {
+        color: var(--text-success);
+      }
+
+      /* Register */
+      .reg-hero {
+        background: var(--sol-green);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .reg-hero::before {
+        content: "";
+        position: absolute;
+        top: -30px;
+        right: -30px;
+        width: 120px;
+        height: 120px;
+        background: rgba(240, 165, 0, 0.15);
+        border-radius: 50%;
+      }
+      .reg-hero i.hero-icon {
+        font-size: 52px;
+        color: var(--sol-amber);
+        display: block;
+        margin-bottom: 0.75rem;
+        position: relative;
+        z-index: 1;
+      }
+      .reg-hero h2 {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+      }
+      .reg-hero p {
+        color: rgba(255, 255, 255, 0.65);
+        font-size: 13px;
+        line-height: 1.65;
+        position: relative;
+        z-index: 1;
+      }
+      .form-group {
+        margin-bottom: 1rem;
+      }
+      .form-group label {
+        display: block;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+        font-weight: 500;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 0.7rem 0.85rem;
+        font-size: 14px;
+        border-radius: var(--radius);
+        border: 0.5px solid var(--border);
+        background: var(--surface-0);
+        color: var(--text-primary);
+        font-family: inherit;
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 1rem;
+      }
+      .form-row .form-group {
+        margin-bottom: 0;
+      }
+      .tap-zone {
+        border: 2px dashed #1a6b4a;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1.25rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--bg-success);
+      }
+      .tap-zone:hover {
+        background: #d0f0e4;
+        border-color: #0f4c35;
+      }
+      .tap-zone i {
+        font-size: 40px;
+        color: #1a6b4a;
+        display: block;
+        margin-bottom: 0.5rem;
+      }
+      .tap-zone p {
+        font-size: 13px;
+        color: #1a6b4a;
+        font-weight: 600;
+      }
+      .tap-zone .tap-sub {
+        font-size: 11px;
+        color: #3a8c68;
+        margin-top: 4px;
+        font-weight: 400;
+      }
+      .reg-btn {
+        width: 100%;
+        background: var(--sol-amber);
+        color: #4a3000;
+        border: none;
+        border-radius: var(--radius);
+        padding: 0.9rem;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        transition: opacity 0.15s;
+      }
+      .reg-btn:hover {
+        opacity: 0.88;
+      }
+
+      /* Toast */
+      .toast {
+        position: fixed;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: var(--sol-green);
+        color: #fff;
+        padding: 0.85rem 1.5rem;
+        border-radius: var(--radius);
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        z-index: 999;
+        white-space: nowrap;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+      .toast.show {
+        transform: translateX(-50%) translateY(0);
+      }
+      .toast i {
+        color: var(--sol-amber);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="header">
+        <div class="header-top">
+          <div class="logo">
+            <i class="ti ti-bolt"></i>
+            Camel Mobility Wallet
+          </div>
+          <div class="nfc-badge">
+            <i class="ti ti-credit-card" style="font-size: 14px"></i>
+            NFC Active
+          </div>
+        </div>
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('dashboard')">
+            Dashboard
+          </button>
+          <button class="tab" onclick="switchTab('charge')">Charge</button>
+          <button class="tab" onclick="switchTab('topup')">Top Up</button>
+          <button class="tab" onclick="switchTab('transactions')">
+            History
+          </button>
+          <button class="tab" onclick="switchTab('register')">Register</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <!-- DASHBOARD -->
+        <div class="panel active" id="panel-dashboard">
+          <div
+            class="nfc-card"
+            onclick="toast('Tap this card on any Camel Mobility OCPP station to start charging')"
+          >
+            <div class="card-chip"></div>
+            <div class="card-balance-label">Wallet balance</div>
+            <div class="card-balance">
+              <span class="cur">₦</span><span id="bal-display">4,800.00</span>
+            </div>
+            <div class="card-footer">
+              <div class="card-id">CM · 2024 · 00473</div>
+            </div>
+            <div class="nfc-ring">
+              <i
+                class="ti ti-nfc"
+                style="
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  z-index: 2;
+                  color: var(--sol-amber);
+                  font-size: 22px;
+                "
+              ></i>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-val amber">12</div>
+              <div class="stat-lbl">Sessions</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val">87.4</div>
+              <div class="stat-lbl">kWh used</div>
+            </div>
+            <div class="stat">
+              <div class="stat-val green">100%</div>
+              <div class="stat-lbl">Solar</div>
+            </div>
+          </div>
+
+          <div class="section-label">Recent sessions</div>
+          <div class="session-row">
+            <div class="s-icon"><i class="ti ti-bolt"></i></div>
+            <div class="s-info">
+              <div class="s-name">Station A — Zone 3</div>
+              <div class="s-meta">Today, 8:14 AM · 48 min</div>
+            </div>
+            <div class="s-amt">
+              <div class="s-kwh">9.2 kWh</div>
+              <div class="s-cost">₦920</div>
+            </div>
+          </div>
+          <div class="session-row">
+            <div class="s-icon"><i class="ti ti-bolt"></i></div>
+            <div class="s-info">
+              <div class="s-name">Station C — Zone 1</div>
+              <div class="s-meta">Yesterday, 6:40 PM · 35 min</div>
+            </div>
+            <div class="s-amt">
+              <div class="s-kwh">6.8 kWh</div>
+              <div class="s-cost">₦680</div>
+            </div>
+          </div>
+          <div class="session-row">
+            <div class="s-icon"><i class="ti ti-bolt"></i></div>
+            <div class="s-info">
+              <div class="s-name">Station B — Zone 2</div>
+              <div class="s-meta">Mon, 7:05 AM · 62 min</div>
+            </div>
+            <div class="s-amt">
+              <div class="s-kwh">11.5 kWh</div>
+              <div class="s-cost">₦1,150</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHARGE -->
+        <div class="panel" id="panel-charge">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 0.75rem;
+            "
+          >
+            <div class="section-label" style="margin-bottom: 0">
+              Select a station
+            </div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                background: var(--bg-accent);
+                border: 0.5px solid var(--border-accent);
+                border-radius: 20px;
+                padding: 3px 10px;
+              "
+            >
+              <i
+                class="ti ti-topology-star-3"
+                style="font-size: 13px; color: var(--text-accent)"
+              ></i>
+              <span
+                style="
+                  font-size: 11px;
+                  font-weight: 600;
+                  color: var(--text-accent);
+                "
+                >OCPP 1.6 / 2.0.1</span
+              >
+            </div>
+          </div>
+          <div class="station-grid">
+            <div
+              class="station-card selected"
+              id="st-a"
+              onclick="selectStation('a')"
+            >
+              <div class="st-name">Station A</div>
+              <div class="st-power">22 kW AC fast charge</div>
+              <div
+                style="
+                  font-size: 10px;
+                  color: var(--text-muted);
+                  margin-top: 2px;
+                  font-family: monospace;
+                "
+              >
+                OCPP · CP-001
+              </div>
+              <div class="st-avail"><span class="dot"></span>Available</div>
+            </div>
+            <div class="station-card" id="st-b" onclick="selectStation('b')">
+              <div class="st-name">Station B</div>
+              <div class="st-power">11 kW AC charge</div>
+              <div
+                style="
+                  font-size: 10px;
+                  color: var(--text-muted);
+                  margin-top: 2px;
+                  font-family: monospace;
+                "
+              >
+                OCPP · CP-002
+              </div>
+              <div class="st-avail"><span class="dot busy"></span>In use</div>
+            </div>
+            <div class="station-card" id="st-c" onclick="selectStation('c')">
+              <div class="st-name">Station C</div>
+              <div class="st-power">22 kW AC fast charge</div>
+              <div
+                style="
+                  font-size: 10px;
+                  color: var(--text-muted);
+                  margin-top: 2px;
+                  font-family: monospace;
+                "
+              >
+                OCPP · CP-003
+              </div>
+              <div class="st-avail"><span class="dot"></span>Available</div>
+            </div>
+            <div class="station-card" id="st-d" onclick="selectStation('d')">
+              <div class="st-name">Station D</div>
+              <div class="st-power">50 kW DC rapid</div>
+              <div
+                style="
+                  font-size: 10px;
+                  color: var(--text-muted);
+                  margin-top: 2px;
+                  font-family: monospace;
+                "
+              >
+                OCPP · CP-004
+              </div>
+              <div class="st-avail"><span class="dot"></span>Available</div>
+            </div>
+          </div>
+
+          <div class="section-label">Spending limit</div>
+          <div class="limit-row">
+            <label>Max ₦</label>
+            <input
+              type="range"
+              id="limit-slider"
+              min="500"
+              max="5000"
+              step="100"
+              value="2000"
+              oninput="updateLimit(this.value)"
+            />
+            <span class="limit-val" id="limit-display">₦2,000</span>
+          </div>
+
+          <div class="section-label" style="margin-bottom: 0.5rem">
+            Estimated charge
+          </div>
+          <div
+            id="est-text"
+            style="
+              font-size: 13px;
+              color: var(--text-muted);
+              margin-bottom: 1.25rem;
+            "
+          >
+            ~20 kWh · approx 55 min at Station A
+          </div>
+
+          <button class="tap-btn" id="tap-start-btn" onclick="startCharge()">
+            <i class="ti ti-nfc"></i> Tap NFC card to start
+          </button>
+          <div
+            id="ocpp-flow"
+            style="
+              margin-top: 1rem;
+              background: var(--surface-0);
+              border-radius: var(--radius);
+              padding: 0.85rem 1rem;
+              border: 0.5px solid var(--border);
+            "
+          >
+            <div
+              style="
+                font-size: 11px;
+                font-weight: 600;
+                color: var(--text-muted);
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                margin-bottom: 0.6rem;
+              "
+            >
+              OCPP handshake
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 5px">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  font-size: 12px;
+                "
+              >
+                <span
+                  style="
+                    background: var(--bg-accent);
+                    color: var(--text-accent);
+                    border-radius: 4px;
+                    padding: 1px 7px;
+                    font-family: monospace;
+                    font-size: 11px;
+                    font-weight: 600;
+                  "
+                  >Authorize.req</span
+                ><span style="color: var(--text-muted)"
+                  >NFC UID sent to CSMS</span
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  font-size: 12px;
+                "
+              >
+                <span
+                  style="
+                    background: var(--bg-success);
+                    color: var(--text-success);
+                    border-radius: 4px;
+                    padding: 1px 7px;
+                    font-family: monospace;
+                    font-size: 11px;
+                    font-weight: 600;
+                  "
+                  >Authorize.conf</span
+                ><span style="color: var(--text-muted)"
+                  >Wallet balance verified</span
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  font-size: 12px;
+                "
+              >
+                <span
+                  style="
+                    background: var(--bg-warning);
+                    color: var(--text-warning);
+                    border-radius: 4px;
+                    padding: 1px 7px;
+                    font-family: monospace;
+                    font-size: 11px;
+                    font-weight: 600;
+                  "
+                  >StartTransaction</span
+                ><span style="color: var(--text-muted)"
+                  >Session opens, metering begins</span
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  font-size: 12px;
+                "
+              >
+                <span
+                  style="
+                    background: #f3eeff;
+                    color: #533ab7;
+                    border-radius: 4px;
+                    padding: 1px 7px;
+                    font-family: monospace;
+                    font-size: 11px;
+                    font-weight: 600;
+                  "
+                  >MeterValues</span
+                ><span style="color: var(--text-muted)"
+                  >kWh streamed every 60 s</span
+                >
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  font-size: 12px;
+                "
+              >
+                <span
+                  style="
+                    background: var(--bg-danger);
+                    color: var(--text-danger);
+                    border-radius: 4px;
+                    padding: 1px 7px;
+                    font-family: monospace;
+                    font-size: 11px;
+                    font-weight: 600;
+                  "
+                  >StopTransaction</span
+                ><span style="color: var(--text-muted)"
+                  >Wallet debited on close</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="charging-view" id="charging-view">
+            <div class="charge-ring" id="charge-pct">0%</div>
+            <div style="font-size: 14px; color: var(--text-secondary)">
+              Charging in progress
+            </div>
+            <div
+              id="charge-kwh"
+              style="font-size: 12px; color: var(--text-muted); margin-top: 4px"
+            >
+              0.0 kWh delivered
+            </div>
+            <div class="live-grid">
+              <div class="stat">
+                <div class="stat-val" id="c-time">0:00</div>
+                <div class="stat-lbl">Elapsed</div>
+              </div>
+              <div class="stat">
+                <div class="stat-val" id="c-cost">₦0</div>
+                <div class="stat-lbl">Cost so far</div>
+              </div>
+            </div>
+            <button class="stop-btn" onclick="stopCharge()">
+              Stop charging
+            </button>
+          </div>
+        </div>
+
+        <!-- TOP UP -->
+        <div class="panel" id="panel-topup">
+          <div class="section-label">Quick amounts</div>
+          <div
+            style="
+              background: var(--bg-warning);
+              border: 0.5px solid var(--border-warning);
+              border-radius: var(--radius);
+              padding: 0.6rem 1rem;
+              margin-bottom: 1rem;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            "
+          >
+            <i
+              class="ti ti-info-circle"
+              style="
+                color: var(--text-warning);
+                font-size: 16px;
+                flex-shrink: 0;
+              "
+            ></i>
+            <span style="font-size: 12px; color: var(--text-warning)"
+              >Minimum top-up is <strong>₦50,000</strong></span
+            >
+          </div>
+          <div class="amt-grid">
+            <button class="amt-btn active" onclick="selectAmt(this,50000)">
+              ₦50,000
+            </button>
+            <button class="amt-btn" onclick="selectAmt(this,100000)">
+              ₦100,000
+            </button>
+            <button class="amt-btn" onclick="selectAmt(this,150000)">
+              ₦150,000
+            </button>
+            <button class="amt-btn" onclick="selectAmt(this,200000)">
+              ₦200,000
+            </button>
+            <button class="amt-btn" onclick="selectAmt(this,500000)">
+              ₦500,000
+            </button>
+            <button class="amt-btn" onclick="selectAmt(this,0)">Custom</button>
+          </div>
+
+          <div class="custom-field" id="custom-field">
+            <label>Enter amount (₦)</label>
+            <input
+              type="number"
+              id="custom-amt"
+              placeholder="Min ₦50,000"
+              min="50000"
+              oninput="setCustomAmt(this.value)"
+            />
+          </div>
+
+          <div class="section-label">Payment method</div>
+          <div class="pay-methods">
+            <div class="pay-opt active" onclick="selectPay(this)">
+              <i class="ti ti-device-mobile"></i> Transfer
+            </div>
+            <div class="pay-opt" onclick="selectPay(this)">
+              <i class="ti ti-credit-card"></i> Card
+            </div>
+            <div class="pay-opt" onclick="selectPay(this)">
+              <i class="ti ti-qrcode"></i> USSD
+            </div>
+          </div>
+
+          <div class="summary-box">
+            <div class="sum-row">
+              <span style="color: var(--text-muted)">Current balance</span
+              ><span id="cur-bal">₦4,800</span>
+            </div>
+            <div class="sum-row">
+              <span style="color: var(--text-muted)">Top-up amount</span
+              ><span style="color: var(--text-success)" id="topup-amt-lbl"
+                >+ ₦50,000</span
+              >
+            </div>
+            <div class="sum-row">
+              <span>New balance</span><span id="new-bal">₦54,800</span>
+            </div>
+          </div>
+
+          <button class="pay-btn" id="pay-btn" onclick="doTopUp()">
+            Pay ₦50,000
+          </button>
+        </div>
+
+        <!-- TRANSACTIONS -->
+        <div class="panel" id="panel-transactions">
+          <div class="tx-filters">
+            <button class="tf-btn active" onclick="filterTx(this,'all')">
+              All
+            </button>
+            <button class="tf-btn" onclick="filterTx(this,'charge')">
+              Charges
+            </button>
+            <button class="tf-btn" onclick="filterTx(this,'topup')">
+              Top-ups
+            </button>
+          </div>
+          <div id="tx-list">
+            <div class="tx-row" data-type="charge">
+              <div class="tx-icon charge"><i class="ti ti-bolt"></i></div>
+              <div class="tx-info">
+                <div class="tx-title">Station A — Zone 3</div>
+                <div class="tx-date">Today, 8:14 AM · 9.2 kWh</div>
+              </div>
+              <div class="tx-amt debit">−₦920</div>
+            </div>
+            <div class="tx-row" data-type="topup">
+              <div class="tx-icon topup"><i class="ti ti-arrow-down"></i></div>
+              <div class="tx-info">
+                <div class="tx-title">Wallet top-up</div>
+                <div class="tx-date">Yesterday, 5:00 PM · Bank transfer</div>
+              </div>
+              <div class="tx-amt credit">+₦3,000</div>
+            </div>
+            <div class="tx-row" data-type="charge">
+              <div class="tx-icon charge"><i class="ti ti-bolt"></i></div>
+              <div class="tx-info">
+                <div class="tx-title">Station C — Zone 1</div>
+                <div class="tx-date">Yesterday, 6:40 PM · 6.8 kWh</div>
+              </div>
+              <div class="tx-amt debit">−₦680</div>
+            </div>
+            <div class="tx-row" data-type="charge">
+              <div class="tx-icon charge"><i class="ti ti-bolt"></i></div>
+              <div class="tx-info">
+                <div class="tx-title">Station B — Zone 2</div>
+                <div class="tx-date">Mon, 7:05 AM · 11.5 kWh</div>
+              </div>
+              <div class="tx-amt debit">−₦1,150</div>
+            </div>
+            <div class="tx-row" data-type="topup">
+              <div class="tx-icon topup"><i class="ti ti-arrow-down"></i></div>
+              <div class="tx-info">
+                <div class="tx-title">Wallet top-up</div>
+                <div class="tx-date">Mon, 6:00 AM · Card</div>
+              </div>
+              <div class="tx-amt credit">+₦5,000</div>
+            </div>
+            <div class="tx-row" data-type="charge">
+              <div class="tx-icon charge"><i class="ti ti-bolt"></i></div>
+              <div class="tx-info">
+                <div class="tx-title">Station D — Zone 4</div>
+                <div class="tx-date">Sun, 9:22 PM · 14.1 kWh</div>
+              </div>
+              <div class="tx-amt debit">−₦1,410</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REGISTER -->
+        <div class="panel" id="panel-register">
+          <div class="reg-hero">
+            <i class="ti ti-nfc hero-icon"></i>
+            <h2>Get your NFC card</h2>
+            <p>
+              Register once. Tap to charge at any SolarCharge station. Your card
+              links to this wallet automatically.
+            </p>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>First name</label><input type="text" placeholder="Ada" />
+            </div>
+            <div class="form-group">
+              <label>Last name</label><input type="text" placeholder="Okafor" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Phone number</label
+            ><input type="tel" placeholder="+234 800 000 0000" />
+          </div>
+          <div class="form-group">
+            <label>Email address</label
+            ><input type="email" placeholder="ada@email.com" />
+          </div>
+          <div class="form-group">
+            <label>Vehicle type</label>
+            <select>
+              <option>Electric car</option>
+              <option>Electric bike / scooter</option>
+              <option>Electric bus</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="section-label">Link your NFC card</div>
+          <div class="tap-zone" id="tap-zone" onclick="tapCard()">
+            <i class="ti ti-nfc" id="tap-zone-icon"></i>
+            <p id="tap-text">Tap your new card here to link it</p>
+            <div class="tap-sub" id="tap-sub">
+              Hold the card near your device's NFC reader
+            </div>
+          </div>
+
+          <button class="reg-btn" onclick="doRegister()">
+            Complete registration
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast-el">
+      <i class="ti ti-check"></i>
+      <span id="toast-msg">Done</span>
+    </div>
+
+    <script>
+      var balance = 4800;
+      var selectedTopup = 50000;
+      var MIN_TOPUP = 50000;
+      var chargeTimer = null;
+      var chargeSeconds = 0;
+      var chargeKwh = 0;
+      var cardTapped = false;
+
+      function switchTab(t) {
+        var tabs = ["dashboard", "charge", "topup", "transactions", "register"];
+        document.querySelectorAll(".tab").forEach(function (b, i) {
+          b.classList.toggle("active", tabs[i] === t);
+        });
+        document.querySelectorAll(".panel").forEach(function (p) {
+          p.classList.remove("active");
+        });
+        document.getElementById("panel-" + t).classList.add("active");
+      }
+
+      function toast(msg) {
+        var el = document.getElementById("toast-el");
+        document.getElementById("toast-msg").textContent = msg;
+        el.classList.add("show");
+        setTimeout(function () {
+          el.classList.remove("show");
+        }, 3200);
+      }
+
+      function selectStation(id) {
+        ["a", "b", "c", "d"].forEach(function (s) {
+          document
+            .getElementById("st-" + s)
+            .classList.toggle("selected", s === id);
+        });
+        var info = {
+          a: "~20 kWh · approx 55 min at Station A (22 kW)",
+          b: "~10 kWh · approx 55 min at Station B (11 kW)",
+          c: "~20 kWh · approx 55 min at Station C (22 kW)",
+          d: "~45 kWh · approx 54 min at Station D (50 kW DC)",
+        };
+        document.getElementById("est-text").textContent = info[id];
+      }
+
+      function updateLimit(v) {
+        document.getElementById("limit-display").textContent =
+          "₦" + parseInt(v).toLocaleString();
+      }
+
+      function startCharge() {
+        document.getElementById("tap-start-btn").style.display = "none";
+        document.getElementById("charging-view").style.display = "block";
+        chargeSeconds = 0;
+        chargeKwh = 0;
+        chargeTimer = setInterval(function () {
+          chargeSeconds++;
+          chargeKwh = Math.round(chargeSeconds * 0.006 * 10) / 10;
+          var pct = Math.min(Math.round(chargeSeconds / 2), 99);
+          var m = Math.floor(chargeSeconds / 60),
+            s = chargeSeconds % 60;
+          document.getElementById("charge-pct").textContent = pct + "%";
+          document.getElementById("charge-kwh").textContent =
+            chargeKwh.toFixed(1) + " kWh delivered";
+          document.getElementById("c-time").textContent =
+            m + ":" + (s < 10 ? "0" : "") + s;
+          document.getElementById("c-cost").textContent =
+            "₦" + Math.round(chargeKwh * 100);
+        }, 1000);
+      }
+
+      function stopCharge() {
+        clearInterval(chargeTimer);
+        var cost = Math.round(chargeKwh * 100);
+        balance = Math.max(0, balance - cost);
+        document.getElementById("bal-display").textContent =
+          balance.toLocaleString("en-NG", { minimumFractionDigits: 2 });
+        document.getElementById("tap-start-btn").style.display = "flex";
+        document.getElementById("charging-view").style.display = "none";
+        toast(
+          "Session ended · " +
+            chargeKwh.toFixed(1) +
+            " kWh · ₦" +
+            cost +
+            " deducted",
+        );
+      }
+
+      function selectAmt(el, v) {
+        document.querySelectorAll(".amt-btn").forEach(function (b) {
+          b.classList.remove("active");
+        });
+        el.classList.add("active");
+        var cf = document.getElementById("custom-field");
+        if (v === 0) {
+          cf.style.display = "block";
+          selectedTopup = 0;
+        } else {
+          cf.style.display = "none";
+          selectedTopup = v;
+          updateTopupSummary(v);
+        }
+      }
+
+      function setCustomAmt(v) {
+        var amt = parseInt(v) || 0;
+        selectedTopup = amt;
+        if (amt > 0 && amt < MIN_TOPUP) {
+          document.getElementById("pay-btn").textContent = "Minimum is ₦50,000";
+          document.getElementById("pay-btn").style.opacity = ".5";
+        } else {
+          document.getElementById("pay-btn").style.opacity = "1";
+          updateTopupSummary(amt);
+        }
+      }
+
+      function updateTopupSummary(amt) {
+        document.getElementById("topup-amt-lbl").textContent =
+          "+ ₦" + amt.toLocaleString();
+        document.getElementById("new-bal").textContent =
+          "₦" + (balance + amt).toLocaleString();
+        document.getElementById("pay-btn").textContent =
+          "Pay ₦" + amt.toLocaleString();
+      }
+
+      function selectPay(el) {
+        document.querySelectorAll(".pay-opt").forEach(function (p) {
+          p.classList.remove("active");
+        });
+        el.classList.add("active");
+      }
+
+      function doTopUp() {
+        if (!selectedTopup) {
+          toast("Enter an amount first");
+          return;
+        }
+        if (selectedTopup < MIN_TOPUP) {
+          toast("Minimum top-up is ₦50,000");
+          return;
+        }
+        balance += selectedTopup;
+        document.getElementById("bal-display").textContent =
+          balance.toLocaleString("en-NG", { minimumFractionDigits: 2 });
+        document.getElementById("cur-bal").textContent =
+          "₦" + balance.toLocaleString();
+        document.getElementById("new-bal").textContent =
+          "₦" + balance.toLocaleString();
+        toast("₦" + selectedTopup.toLocaleString() + " added to your wallet");
+      }
+
+      function filterTx(btn, type) {
+        document.querySelectorAll(".tf-btn").forEach(function (b) {
+          b.classList.remove("active");
+        });
+        btn.classList.add("active");
+        document.querySelectorAll(".tx-row").forEach(function (r) {
+          r.style.display =
+            type === "all" || r.dataset.type === type ? "flex" : "none";
+        });
+      }
+
+      function tapCard() {
+        if (cardTapped) return;
+        cardTapped = true;
+        var z = document.getElementById("tap-zone");
+        z.style.background = "#d0f5e8";
+        z.style.borderColor = "#0f4c35";
+        document.getElementById("tap-zone-icon").className = "ti ti-check";
+        document.getElementById("tap-zone-icon").style.color = "#0f4c35";
+        document.getElementById("tap-text").textContent =
+          "Card linked — CM · 2024 · 00474";
+        document.getElementById("tap-sub").textContent =
+          "This card is now linked to your wallet";
+        toast("NFC card detected and linked successfully");
+      }
+
+      function doRegister() {
+        if (!cardTapped) {
+          toast("Tap your NFC card first to link it");
+          return;
+        }
+        toast("Registration complete — your card is ready to use");
+        setTimeout(function () {
+          switchTab("dashboard");
+        }, 2200);
+      }
+
+      // Init top-up summary
+      updateTopupSummary(50000);
+      document.getElementById("cur-bal").textContent =
+        "₦" + balance.toLocaleString();
+    </script>
+  </body>
+</html>
