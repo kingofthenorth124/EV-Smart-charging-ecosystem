@@ -51,6 +51,11 @@ export default defineConfig({
       : []),
   ],
   resolve: {
+    // "workspace" maps each @workspace/* package to its TypeScript source
+    // (the "workspace" export condition in each package's package.json).
+    // Without this, Vite falls back to "default" → dist/index.js which does
+    // not exist for declaration-only packages (emitDeclarationOnly: true).
+    conditions: ["workspace"],
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
       "@assets": path.resolve(
