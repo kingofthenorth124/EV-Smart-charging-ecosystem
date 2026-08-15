@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
 import type { Request, Response } from 'express';
 
 interface ValidationError {
@@ -17,7 +18,7 @@ interface ErrorResponseBody {
   statusCode: number;
   message: string;
   error?: string;
-  correlationId?: string;
+  correlationId: string;
   details?: Array<{ field: string; message: string }>;
 }
 
@@ -41,7 +42,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request & { correlationId?: string }>();
 
-    const correlationId = request.correlationId ?? request.headers['x-correlation-id'];
+    // Always produce a correlationId — interceptors run after guards, so
+    // guard-thrown errors (401, 403, 429) won't have one on the request yet.
+    const correlationId =
+      request.correlationId ??
+      (request.headers['x-correlation-id'] as string | undefined) ??
+      uuidv4();
 
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
@@ -88,7 +94,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       statusCode,
       message,
       ...(error && { error }),
-      ...(correlationId && { correlationId: correlationId as string }),
+      correlationId,
       ...(details && { details }),
     };
 

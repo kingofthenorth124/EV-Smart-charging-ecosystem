@@ -72,15 +72,24 @@ export class AuthService {
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      const attempts = await this.identityService.incrementFailedAttempts(user.id);
       const maxAttempts = this.configService.get<number>('security.lockoutAttempts', 5);
+      const lockoutMinutes = this.configService.get<number>(
+        'security.lockoutDurationMinutes',
+        15,
+      );
 
-      if (attempts >= maxAttempts) {
-        const lockoutMinutes = this.configService.get<number>(
-          'security.lockoutDurationMinutes',
-          15,
+      // Single atomic SQL UPDATE: increment counter AND conditionally set
+      // lockedUntil in the same statement.  There is no intermediate state
+      // where failedLoginAttempts ≥ threshold but lockedUntil is still NULL,
+      // so a concurrent valid login's conditional reset cannot bypass this lock.
+      const { failedLoginAttempts: attempts, lockedUntil } =
+        await this.identityService.incrementAndMaybeLock(
+          user.id,
+          maxAttempts,
+          lockoutMinutes,
         );
-        await this.identityService.lockAccount(user.id, lockoutMinutes);
+
+      if (lockedUntil) {
         this.logger.warn(
           { userId: user.id, email: user.email, attempts },
           'Account locked after failed login attempts',
@@ -109,8 +118,32 @@ export class AuthService {
       );
     }
 
-    // Successful login
-    await this.identityService.resetFailedAttempts(user.id);
+    // Atomic reset: a single conditional UPDATE checks lock state and clears
+    // the counter in one SQL statement.  If a concurrent wrong-password request
+    // reached the threshold and set lockedUntil during our bcrypt.compare, the
+    // WHERE clause won't match and wasLocked comes back true — we must refuse
+    // to issue tokens so the earned lockout is not silently bypassed.
+    const { wasLocked } = await this.identityService.resetFailedAttempts(user.id);
+    if (wasLocked) {
+      const lockedState = await this.identityService.findByIdInternal(user.id);
+      const minutesRemaining = lockedState?.lockedUntil
+        ? Math.ceil((lockedState.lockedUntil.getTime() - Date.now()) / 60_000)
+        : 15;
+      await this.auditService.log({
+        actorId: user.id,
+        actorEmail: user.email,
+        action: AUTH_AUDIT_ACTIONS.LOGIN_LOCKED,
+        resource: 'user',
+        resourceId: user.id,
+        result: 'FAILURE',
+        correlationId,
+        ...auditMeta,
+      });
+      throw new ForbiddenException(
+        `Account is temporarily locked. Try again in ${minutesRemaining} minute(s).`,
+      );
+    }
+
     await this.identityService.recordLogin(user.id);
 
     const tokens = await this.createTokenPair(user);

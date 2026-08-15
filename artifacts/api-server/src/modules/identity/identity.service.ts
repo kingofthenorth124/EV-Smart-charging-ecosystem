@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
-import type { Prisma, User } from '@prisma/client';
+import { Prisma, type User } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTIONS } from './audit-actions';
@@ -48,18 +48,34 @@ export class IdentityService {
     const rounds = this.configService.get<number>('security.bcryptRounds', 12);
     const passwordHash = await bcrypt.hash(dto.password, rounds);
 
-    const user = await this.prisma.user.create({
-      data: {
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        email: dto.email,
-        phone: dto.phone,
-        passwordHash,
-        role: 'CUSTOMER',
-        status: 'PENDING',
-        registrationSource: 'SELF_REGISTER',
-      },
-    });
+    let user;
+    try {
+      user = await this.prisma.user.create({
+        data: {
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          email: dto.email,
+          phone: dto.phone,
+          passwordHash,
+          role: 'CUSTOMER',
+          status: 'PENDING',
+          registrationSource: 'SELF_REGISTER',
+        },
+      });
+    } catch (e) {
+      // P2002: unique constraint violation — two concurrent registrations raced
+      // past the findFirst check for the same email or phone.  Map to 409 so
+      // the client always gets a deterministic conflict response, never a 500.
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === 'P2002'
+      ) {
+        const target = (e.meta as { target?: string[] } | undefined)?.target;
+        const field = target?.includes('email') ? 'email address' : 'phone number';
+        throw new ConflictException(`This ${field} is already registered`);
+      }
+      throw e;
+    }
 
     await this.auditService.log({
       actorId: user.id,
@@ -209,29 +225,70 @@ export class IdentityService {
     });
   }
 
-  async incrementFailedAttempts(userId: string): Promise<number> {
-    const updated = await this.prisma.user.update({
-      where: { id: userId },
-      data: { failedLoginAttempts: { increment: 1 } },
-      select: { failedLoginAttempts: true },
-    });
-    return updated.failedLoginAttempts;
+  /**
+   * Atomically increments the failed-login counter and, when the new count
+   * reaches `threshold`, sets `lockedUntil` — all in a single SQL statement.
+   *
+   * Using one UPDATE eliminates the TOCTOU window that existed when
+   * `incrementFailedAttempts` and `lockAccount` were two separate round-trips:
+   * a concurrent valid login could read the row between those two writes and
+   * see counter ≥ threshold with lockedUntil still NULL, then reset the counter
+   * before the lock was written.  With one statement there is no intermediate
+   * state where the threshold is crossed but the lock is absent.
+   */
+  async incrementAndMaybeLock(
+    userId: string,
+    threshold: number,
+    lockDurationMinutes: number,
+  ): Promise<{ failedLoginAttempts: number; lockedUntil: Date | null }> {
+    const rows = await this.prisma.$queryRaw<
+      Array<{ failedLoginAttempts: number; lockedUntil: Date | null }>
+    >(Prisma.sql`
+      UPDATE users
+      SET
+        "failedLoginAttempts" = "failedLoginAttempts" + 1,
+        "lockedUntil" = CASE
+          WHEN "failedLoginAttempts" + 1 >= ${threshold}
+          THEN NOW() + (${lockDurationMinutes}::integer * INTERVAL '1 minute')
+          ELSE "lockedUntil"
+        END
+      WHERE id = ${userId}
+      RETURNING "failedLoginAttempts", "lockedUntil"
+    `);
+    const row = rows[0];
+    return {
+      failedLoginAttempts: Number(row.failedLoginAttempts),
+      lockedUntil: row.lockedUntil,
+    };
   }
 
-  async lockAccount(userId: string, durationMinutes: number): Promise<void> {
-    const lockedUntil = new Date();
-    lockedUntil.setMinutes(lockedUntil.getMinutes() + durationMinutes);
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { lockedUntil },
-    });
-  }
-
-  async resetFailedAttempts(userId: string): Promise<void> {
-    await this.prisma.user.update({
-      where: { id: userId },
+  /**
+   * Atomically resets the failed-attempt counter — but ONLY when the account
+   * is not currently locked.
+   *
+   * A single `updateMany` with a conditional WHERE clause is used so the
+   * check ("is the account locked?") and the write ("clear the counter") are
+   * one SQL statement with no TOCTOU window.  If a concurrent wrong-password
+   * request reached the failure threshold and set `lockedUntil` during our
+   * caller's `bcrypt.compare`, the WHERE clause won't match and the lock is
+   * preserved.
+   *
+   * Returns `{ wasLocked: true }` when the update was a no-op because a
+   * current lock was found; the caller must react by refusing to issue tokens.
+   */
+  async resetFailedAttempts(userId: string): Promise<{ wasLocked: boolean }> {
+    const result = await this.prisma.user.updateMany({
+      where: {
+        id: userId,
+        // Only reset when there is no active lock
+        OR: [
+          { lockedUntil: null },
+          { lockedUntil: { lte: new Date() } }, // expired lock is fine to clear
+        ],
+      },
       data: { failedLoginAttempts: 0, lockedUntil: null },
     });
+    return { wasLocked: result.count === 0 };
   }
 
   async recordLogin(userId: string): Promise<void> {
