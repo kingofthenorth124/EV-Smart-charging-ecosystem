@@ -4,12 +4,31 @@ A smart EV-charging payment platform for Nigerian operators: customers manage a 
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `pnpm --filter @workspace/api-server run db:migrate` — apply pending Prisma migrations (dev)
+- `pnpm --filter @workspace/api-server run db:migrate:prod` — apply migrations in production
+- Required env: `DATABASE_URL` — Postgres connection string (runtime-managed by Replit)
+
+### Bootstrapping the first SUPER_ADMIN
+
+Self-registration always creates `CUSTOMER / PENDING` accounts. To create the first admin:
+
+1. Set the following Replit Secrets (see `replit.md → Secrets`):
+   - `ADMIN_BOOTSTRAP_SECRET` — any random string ≥ 16 chars (a one-time gate)
+   - `ADMIN_EMAIL` — the admin's login email
+   - `ADMIN_PHONE` — E.164 phone, e.g. `+2348012345678`
+   - `ADMIN_PASSWORD` — initial password ≥ 12 chars (**change on first login**)
+2. Run the seed from the Shell:
+   ```
+   pnpm --filter @workspace/api-server run seed:admin
+   ```
+3. Log in at `/login` with the email and password above.
+4. Navigate to `/admin/users` to manage and activate `PENDING` customers.
+
+The script is **idempotent** — re-running it with the same email is safe. If the account already exists as `SUPER_ADMIN`, it exits without changes. If the email exists with another role, it upgrades to `SUPER_ADMIN / ACTIVE`.
 
 ## Stack
 
