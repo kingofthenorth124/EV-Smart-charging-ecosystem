@@ -14,6 +14,7 @@ import type { User } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { IdentityService } from '../identity/identity.service';
+import { EmailService } from '../../common/email/email.service';
 import { AUTH_AUDIT_ACTIONS } from './audit-actions';
 import type { AuthTokensDto, LoginResponseDto } from './dto/auth-tokens.dto';
 import { UserResponseDto } from '../identity/dto/user-response.dto';
@@ -28,6 +29,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly identityService: IdentityService,
     private readonly auditService: AuditService,
+    private readonly emailService: EmailService,
   ) {}
 
   // ── Login ────────────────────────────────────────────────────────────────────
@@ -351,8 +353,9 @@ export class AuthService {
       },
     });
 
-    // Notify user — email service required for production
-    this.notifyPasswordReset(user.email, plainToken);
+    // Notify user — fire-and-forget; errors are logged but do not expose
+    // whether the account exists (enumeration prevention).
+    await this.notifyPasswordReset(user.email, plainToken);
 
     await this.auditService.log({
       actorId: user.id,
@@ -453,6 +456,10 @@ export class AuthService {
     return createHash('sha256').update(token).digest('hex');
   }
 
+  // ── Email helpers ─────────────────────────────────────────────────────────
+
+  // (see module-level buildPasswordResetEmail below)
+
   private getRefreshTokenExpiry(): Date {
     const expiry = new Date();
     const raw = this.configService.get<string>('jwt.refreshExpiresIn', '7d');
@@ -464,25 +471,82 @@ export class AuthService {
   /**
    * Notify the user of their password reset token.
    *
-   * DEVELOPMENT: logs the token and URL to stdout.
-   * PRODUCTION: requires an email service integration (planned for a future phase).
-   *             Password reset is non-functional in production until email is wired up.
+   * Sends a real email via Resend when RESEND_API_KEY is configured.
+   * In development without a key, logs the token and URL to stdout instead.
+   * Errors are caught and logged — the caller already committed the token to
+   * the database and must not reveal whether the address exists, so a delivery
+   * failure is silent to the HTTP response.
    */
-  private notifyPasswordReset(email: string, token: string): void {
-    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
+  private async notifyPasswordReset(email: string, token: string): Promise<void> {
+    const frontendUrl = this.configService.get<string>(
+      'email.frontendUrl',
+      'http://localhost:5173',
+    );
     const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
-    if (process.env.NODE_ENV !== 'production') {
-      this.logger.warn(`[DEV] Password reset for: ${email}`, 'PasswordReset');
-      this.logger.warn(`[DEV] Token: ${token}`, 'PasswordReset');
-      this.logger.warn(`[DEV] URL:   ${resetUrl}`, 'PasswordReset');
-    } else {
-      // TODO: Email service integration — send reset URL to user's email
+    try {
+      await this.emailService.send({
+        to: email,
+        subject: 'Reset your Camel Wallet password',
+        html: buildPasswordResetEmail(resetUrl),
+        text:
+          `You requested a password reset for your Camel Wallet account.\n\n` +
+          `Click the link below to set a new password (valid for 60 minutes):\n\n` +
+          `${resetUrl}\n\n` +
+          `If you did not request this, you can safely ignore this email.`,
+      });
+    } catch (err) {
       this.logger.error(
-        'Email service not configured. Password reset requires email integration. ' +
-          'Users cannot complete password resets in production until this is implemented.',
-        'PasswordReset',
+        { err, email },
+        'Failed to send password reset email',
       );
     }
   }
 }
+
+// ── Module-level helpers ──────────────────────────────────────────────────────
+
+/**
+ * Minimal HTML email for password resets.
+ * Inline styles for maximum email-client compatibility.
+ */
+function buildPasswordResetEmail(resetUrl: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 0">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <tr><td style="background:#1a1a2e;padding:24px 32px">
+          <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:0.5px">🐪 Camel Wallet</h1>
+        </td></tr>
+        <tr><td style="padding:32px">
+          <h2 style="margin:0 0 16px;color:#1a1a2e;font-size:22px">Reset your password</h2>
+          <p style="margin:0 0 24px;color:#555;font-size:15px;line-height:1.6">
+            We received a request to reset the password for your Camel Wallet account.
+            Click the button below to choose a new password. This link expires in <strong>60 minutes</strong>.
+          </p>
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr><td>
+            <a href="${resetUrl}"
+               style="display:inline-block;padding:14px 28px;background:#e8a835;color:#1a1a2e;text-decoration:none;border-radius:6px;font-weight:700;font-size:15px">
+              Reset Password
+            </a>
+          </td></tr></table>
+          <p style="margin:24px 0 0;color:#888;font-size:13px;line-height:1.6">
+            If the button doesn't work, copy and paste this URL into your browser:<br>
+            <a href="${resetUrl}" style="color:#e8a835;word-break:break-all">${resetUrl}</a>
+          </p>
+          <hr style="margin:24px 0;border:none;border-top:1px solid #eee">
+          <p style="margin:0;color:#aaa;font-size:12px">
+            If you didn't request a password reset, you can safely ignore this email.
+            Your password will not change.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+

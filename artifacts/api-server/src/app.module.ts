@@ -15,6 +15,7 @@ import { HealthModule } from './modules/health/health.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { EmailModule } from './common/email/email.module';
 
 @Module({
   imports: [
@@ -90,6 +91,7 @@ import { AuthModule } from './modules/auth/auth.module';
     AuditModule,
     IdentityModule,
     AuthModule,
+    EmailModule,
   ],
 
   providers: [

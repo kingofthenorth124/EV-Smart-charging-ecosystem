@@ -66,6 +66,15 @@ export const configuration = () => ({
     authTtlMs: parseInt(process.env.AUTH_RATE_LIMIT_TTL_MS ?? '900000', 10), // 15 min
     authMax: parseInt(process.env.AUTH_RATE_LIMIT_MAX ?? '10', 10),
   },
+
+  email: {
+    /** Resend API key — required in production, optional in development */
+    resendApiKey: process.env.RESEND_API_KEY,
+    /** From address shown in password-reset emails */
+    fromAddress: process.env.EMAIL_FROM ?? 'noreply@camel-wallet.app',
+    /** Base URL for the frontend reset-password page */
+    frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+  },
 });
 
 export type AppConfiguration = ReturnType<typeof configuration>;
