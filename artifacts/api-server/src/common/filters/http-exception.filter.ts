@@ -98,6 +98,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       ...(details && { details }),
     };
 
+    // Ensure the X-Correlation-ID header is always present on error responses.
+    // The CorrelationIdInterceptor only runs for routed handlers; guard
+    // rejections (401/403) and 404s bypass it and land here directly.
+    response.setHeader('X-Correlation-ID', correlationId);
     response.status(statusCode).json(body);
   }
 
