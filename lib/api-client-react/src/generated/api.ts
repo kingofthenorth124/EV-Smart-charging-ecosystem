@@ -31,21 +31,33 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ActiveSessionResponse,
   ApiErrorResponse,
   AuthTokens,
   ChangePasswordRequest,
+  ChargingSession,
+  DashboardSummary,
   HealthStatus,
+  ListSessionsParams,
+  ListTransactionsParams,
   ListUsersParams,
   LoginRequest,
   LoginResponse,
+  PaginatedSessions,
+  PaginatedTransactions,
   PaginatedUsers,
   PasswordResetConfirmBody,
   PasswordResetRequestBody,
   RefreshRequest,
   RegisterRequest,
+  StartSessionRequest,
+  Station,
   SystemInfo,
+  TopUpRequest,
+  TopUpResponse,
   UpdateUserStatusRequest,
-  UserProfile
+  UserProfile,
+  WalletSummary
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -969,6 +981,705 @@ export function useGetUserById<TData = Awaited<ReturnType<typeof getUserById>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetUserByIdQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetWalletUrl = () => {
+
+
+
+
+  return `/api/v1/wallet`
+}
+
+/**
+ * Returns the authoritative wallet balance and minimum-balance rule. The wallet is created on first access.
+ * @summary Get current user's wallet summary
+ */
+export const getWallet = async ( options?: RequestInit): Promise<WalletSummary> => {
+
+  return customFetch<WalletSummary>(getGetWalletUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWalletQueryKey = () => {
+    return [
+    `/api/v1/wallet`
+    ] as const;
+    }
+
+
+export const getGetWalletQueryOptions = <TData = Awaited<ReturnType<typeof getWallet>>, TError = ErrorType<ApiErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWallet>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWalletQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWallet>>> = ({ signal }) => getWallet({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWallet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWalletQueryResult = NonNullable<Awaited<ReturnType<typeof getWallet>>>
+export type GetWalletQueryError = ErrorType<ApiErrorResponse>
+
+
+/**
+ * @summary Get current user's wallet summary
+ */
+
+export function useGetWallet<TData = Awaited<ReturnType<typeof getWallet>>, TError = ErrorType<ApiErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWallet>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWalletQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getTopUpWalletUrl = () => {
+
+
+
+
+  return `/api/v1/wallet/topup`
+}
+
+/**
+ * Initiates a wallet top-up through the selected payment method.
+ * In this environment payments settle instantly via the sandbox provider;
+ * the backend remains the authoritative source of payment status.
+ * @summary Top up the wallet
+ */
+export const topUpWallet = async (topUpRequest: TopUpRequest, options?: RequestInit): Promise<TopUpResponse> => {
+
+  return customFetch<TopUpResponse>(getTopUpWalletUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(topUpRequest)
+  }
+);}
+
+
+
+
+
+export const getTopUpWalletMutationOptions = <TError = ErrorType<ApiErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof topUpWallet>>, TError,{data: BodyType<TopUpRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof topUpWallet>>, TError,{data: BodyType<TopUpRequest>}, TContext> => {
+
+const mutationKey = ['topUpWallet'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof topUpWallet>>, {data: BodyType<TopUpRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  topUpWallet(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TopUpWalletMutationResult = NonNullable<Awaited<ReturnType<typeof topUpWallet>>>
+    export type TopUpWalletMutationBody = BodyType<TopUpRequest>
+    export type TopUpWalletMutationError = ErrorType<ApiErrorResponse>
+
+    /**
+ * @summary Top up the wallet
+ */
+export const useTopUpWallet = <TError = ErrorType<ApiErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof topUpWallet>>, TError,{data: BodyType<TopUpRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof topUpWallet>>,
+        TError,
+        {data: BodyType<TopUpRequest>},
+        TContext
+      > => {
+      return useMutation(getTopUpWalletMutationOptions(options));
+    }
+
+export const getListTransactionsUrl = (params?: ListTransactionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/wallet/transactions?${stringifiedParams}` : `/api/v1/wallet/transactions`
+}
+
+/**
+ * @summary List wallet transactions
+ */
+export const listTransactions = async (params?: ListTransactionsParams, options?: RequestInit): Promise<PaginatedTransactions> => {
+
+  return customFetch<PaginatedTransactions>(getListTransactionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTransactionsQueryKey = (params?: ListTransactionsParams,) => {
+    return [
+    `/api/v1/wallet/transactions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListTransactionsQueryOptions = <TData = Awaited<ReturnType<typeof listTransactions>>, TError = ErrorType<ApiErrorResponse>>(params?: ListTransactionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTransactions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTransactionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTransactions>>> = ({ signal }) => listTransactions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTransactions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTransactionsQueryResult = NonNullable<Awaited<ReturnType<typeof listTransactions>>>
+export type ListTransactionsQueryError = ErrorType<ApiErrorResponse>
+
+
+/**
+ * @summary List wallet transactions
+ */
+
+export function useListTransactions<TData = Awaited<ReturnType<typeof listTransactions>>, TError = ErrorType<ApiErrorResponse>>(
+ params?: ListTransactionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTransactions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTransactionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListStationsUrl = () => {
+
+
+
+
+  return `/api/v1/stations`
+}
+
+/**
+ * @summary List charging stations
+ */
+export const listStations = async ( options?: RequestInit): Promise<Station[]> => {
+
+  return customFetch<Station[]>(getListStationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListStationsQueryKey = () => {
+    return [
+    `/api/v1/stations`
+    ] as const;
+    }
+
+
+export const getListStationsQueryOptions = <TData = Awaited<ReturnType<typeof listStations>>, TError = ErrorType<ApiErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listStations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListStationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listStations>>> = ({ signal }) => listStations({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listStations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListStationsQueryResult = NonNullable<Awaited<ReturnType<typeof listStations>>>
+export type ListStationsQueryError = ErrorType<ApiErrorResponse>
+
+
+/**
+ * @summary List charging stations
+ */
+
+export function useListStations<TData = Awaited<ReturnType<typeof listStations>>, TError = ErrorType<ApiErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listStations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListStationsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListSessionsUrl = (params?: ListSessionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/sessions?${stringifiedParams}` : `/api/v1/sessions`
+}
+
+/**
+ * @summary List the current user's charging sessions
+ */
+export const listSessions = async (params?: ListSessionsParams, options?: RequestInit): Promise<PaginatedSessions> => {
+
+  return customFetch<PaginatedSessions>(getListSessionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSessionsQueryKey = (params?: ListSessionsParams,) => {
+    return [
+    `/api/v1/sessions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListSessionsQueryOptions = <TData = Awaited<ReturnType<typeof listSessions>>, TError = ErrorType<ApiErrorResponse>>(params?: ListSessionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSessionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSessions>>> = ({ signal }) => listSessions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSessions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSessionsQueryResult = NonNullable<Awaited<ReturnType<typeof listSessions>>>
+export type ListSessionsQueryError = ErrorType<ApiErrorResponse>
+
+
+/**
+ * @summary List the current user's charging sessions
+ */
+
+export function useListSessions<TData = Awaited<ReturnType<typeof listSessions>>, TError = ErrorType<ApiErrorResponse>>(
+ params?: ListSessionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSessions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSessionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetActiveSessionUrl = () => {
+
+
+
+
+  return `/api/v1/sessions/active`
+}
+
+/**
+ * Returns live server-computed session values, or session=null when no session is active.
+ * @summary Get the current active charging session
+ */
+export const getActiveSession = async ( options?: RequestInit): Promise<ActiveSessionResponse> => {
+
+  return customFetch<ActiveSessionResponse>(getGetActiveSessionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetActiveSessionQueryKey = () => {
+    return [
+    `/api/v1/sessions/active`
+    ] as const;
+    }
+
+
+export const getGetActiveSessionQueryOptions = <TData = Awaited<ReturnType<typeof getActiveSession>>, TError = ErrorType<ApiErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetActiveSessionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getActiveSession>>> = ({ signal }) => getActiveSession({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getActiveSession>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetActiveSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getActiveSession>>>
+export type GetActiveSessionQueryError = ErrorType<ApiErrorResponse>
+
+
+/**
+ * @summary Get the current active charging session
+ */
+
+export function useGetActiveSession<TData = Awaited<ReturnType<typeof getActiveSession>>, TError = ErrorType<ApiErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getActiveSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetActiveSessionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getStartSessionUrl = () => {
+
+
+
+
+  return `/api/v1/sessions/start`
+}
+
+/**
+ * Authorizes and starts a charging session at the selected station.
+ * Fails when the wallet balance is below the minimum required balance,
+ * the station has no available connectors, or a session is already active.
+ * @summary Start a charging session
+ */
+export const startSession = async (startSessionRequest: StartSessionRequest, options?: RequestInit): Promise<ChargingSession> => {
+
+  return customFetch<ChargingSession>(getStartSessionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(startSessionRequest)
+  }
+);}
+
+
+
+
+
+export const getStartSessionMutationOptions = <TError = ErrorType<ApiErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startSession>>, TError,{data: BodyType<StartSessionRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startSession>>, TError,{data: BodyType<StartSessionRequest>}, TContext> => {
+
+const mutationKey = ['startSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startSession>>, {data: BodyType<StartSessionRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  startSession(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartSessionMutationResult = NonNullable<Awaited<ReturnType<typeof startSession>>>
+    export type StartSessionMutationBody = BodyType<StartSessionRequest>
+    export type StartSessionMutationError = ErrorType<ApiErrorResponse>
+
+    /**
+ * @summary Start a charging session
+ */
+export const useStartSession = <TError = ErrorType<ApiErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startSession>>, TError,{data: BodyType<StartSessionRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startSession>>,
+        TError,
+        {data: BodyType<StartSessionRequest>},
+        TContext
+      > => {
+      return useMutation(getStartSessionMutationOptions(options));
+    }
+
+export const getStopSessionUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/sessions/${id}/stop`
+}
+
+/**
+ * Finalizes the session, debits the wallet, and records a CHARGE transaction.
+ * @summary Stop a charging session
+ */
+export const stopSession = async (id: string, options?: RequestInit): Promise<ChargingSession> => {
+
+  return customFetch<ChargingSession>(getStopSessionUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getStopSessionMutationOptions = <TError = ErrorType<ApiErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stopSession>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof stopSession>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['stopSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof stopSession>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  stopSession(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StopSessionMutationResult = NonNullable<Awaited<ReturnType<typeof stopSession>>>
+
+    export type StopSessionMutationError = ErrorType<ApiErrorResponse>
+
+    /**
+ * @summary Stop a charging session
+ */
+export const useStopSession = <TError = ErrorType<ApiErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stopSession>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof stopSession>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getStopSessionMutationOptions(options));
+    }
+
+export const getGetDashboardUrl = () => {
+
+
+
+
+  return `/api/v1/dashboard`
+}
+
+/**
+ * Wallet, lifetime charging statistics, recent sessions, and recent transactions in a single call.
+ * @summary Customer dashboard summary
+ */
+export const getDashboard = async ( options?: RequestInit): Promise<DashboardSummary> => {
+
+  return customFetch<DashboardSummary>(getGetDashboardUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDashboardQueryKey = () => {
+    return [
+    `/api/v1/dashboard`
+    ] as const;
+    }
+
+
+export const getGetDashboardQueryOptions = <TData = Awaited<ReturnType<typeof getDashboard>>, TError = ErrorType<ApiErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDashboardQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboard>>> = ({ signal }) => getDashboard({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDashboardQueryResult = NonNullable<Awaited<ReturnType<typeof getDashboard>>>
+export type GetDashboardQueryError = ErrorType<ApiErrorResponse>
+
+
+/**
+ * @summary Customer dashboard summary
+ */
+
+export function useGetDashboard<TData = Awaited<ReturnType<typeof getDashboard>>, TError = ErrorType<ApiErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDashboardQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

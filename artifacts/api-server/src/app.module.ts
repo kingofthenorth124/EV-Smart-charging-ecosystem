@@ -15,6 +15,8 @@ import { HealthModule } from './modules/health/health.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { WalletModule } from './modules/wallet/wallet.module';
+import { ChargingModule } from './modules/charging/charging.module';
 import { EmailModule } from './common/email/email.module';
 
 @Module({
@@ -102,6 +104,8 @@ import { EmailModule } from './common/email/email.module';
     IdentityModule,
     AuthModule,
     EmailModule,
+    WalletModule,
+    ChargingModule,
   ],
 
   providers: [

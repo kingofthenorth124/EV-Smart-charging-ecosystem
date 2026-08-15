@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { Zap, LogOut, Shield, Users, Home, CreditCard } from "lucide-react";
+import { Zap, LogOut, Shield, Users, Home, CreditCard, BatteryCharging, Wallet, History } from "lucide-react";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
@@ -14,6 +14,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: Home },
+    { href: "/charge", label: "Charge", icon: BatteryCharging },
+    { href: "/topup", label: "Top Up", icon: Wallet },
+    { href: "/history", label: "History", icon: History },
     { href: "/account/security", label: "Security", icon: Shield },
   ];
 

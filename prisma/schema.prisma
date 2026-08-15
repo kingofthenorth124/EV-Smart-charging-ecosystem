@@ -43,6 +43,8 @@ model User {
 
   refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]
+  wallet              Wallet?
+  chargingSessions    ChargingSession[]
 
   @@index([email])
   @@index([status])
@@ -139,7 +141,137 @@ model SystemConfig {
   @@map("system_configs")
 }
 
+// ─── Wallet (Module 2) ────────────────────────────────────────────────────────
+// One wallet per user. All amounts are stored in kobo (integer minor units).
+// The backend is the ONLY authoritative source for balances.
+
+model Wallet {
+  id           String       @id @default(cuid())
+  userId       String       @unique
+  /// Current balance in kobo (NGN minor units)
+  balanceKobo  Int          @default(0)
+  status       WalletStatus @default(ACTIVE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id               String            @id @default(cuid())
+  walletId         String
+  userId           String
+  type             TransactionType
+  status           TransactionStatus @default(COMPLETED)
+  /// Signed amount in kobo: positive = credit, negative = debit
+  amountKobo       Int
+  /// Wallet balance in kobo after this transaction was applied
+  balanceAfterKobo Int
+  /// Unique business reference, e.g. TOP-XXXX or CHG-XXXX
+  reference        String            @unique
+  description      String
+  /// Payment method for top-ups (BANK_TRANSFER | CARD | USSD)
+  method           String?
+  sessionId        String?
+  createdAt        DateTime          @default(now())
+
+  wallet  Wallet           @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  session ChargingSession? @relation(fields: [sessionId], references: [id])
+
+  @@index([walletId, createdAt])
+  @@index([userId, createdAt])
+  @@index([type])
+  @@map("wallet_transactions")
+}
+
+// ─── Charging (Module 2) ──────────────────────────────────────────────────────
+
+model Station {
+  id                  String        @id @default(cuid())
+  name                String
+  location            String
+  /// Maximum charging power in kW
+  powerKw             Float
+  connectorType       String
+  connectorsTotal     Int
+  connectorsAvailable Int
+  /// Energy tariff in kobo per kWh
+  tariffKoboPerKwh    Int
+  status              StationStatus @default(AVAILABLE)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  sessions ChargingSession[]
+
+  @@index([status])
+  @@map("stations")
+}
+
+model ChargingSession {
+  id            String        @id @default(cuid())
+  userId        String
+  stationId     String
+  status        SessionStatus @default(ACTIVE)
+  /// Energy delivered in Wh (integer to avoid float drift)
+  energyWh      Int           @default(0)
+  /// Final cost in kobo (0 while active; live cost is computed server-side)
+  costKobo      Int           @default(0)
+  /// Optional customer spend limit for this session, in kobo
+  limitKobo     Int?
+  /// Tariff snapshot at session start, kobo per kWh
+  tariffKoboPerKwh Int
+  /// Power snapshot at session start, kW
+  powerKw       Float
+  startedAt     DateTime      @default(now())
+  endedAt       DateTime?
+  /// How the session ended: USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED
+  stopReason    String?
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  station      Station             @relation(fields: [stationId], references: [id])
+  transactions WalletTransaction[]
+
+  @@index([userId, startedAt])
+  @@index([userId, status])
+  @@map("charging_sessions")
+}
+
 // ─── Enumerations ─────────────────────────────────────────────────────────────
+
+enum WalletStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum TransactionType {
+  TOPUP
+  CHARGE
+  REFUND
+  ADJUSTMENT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum StationStatus {
+  AVAILABLE
+  BUSY
+  OFFLINE
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  STOPPED
+  FAULTED
+}
+
 
 enum UserRole {
   CUSTOMER

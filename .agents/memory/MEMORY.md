@@ -1,2 +1,3 @@
 - [Prisma v7 + pnpm monorepo](prisma-v7-pnpm.md) — v7 requires driver adapter, no URL in schema, custom postinstall.cjs for generate resolution.
 - [Zod version hoisting hazard](zod-version-hoisting.md) — never add zod v4 as a dep; use the `zod/v4` subpath or pnpm's hidden hoist poisons v3 consumers' typechecks.
+- [Orval zod index overwrite](orval-zod-index.md) — api-spec codegen appends a types re-export to lib/api-zod/src/index.ts; revert it or typecheck fails with TS2308.

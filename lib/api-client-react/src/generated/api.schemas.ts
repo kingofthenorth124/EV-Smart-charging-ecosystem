@@ -163,6 +163,176 @@ export interface UpdateUserStatusRequest {
   status: UserStatus;
 }
 
+export type WalletStatus = typeof WalletStatus[keyof typeof WalletStatus];
+
+
+export const WalletStatus = {
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED',
+} as const;
+
+export interface WalletSummary {
+  id: string;
+  /** Current balance in kobo (NGN minor units) */
+  balanceKobo: number;
+  /** Minimum balance required to start a charging session, in kobo */
+  minBalanceKobo: number;
+  currency: string;
+  status: WalletStatus;
+  updatedAt: string;
+}
+
+export type TransactionType = typeof TransactionType[keyof typeof TransactionType];
+
+
+export const TransactionType = {
+  TOPUP: 'TOPUP',
+  CHARGE: 'CHARGE',
+  REFUND: 'REFUND',
+  ADJUSTMENT: 'ADJUSTMENT',
+} as const;
+
+export type TransactionStatus = typeof TransactionStatus[keyof typeof TransactionStatus];
+
+
+export const TransactionStatus = {
+  PENDING: 'PENDING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+} as const;
+
+export type TopUpMethod = typeof TopUpMethod[keyof typeof TopUpMethod];
+
+
+export const TopUpMethod = {
+  BANK_TRANSFER: 'BANK_TRANSFER',
+  CARD: 'CARD',
+  USSD: 'USSD',
+} as const;
+
+export interface WalletTransaction {
+  id: string;
+  type: TransactionType;
+  status: TransactionStatus;
+  /** Signed amount in kobo (positive = credit, negative = debit) */
+  amountKobo: number;
+  balanceAfterKobo: number;
+  reference: string;
+  description: string;
+  method?: string | null;
+  sessionId?: string | null;
+  createdAt: string;
+}
+
+export interface PaginatedTransactions {
+  data: WalletTransaction[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface TopUpRequest {
+  /**
+     * Top-up amount in kobo (min ₦100)
+     * @minimum 10000
+     * @maximum 100000000
+     */
+  amountKobo: number;
+  method: TopUpMethod;
+}
+
+export interface TopUpResponse {
+  transaction: WalletTransaction;
+  wallet: WalletSummary;
+}
+
+export type StationStatus = typeof StationStatus[keyof typeof StationStatus];
+
+
+export const StationStatus = {
+  AVAILABLE: 'AVAILABLE',
+  BUSY: 'BUSY',
+  OFFLINE: 'OFFLINE',
+} as const;
+
+export interface Station {
+  id: string;
+  name: string;
+  location: string;
+  powerKw: number;
+  connectorType: string;
+  connectorsTotal: number;
+  connectorsAvailable: number;
+  /** Energy tariff in kobo per kWh */
+  tariffKoboPerKwh: number;
+  status: StationStatus;
+}
+
+export type SessionStatus = typeof SessionStatus[keyof typeof SessionStatus];
+
+
+export const SessionStatus = {
+  ACTIVE: 'ACTIVE',
+  COMPLETED: 'COMPLETED',
+  STOPPED: 'STOPPED',
+  FAULTED: 'FAULTED',
+} as const;
+
+export interface ChargingSession {
+  id: string;
+  status: SessionStatus;
+  stationId: string;
+  stationName: string;
+  stationLocation: string;
+  powerKw: number;
+  tariffKoboPerKwh: number;
+  /** Energy delivered in watt-hours */
+  energyWh: number;
+  /** Session cost in kobo (live value while active, final when ended) */
+  costKobo: number;
+  limitKobo?: number | null;
+  /** Seconds since session start (server-computed) */
+  elapsedSeconds?: number;
+  startedAt: string;
+  endedAt?: string | null;
+  /** USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED */
+  stopReason?: string | null;
+}
+
+export interface ActiveSessionResponse {
+  /** The active charging session, or null when none is active */
+  session?: ChargingSession | null;
+}
+
+export interface PaginatedSessions {
+  data: ChargingSession[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface StartSessionRequest {
+  stationId: string;
+  /**
+     * Optional spend limit for this session, in kobo
+     * @minimum 10000
+     */
+  limitKobo?: number | null;
+}
+
+export interface DashboardSummary {
+  wallet: WalletSummary;
+  /** Total completed charging sessions */
+  sessionsCount: number;
+  /** Lifetime energy consumed in watt-hours */
+  totalEnergyWh: number;
+  /** Lifetime charging spend in kobo */
+  totalSpentKobo: number;
+  recentSessions: ChargingSession[];
+  recentTransactions: WalletTransaction[];
+  activeSession: ChargingSession | null;
+}
+
 export type ListUsersParams = {
 /**
  * @minimum 1
@@ -179,5 +349,30 @@ role?: UserRole;
  * Search by name or email (partial match)
  */
 search?: string;
+};
+
+export type ListTransactionsParams = {
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+type?: TransactionType;
+};
+
+export type ListSessionsParams = {
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
 };
 

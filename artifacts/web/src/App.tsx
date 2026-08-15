@@ -7,6 +7,9 @@ import { AuthProvider } from '@/hooks/use-auth';
 import { GuestRoute, ProtectedRoute } from '@/components/protected-route';
 import NotFound from '@/pages/not-found';
 import Home from '@/pages/home';
+import Charge from '@/pages/charge';
+import TopUp from '@/pages/topup';
+import History from '@/pages/history';
 import Login from '@/pages/login';
 import Register from '@/pages/register';
 import ForgotPassword from '@/pages/forgot-password';
@@ -53,6 +56,15 @@ function Router() {
         </Route>
         <Route path="/admin/users">
           <ProtectedRoute component={AdminUsers} roles={['SUPER_ADMIN', 'ADMIN_OFFICER']} />
+        </Route>
+        <Route path="/charge">
+          <ProtectedRoute component={Charge} />
+        </Route>
+        <Route path="/topup">
+          <ProtectedRoute component={TopUp} />
+        </Route>
+        <Route path="/history">
+          <ProtectedRoute component={History} />
         </Route>
         <Route path="/">
           <ProtectedRoute component={Home} />

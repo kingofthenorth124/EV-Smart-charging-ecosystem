@@ -34,6 +34,12 @@ tags:
     description: Authentication, registration, and password management
   - name: users
     description: User identity and account management (admin)
+  - name: wallet
+    description: Customer wallet, balance, top-ups, and transactions
+  - name: charging
+    description: Charging stations and charging sessions
+  - name: dashboard
+    description: Customer dashboard summary
 
 components:
   securitySchemes:
@@ -288,6 +294,259 @@ components:
       properties:
         status:
           $ref: '#/components/schemas/UserStatus'
+
+    # ── Wallet (Module 2) ─────────────────────────────────────────────────────
+    WalletStatus:
+      type: string
+      enum: [ACTIVE, SUSPENDED]
+
+    WalletSummary:
+      type: object
+      required: [id, balanceKobo, minBalanceKobo, currency, status, updatedAt]
+      properties:
+        id:
+          type: string
+        balanceKobo:
+          type: integer
+          description: Current balance in kobo (NGN minor units)
+          example: 1250000
+        minBalanceKobo:
+          type: integer
+          description: Minimum balance required to start a charging session, in kobo
+          example: 50000
+        currency:
+          type: string
+          example: NGN
+        status:
+          $ref: '#/components/schemas/WalletStatus'
+        updatedAt:
+          type: string
+          format: date-time
+
+    TransactionType:
+      type: string
+      enum: [TOPUP, CHARGE, REFUND, ADJUSTMENT]
+
+    TransactionStatus:
+      type: string
+      enum: [PENDING, COMPLETED, FAILED]
+
+    TopUpMethod:
+      type: string
+      enum: [BANK_TRANSFER, CARD, USSD]
+
+    WalletTransaction:
+      type: object
+      required: [id, type, status, amountKobo, balanceAfterKobo, reference, description, createdAt]
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        status:
+          $ref: '#/components/schemas/TransactionStatus'
+        amountKobo:
+          type: integer
+          description: Signed amount in kobo (positive = credit, negative = debit)
+        balanceAfterKobo:
+          type: integer
+        reference:
+          type: string
+          example: TOP-8F3KQ2
+        description:
+          type: string
+          example: Wallet top-up via bank transfer
+        method:
+          type: string
+          nullable: true
+        sessionId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    PaginatedTransactions:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletTransaction'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    TopUpRequest:
+      type: object
+      required: [amountKobo, method]
+      properties:
+        amountKobo:
+          type: integer
+          minimum: 10000
+          maximum: 100000000
+          description: Top-up amount in kobo (min ₦100)
+          example: 500000
+        method:
+          $ref: '#/components/schemas/TopUpMethod'
+
+    TopUpResponse:
+      type: object
+      required: [transaction, wallet]
+      properties:
+        transaction:
+          $ref: '#/components/schemas/WalletTransaction'
+        wallet:
+          $ref: '#/components/schemas/WalletSummary'
+
+    # ── Charging (Module 2) ───────────────────────────────────────────────────
+    StationStatus:
+      type: string
+      enum: [AVAILABLE, BUSY, OFFLINE]
+
+    Station:
+      type: object
+      required: [id, name, location, powerKw, connectorType, connectorsTotal, connectorsAvailable, tariffKoboPerKwh, status]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Lekki Phase 1 Hub
+        location:
+          type: string
+          example: Admiralty Way, Lekki
+        powerKw:
+          type: number
+          example: 60
+        connectorType:
+          type: string
+          example: CCS2
+        connectorsTotal:
+          type: integer
+        connectorsAvailable:
+          type: integer
+        tariffKoboPerKwh:
+          type: integer
+          description: Energy tariff in kobo per kWh
+          example: 25000
+        status:
+          $ref: '#/components/schemas/StationStatus'
+
+    SessionStatus:
+      type: string
+      enum: [ACTIVE, COMPLETED, STOPPED, FAULTED]
+
+    ChargingSession:
+      type: object
+      required: [id, status, stationId, stationName, stationLocation, powerKw, tariffKoboPerKwh, energyWh, costKobo, startedAt]
+      properties:
+        id:
+          type: string
+        status:
+          $ref: '#/components/schemas/SessionStatus'
+        stationId:
+          type: string
+        stationName:
+          type: string
+        stationLocation:
+          type: string
+        powerKw:
+          type: number
+        tariffKoboPerKwh:
+          type: integer
+        energyWh:
+          type: integer
+          description: Energy delivered in watt-hours
+        costKobo:
+          type: integer
+          description: Session cost in kobo (live value while active, final when ended)
+        limitKobo:
+          type: integer
+          nullable: true
+        elapsedSeconds:
+          type: integer
+          description: Seconds since session start (server-computed)
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        stopReason:
+          type: string
+          nullable: true
+          description: USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED
+
+    ActiveSessionResponse:
+      type: object
+      required: []
+      properties:
+        session:
+          oneOf:
+            - $ref: '#/components/schemas/ChargingSession'
+          nullable: true
+          description: The active charging session, or null when none is active
+
+    PaginatedSessions:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChargingSession'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    StartSessionRequest:
+      type: object
+      required: [stationId]
+      properties:
+        stationId:
+          type: string
+        limitKobo:
+          type: integer
+          minimum: 10000
+          nullable: true
+          description: Optional spend limit for this session, in kobo
+
+    DashboardSummary:
+      type: object
+      required: [wallet, sessionsCount, totalEnergyWh, totalSpentKobo, recentSessions, recentTransactions, activeSession]
+      properties:
+        wallet:
+          $ref: '#/components/schemas/WalletSummary'
+        sessionsCount:
+          type: integer
+          description: Total completed charging sessions
+        totalEnergyWh:
+          type: integer
+          description: Lifetime energy consumed in watt-hours
+        totalSpentKobo:
+          type: integer
+          description: Lifetime charging spend in kobo
+        recentSessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChargingSession'
+        recentTransactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletTransaction'
+        activeSession:
+          oneOf:
+            - $ref: '#/components/schemas/ChargingSession'
+          nullable: true
 
 paths:
   # ── Health ──────────────────────────────────────────────────────────────────
@@ -631,6 +890,268 @@ paths:
           description: Not authenticated
         '403':
           description: Insufficient permissions
+
+  # ── Wallet ──────────────────────────────────────────────────────────────────
+  /v1/wallet:
+    get:
+      operationId: getWallet
+      summary: Get current user's wallet summary
+      description: Returns the authoritative wallet balance and minimum-balance rule. The wallet is created on first access.
+      tags: [wallet]
+      responses:
+        '200':
+          description: Wallet summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletSummary'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /v1/wallet/topup:
+    post:
+      operationId: topUpWallet
+      summary: Top up the wallet
+      description: |
+        Initiates a wallet top-up through the selected payment method.
+        In this environment payments settle instantly via the sandbox provider;
+        the backend remains the authoritative source of payment status.
+      tags: [wallet]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopUpRequest'
+      responses:
+        '201':
+          description: Top-up completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopUpResponse'
+        '403':
+          description: Wallet suspended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /v1/wallet/transactions:
+    get:
+      operationId: listTransactions
+      summary: List wallet transactions
+      tags: [wallet]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+      responses:
+        '200':
+          description: Paginated transactions (newest first)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTransactions'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  # ── Charging ────────────────────────────────────────────────────────────────
+  /v1/stations:
+    get:
+      operationId: listStations
+      summary: List charging stations
+      tags: [charging]
+      responses:
+        '200':
+          description: Charging stations with live availability
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Station'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /v1/sessions:
+    get:
+      operationId: listSessions
+      summary: List the current user's charging sessions
+      tags: [charging]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Paginated sessions (newest first)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSessions'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /v1/sessions/active:
+    get:
+      operationId: getActiveSession
+      summary: Get the current active charging session
+      description: Returns live server-computed session values, or session=null when no session is active.
+      tags: [charging]
+      responses:
+        '200':
+          description: Active session (or null)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActiveSessionResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /v1/sessions/start:
+    post:
+      operationId: startSession
+      summary: Start a charging session
+      description: |
+        Authorizes and starts a charging session at the selected station.
+        Fails when the wallet balance is below the minimum required balance,
+        the station has no available connectors, or a session is already active.
+      tags: [charging]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartSessionRequest'
+      responses:
+        '201':
+          description: Session started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChargingSession'
+        '402':
+          description: Insufficient wallet balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '404':
+          description: Station not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '409':
+          description: Session already active or station unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  /v1/sessions/{id}/stop:
+    post:
+      operationId: stopSession
+      summary: Stop a charging session
+      description: Finalizes the session, debits the wallet, and records a CHARGE transaction.
+      tags: [charging]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session stopped and settled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChargingSession'
+        '404':
+          description: Session not found or not owned by caller
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '409':
+          description: Session is not active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+
+  # ── Dashboard ───────────────────────────────────────────────────────────────
+  /v1/dashboard:
+    get:
+      operationId: getDashboard
+      summary: Customer dashboard summary
+      description: Wallet, lifetime charging statistics, recent sessions, and recent transactions in a single call.
+      tags: [dashboard]
+      responses:
+        '200':
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
 
   /v1/users/{id}/status:
     patch:
