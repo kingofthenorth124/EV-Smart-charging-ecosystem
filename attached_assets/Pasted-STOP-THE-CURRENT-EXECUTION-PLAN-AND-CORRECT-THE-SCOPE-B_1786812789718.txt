@@ -1,0 +1,406 @@
+STOP THE CURRENT EXECUTION PLAN AND CORRECT THE SCOPE BEFORE WRITING MORE CODE.
+
+The current plan is too broad for Module 1.
+
+The five architectural documents and the Master Development Prompt are the authoritative source of truth. They define the overall platform architecture and the module-by-module methodology.
+
+1. DO NOT BUILD THE ENTIRE PLATFORM NOW
+
+Module 1 is NOT a platform-wide implementation sprint.
+
+Do NOT implement:
+
+- OCPP Gateway
+- OCPP 1.6J/2.0.1 business logic
+- Charging Sessions
+- Wallet
+- Payments
+- Pricing
+- RFID/NFC
+- Charging Stations
+- Fleet
+- CRM
+- ERP
+- Driver business domain
+- Vehicle management
+- Future business modules
+- APIs belonging to future modules
+- Future module business logic
+
+Those will be implemented in their respective modules.
+
+---
+
+2. DO NOT WRITE THE FULL PLATFORM OPENAPI IMPLEMENTATION
+
+Do NOT create a complete OpenAPI specification containing all future platform APIs.
+
+The architecture may define platform-wide API standards, conventions, versioning, security and integration principles.
+
+However, Module 1 must implement and document ONLY the APIs owned by Module 1.
+
+Module 1 API scope includes the APIs required for:
+
+- Authentication
+- Identity
+- Users
+- Roles
+- Permissions
+- Sessions
+- Password management
+- Account lifecycle
+- Authorization
+- Security/audit functionality where applicable
+
+Future module APIs must be created when those modules are implemented.
+
+---
+
+3. DO NOT BUILD ALL MODULES IN PARALLEL
+
+The project follows a strict:
+
+ARCHITECT → IMPLEMENT → TEST → REVIEW → COMPLETE → NEXT MODULE
+
+methodology.
+
+Do NOT use parallel subagents to independently build future modules.
+
+Parallel work is permitted only when the work belongs to Module 1 and cannot create architectural conflicts.
+
+Module 1 must be completed and validated before Module 2 begins.
+
+---
+
+4. CORRECT MODULE 1 SCOPE
+
+Module 1 is:
+
+ENTERPRISE FOUNDATION, IDENTITY & ACCESS MANAGEMENT
+
+Implement only the foundation and identity/access capabilities required at this stage.
+
+The scope includes:
+
+Backend Foundation
+
+- NestJS
+- TypeScript
+- Prisma
+- PostgreSQL integration
+- configuration management
+- module/service architecture
+- API infrastructure
+- validation
+- error handling
+- logging
+- request/correlation IDs
+- health checks
+
+Identity
+
+- User identity
+- User lifecycle
+- Account status
+- Registration where required
+- User retrieval
+- User management
+
+Authentication
+
+- Login
+- Logout
+- Access tokens
+- Refresh tokens
+- Token rotation/revocation
+- Session management
+- Password change
+- Password reset
+- Authentication security
+
+Authorization
+
+- Roles
+- Permissions
+- User-role relationships
+- Role-permission relationships
+- Authorization guards
+- Permission enforcement
+- Tenant/organization isolation where required by the architecture
+
+Security
+
+- Password hashing
+- Rate limiting
+- Brute-force protection
+- Account lockout where required
+- Secure token handling
+- Secret management
+- Security events
+- Audit logging
+
+API
+
+Create and document ONLY Module 1 APIs.
+
+Use the approved API versioning, naming, response, error and security conventions from the architecture documents.
+
+Frontend
+
+Implement only the frontend required for Module 1:
+
+- Login
+- Authentication state
+- Password management
+- User context
+- Permission-aware navigation
+- Administration screens required by Module 1
+
+Frontend must use the real Module 1 backend APIs.
+
+Do not create fake production authentication.
+
+---
+
+5. EXISTING EXPRESS/DRIZZLE CODE
+
+The existing project contains an Express/Drizzle setup.
+
+Do NOT blindly delete it.
+
+First:
+
+1. Inspect the existing repository.
+2. Identify reusable functionality.
+3. Identify existing business logic.
+4. Identify existing database structures.
+5. Identify useful configuration.
+6. Identify anything that conflicts with the approved architecture.
+
+Then migrate/rebuild the required foundation using:
+
+NestJS + TypeScript + Prisma + PostgreSQL
+
+while preserving useful existing work wherever technically appropriate.
+
+Do not maintain two competing backend architectures merely for convenience.
+
+The final approved architecture must have a clear ownership model.
+
+---
+
+6. ARCHITECTURAL BOUNDARIES
+
+Module 1 owns:
+
+Identity
+Authentication
+Authorization
+Users
+Roles
+Permissions
+Sessions
+Security
+Audit foundations
+
+Module 1 does NOT own:
+
+Charging
+OCPP
+Wallet
+Payments
+Pricing
+Stations
+RFID/NFC
+CRM
+ERP
+Fleet
+Vehicles
+Charging sessions
+
+Future domains must consume Module 1 identity through stable identifiers and APIs rather than creating duplicate authentication systems.
+
+---
+
+7. PLATFORM FOUNDATION VS MODULE IMPLEMENTATION
+
+There is an important distinction:
+
+The five architectural documents define the PLATFORM.
+
+Module 1 defines what is IMPLEMENTED NOW.
+
+Therefore:
+
+BUILD THE FOUNDATION NECESSARY FOR THE PLATFORM.
+
+BUT
+
+IMPLEMENT ONLY MODULE 1 BUSINESS CAPABILITIES.
+
+Do not confuse architectural readiness with premature implementation.
+
+For example, it is correct to establish:
+
+- API versioning
+- event conventions
+- authentication infrastructure
+- shared contracts
+- logging standards
+- observability foundations
+- configuration standards
+
+But it is NOT correct to implement the future Wallet, Payment, OCPP or Charging Session domains merely because they are part of the overall architecture.
+
+---
+
+8. CORRECT EXECUTION SEQUENCE
+
+Follow this sequence exactly:
+
+PHASE 1 — ARCHITECTURE REVIEW
+
+Read all five architectural documents.
+
+Extract the Module 1 requirements and constraints.
+
+PHASE 2 — REPOSITORY INSPECTION
+
+Inspect the existing project before modifying it.
+
+PHASE 3 — MODULE 1 PLAN
+
+Produce a concise implementation plan showing:
+
+- files to create
+- files to modify
+- database changes
+- APIs
+- services
+- frontend changes
+- tests
+- documentation
+
+Do not implement before establishing this plan.
+
+PHASE 4 — FOUNDATION
+
+Establish the approved NestJS/Prisma architecture.
+
+PHASE 5 — DATABASE
+
+Implement Module 1 schema, migrations, constraints and indexes.
+
+PHASE 6 — BACKEND
+
+Implement Module 1 identity, authentication and authorization.
+
+PHASE 7 — API
+
+Implement and document Module 1 APIs only.
+
+PHASE 8 — FRONTEND
+
+Connect Module 1 frontend functionality to the real APIs.
+
+PHASE 9 — SECURITY & OBSERVABILITY
+
+Implement the required security, logging, audit and observability capabilities.
+
+PHASE 10 — TESTING
+
+Run:
+
+- unit tests
+- integration tests
+- API/E2E tests
+- security tests
+
+PHASE 11 — ARCHITECTURAL REVIEW
+
+Compare the completed implementation against all five architectural documents.
+
+Identify and correct deviations.
+
+PHASE 12 — DOCUMENTATION
+
+Update the Module 1 documentation to reflect what was actually implemented.
+
+PHASE 13 — COMPLETION
+
+Produce a Module 1 completion report.
+
+Do NOT proceed to Module 2.
+
+---
+
+9. SUBAGENTS
+
+Do not launch independent design/implementation subagents that can create conflicting architecture.
+
+If subagents are used, they must:
+
+- operate only within Module 1
+- follow the five architectural documents
+- follow the Master Development Prompt
+- use the approved coding standards
+- use the approved contracts
+- not invent independent architecture
+- report their work back for architectural validation
+
+The primary agent remains responsible for architectural consistency.
+
+---
+
+10. DEFINITION OF DONE
+
+Module 1 is complete only when:
+
+- Backend foundation works
+- Prisma schema works
+- PostgreSQL integration works
+- Authentication works
+- Authorization works
+- Roles work
+- Permissions work
+- Sessions work
+- Token lifecycle works
+- Password management works
+- Account lifecycle works
+- Security controls work
+- Audit/security events work where required
+- APIs are documented
+- Frontend is connected to real APIs
+- Tests pass
+- Security tests pass
+- Documentation is updated
+- Architecture review passes
+- No future business modules have been prematurely implemented
+
+Only after this is satisfied may Module 2 begin.
+
+---
+
+11. REQUIRED RESPONSE BEFORE CONTINUING
+
+DO NOT CONTINUE WRITING CODE YET.
+
+First respond with:
+
+1. The corrected Module 1 scope.
+2. The revised implementation phases.
+3. The existing files/architecture you inspected.
+4. What will be preserved from Express/Drizzle.
+5. What will be migrated to NestJS/Prisma.
+6. The Module 1 APIs you intend to implement.
+7. The database entities you intend to create.
+8. Any architectural conflicts discovered.
+9. Confirmation that future modules will NOT be implemented now.
+
+WAIT FOR THIS REVIEW POINT BEFORE EXECUTING THE NEXT LARGE BATCH OF CHANGES.
+
+The objective is not to produce the most code.
+
+The objective is to produce the CORRECT enterprise foundation.
+
+BEGIN WITH THE CORRECTED PLAN, NOT THE IMPLEMENTATION.
