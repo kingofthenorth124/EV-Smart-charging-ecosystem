@@ -7,12 +7,16 @@
  * Each call produces an independent NestJS application with its own DI container,
  * so in-memory throttler storage never leaks between test suites.
  */
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { getStorageToken } from '@nestjs/throttler';
-import helmet from 'helmet';
-import { AppModule } from '../app.module';
-import { PrismaService } from '../modules/database/prisma.service';
+import {
+  BadRequestException,
+  INestApplication,
+  ValidationPipe,
+} from "@nestjs/common";
+import { Test, TestingModule } from "@nestjs/testing";
+import { getStorageToken } from "@nestjs/throttler";
+import helmet from "helmet";
+import { AppModule } from "../app.module";
+import { PrismaService } from "../modules/database/prisma.service";
 
 /**
  * No-op throttler storage — increment() always reports totalHits=1 so every
@@ -21,7 +25,12 @@ import { PrismaService } from '../modules/database/prisma.service';
  */
 const noopThrottlerStorage = {
   async increment(_key: string, _ttl: number, _limit: number) {
-    return { totalHits: 1, timeToExpire: 0, isBlocked: false, timeToBlockExpire: 0 };
+    return {
+      totalHits: 1,
+      timeToExpire: 0,
+      isBlocked: false,
+      timeToBlockExpire: 0,
+    };
   },
 };
 
@@ -43,7 +52,7 @@ async function buildApp(
   const app = moduleFixture.createNestApplication();
 
   // Mirror main.ts setup exactly
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix("api");
   app.use(helmet());
   app.enableCors({ origin: true, credentials: true });
   app.useGlobalPipes(
@@ -53,6 +62,7 @@ async function buildApp(
       transform: true,
       transformOptions: { enableImplicitConversion: true },
       stopAtFirstError: false,
+      exceptionFactory: (errors) => new BadRequestException(errors),
     }),
   );
 

@@ -3,4 +3,5 @@
 - [Zod resolver compatibility](zod-resolver-compat.md) — @workspace/validation uses zod v3 (not zod/v4); zodResolver reads error.errors (v3), v4 uses .issues and silently fails.
 - [Orval zod index overwrite](orval-zod-index.md) — api-spec codegen appends a types re-export to lib/api-zod/src/index.ts; revert it or typecheck fails with TS2308.
 - [api-client-react dist rebuild](api-client-dist-rebuild.md) — web app typecheck uses project references to dist/; after codegen, remove duplicate exports in index.ts then run tsc -b in lib/api-client-react.
+- [pnpm hidden-hoist version splits](hoisting-version-splits.md) — duplicate @types/react or jest versions break typecheck/tests in unrelated packages; keep one version workspace-wide.
 - [UI package variant split](ui-variant-split.md) — buttonVariants/badgeVariants live in packages/ui/src/lib/variants.ts (no JSX); vitest node env can't import JSX files, so variant logic must stay in a pure TS module.

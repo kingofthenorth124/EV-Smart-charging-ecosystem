@@ -4,7 +4,7 @@
  */
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
-import { ValidationPipe } from "@nestjs/common";
+import { BadRequestException, ValidationPipe } from "@nestjs/common";
 import { Logger } from "nestjs-pino";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
@@ -43,6 +43,9 @@ async function bootstrap(): Promise<void> {
       transform: true,
       transformOptions: { enableImplicitConversion: true },
       stopAtFirstError: false,
+      // Preserve ValidationError objects so the exception filter can emit
+      // field-level details ({ field, message }) instead of field: "unknown".
+      exceptionFactory: (errors) => new BadRequestException(errors),
     }),
   );
 

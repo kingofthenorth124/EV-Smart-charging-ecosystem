@@ -70,7 +70,15 @@ The script is **idempotent** — re-running it with the same email is safe. If t
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+**Module 1 — Identity & Access (complete, validated 2026-08-15; see `docs/module-1-completion-report.md`):**
+- Self-registration (CUSTOMER/PENDING), login with JWT access + rotating opaque refresh tokens, logout, `GET /me`
+- Password change and password reset (email delivery via Resend, non-enumerating 202)
+- Account lockout after 5 failed logins (15 min), per-IP login rate limiting (429 + Retry-After)
+- Role-based access control (CUSTOMER, ADMIN_OFFICER, SUPER_ADMIN); customers blocked from admin routes
+- Admin user directory (search/filter/paginate) with status management (activate/suspend/deactivate) — web UI at `/admin/users`
+- Full audit trail for every security event; consistent error contract `{ statusCode, message, error, correlationId }` with field-level 422 details
+
+**Module 2 — Wallet & Charging (built):** prepaid kobo-denominated wallet, top-ups, transaction history, charging stations, race-safe session start/stop, dashboard; web + Expo mobile clients.
 
 ## User preferences
 
@@ -78,7 +86,9 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Keep `@types/react` on a single version workspace-wide (catalog pinned to `~19.1.10` to match the mobile app's Expo pin). Two versions poison the pnpm hidden-hoist fallback and break typecheck in unrelated packages.
+- The api-server pins `jest-environment-node@^30` locally because react-native (mobile) hoists jest 29 pieces that otherwise get resolved by jest 30's runtime.
+- Vite configs (web, mockup-sandbox) require `PORT`/`BASE_PATH` only when serving; `vite build` runs without them.
 
 ## Pointers
 
