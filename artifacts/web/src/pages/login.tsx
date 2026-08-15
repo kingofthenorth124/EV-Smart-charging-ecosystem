@@ -74,7 +74,7 @@ export default function Login() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="you@example.com" {...field} data-testid="input-email" />
+                  <Input autoComplete="email" placeholder="you@example.com" {...field} data-testid="input-email" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -97,7 +97,7 @@ export default function Login() {
                   </Link>
                 </div>
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} data-testid="input-password" />
+                  <Input type="password" autoComplete="current-password" placeholder="••••••••" {...field} data-testid="input-password" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

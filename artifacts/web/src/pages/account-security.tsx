@@ -93,7 +93,7 @@ export default function AccountSecurity() {
                 <FormItem>
                   <FormLabel>Current Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} data-testid="input-currentpassword" />
+                    <Input type="password" autoComplete="current-password" placeholder="••••••••" {...field} data-testid="input-currentpassword" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -109,7 +109,7 @@ export default function AccountSecurity() {
                 <FormItem>
                   <FormLabel>New Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} data-testid="input-newpassword" />
+                    <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} data-testid="input-newpassword" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -123,7 +123,7 @@ export default function AccountSecurity() {
                 <FormItem>
                   <FormLabel>Confirm New Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} data-testid="input-confirmpassword" />
+                    <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} data-testid="input-confirmpassword" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

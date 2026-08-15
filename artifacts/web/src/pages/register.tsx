@@ -122,7 +122,7 @@ export default function Register() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="amina@example.com" {...field} data-testid="input-email" />
+                  <Input autoComplete="email" placeholder="amina@example.com" {...field} data-testid="input-email" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -150,7 +150,7 @@ export default function Register() {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} data-testid="input-password" />
+                  <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} data-testid="input-password" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -164,7 +164,7 @@ export default function Register() {
               <FormItem>
                 <FormLabel>Confirm Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} data-testid="input-confirmpassword" />
+                  <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} data-testid="input-confirmpassword" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

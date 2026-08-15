@@ -123,7 +123,7 @@ export default function AdminUsers() {
         description: `${user.firstName}'s status is now ${newStatus}.`,
       });
       setConfirmAction(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/users"], exact: false });
     } catch (err) {
       toast({
         title: "Update Failed",
