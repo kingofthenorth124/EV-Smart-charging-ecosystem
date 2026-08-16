@@ -216,7 +216,7 @@ export default function TopUp() {
         </div>
 
         <div className="mb-8">
-          <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3">
+          <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3 border-t-[color:var(--color-blue-700)] border-r-[color:var(--color-blue-700)] border-b-[color:var(--color-blue-700)] border-l-[color:var(--color-blue-700)]">
             Payment Method
           </div>
           <div className="grid grid-cols-3 gap-2">
