@@ -81,7 +81,7 @@ components:
         details:
           type: array
           items:
-            $ref: '#/components/schemas/ValidationErrorDetail'
+            $ref: "#/components/schemas/ValidationErrorDetail"
 
     # ── Health / System ───────────────────────────────────────────────────────
     HealthStatus:
@@ -130,7 +130,19 @@ components:
 
     UserProfile:
       type: object
-      required: [id, firstName, lastName, email, phone, role, status, registrationSource, createdAt, updatedAt]
+      required:
+        [
+          id,
+          firstName,
+          lastName,
+          email,
+          phone,
+          role,
+          status,
+          registrationSource,
+          createdAt,
+          updatedAt,
+        ]
       properties:
         id:
           type: string
@@ -147,11 +159,11 @@ components:
           example: amara@example.com
         phone:
           type: string
-          example: '+2348012345678'
+          example: "+2348012345678"
         role:
-          $ref: '#/components/schemas/UserRole'
+          $ref: "#/components/schemas/UserRole"
         status:
-          $ref: '#/components/schemas/UserStatus'
+          $ref: "#/components/schemas/UserStatus"
         registrationSource:
           type: string
           example: SELF_REGISTER
@@ -173,7 +185,7 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/UserProfile'
+            $ref: "#/components/schemas/UserProfile"
         total:
           type: integer
           example: 42
@@ -205,7 +217,7 @@ components:
           example: amara@example.com
         phone:
           type: string
-          example: '+2348012345678'
+          example: "+2348012345678"
         password:
           type: string
           minLength: 8
@@ -246,9 +258,9 @@ components:
       required: [user, tokens]
       properties:
         user:
-          $ref: '#/components/schemas/UserProfile'
+          $ref: "#/components/schemas/UserProfile"
         tokens:
-          $ref: '#/components/schemas/AuthTokens'
+          $ref: "#/components/schemas/AuthTokens"
 
     RefreshRequest:
       type: object
@@ -293,7 +305,7 @@ components:
       required: [status]
       properties:
         status:
-          $ref: '#/components/schemas/UserStatus'
+          $ref: "#/components/schemas/UserStatus"
 
     # ── Wallet (Module 2) ─────────────────────────────────────────────────────
     WalletStatus:
@@ -318,7 +330,7 @@ components:
           type: string
           example: NGN
         status:
-          $ref: '#/components/schemas/WalletStatus'
+          $ref: "#/components/schemas/WalletStatus"
         updatedAt:
           type: string
           format: date-time
@@ -337,14 +349,24 @@ components:
 
     WalletTransaction:
       type: object
-      required: [id, type, status, amountKobo, balanceAfterKobo, reference, description, createdAt]
+      required:
+        [
+          id,
+          type,
+          status,
+          amountKobo,
+          balanceAfterKobo,
+          reference,
+          description,
+          createdAt,
+        ]
       properties:
         id:
           type: string
         type:
-          $ref: '#/components/schemas/TransactionType'
+          $ref: "#/components/schemas/TransactionType"
         status:
-          $ref: '#/components/schemas/TransactionStatus'
+          $ref: "#/components/schemas/TransactionStatus"
         amountKobo:
           type: integer
           description: Signed amount in kobo (positive = credit, negative = debit)
@@ -373,7 +395,7 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/WalletTransaction'
+            $ref: "#/components/schemas/WalletTransaction"
         total:
           type: integer
         page:
@@ -392,16 +414,16 @@ components:
           description: Top-up amount in kobo (min ₦100)
           example: 500000
         method:
-          $ref: '#/components/schemas/TopUpMethod'
+          $ref: "#/components/schemas/TopUpMethod"
 
     TopUpResponse:
       type: object
       required: [transaction, wallet]
       properties:
         transaction:
-          $ref: '#/components/schemas/WalletTransaction'
+          $ref: "#/components/schemas/WalletTransaction"
         wallet:
-          $ref: '#/components/schemas/WalletSummary'
+          $ref: "#/components/schemas/WalletSummary"
 
     # ── Charging (Module 2) ───────────────────────────────────────────────────
     StationStatus:
@@ -410,7 +432,18 @@ components:
 
     Station:
       type: object
-      required: [id, name, location, powerKw, connectorType, connectorsTotal, connectorsAvailable, tariffKoboPerKwh, status]
+      required:
+        [
+          id,
+          name,
+          location,
+          powerKw,
+          connectorType,
+          connectorsTotal,
+          connectorsAvailable,
+          tariffKoboPerKwh,
+          status,
+        ]
       properties:
         id:
           type: string
@@ -435,7 +468,7 @@ components:
           description: Energy tariff in kobo per kWh
           example: 25000
         status:
-          $ref: '#/components/schemas/StationStatus'
+          $ref: "#/components/schemas/StationStatus"
 
     SessionStatus:
       type: string
@@ -443,12 +476,24 @@ components:
 
     ChargingSession:
       type: object
-      required: [id, status, stationId, stationName, stationLocation, powerKw, tariffKoboPerKwh, energyWh, costKobo, startedAt]
+      required:
+        [
+          id,
+          status,
+          stationId,
+          stationName,
+          stationLocation,
+          powerKw,
+          tariffKoboPerKwh,
+          energyWh,
+          costKobo,
+          startedAt,
+        ]
       properties:
         id:
           type: string
         status:
-          $ref: '#/components/schemas/SessionStatus'
+          $ref: "#/components/schemas/SessionStatus"
         stationId:
           type: string
         stationName:
@@ -489,7 +534,7 @@ components:
       properties:
         session:
           oneOf:
-            - $ref: '#/components/schemas/ChargingSession'
+            - $ref: "#/components/schemas/ChargingSession"
           nullable: true
           description: The active charging session, or null when none is active
 
@@ -500,7 +545,7 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/ChargingSession'
+            $ref: "#/components/schemas/ChargingSession"
         total:
           type: integer
         page:
@@ -522,10 +567,19 @@ components:
 
     DashboardSummary:
       type: object
-      required: [wallet, sessionsCount, totalEnergyWh, totalSpentKobo, recentSessions, recentTransactions, activeSession]
+      required:
+        [
+          wallet,
+          sessionsCount,
+          totalEnergyWh,
+          totalSpentKobo,
+          recentSessions,
+          recentTransactions,
+          activeSession,
+        ]
       properties:
         wallet:
-          $ref: '#/components/schemas/WalletSummary'
+          $ref: "#/components/schemas/WalletSummary"
         sessionsCount:
           type: integer
           description: Total completed charging sessions
@@ -538,14 +592,14 @@ components:
         recentSessions:
           type: array
           items:
-            $ref: '#/components/schemas/ChargingSession'
+            $ref: "#/components/schemas/ChargingSession"
         recentTransactions:
           type: array
           items:
-            $ref: '#/components/schemas/WalletTransaction'
+            $ref: "#/components/schemas/WalletTransaction"
         activeSession:
           oneOf:
-            - $ref: '#/components/schemas/ChargingSession'
+            - $ref: "#/components/schemas/ChargingSession"
           nullable: true
 
 paths:
@@ -558,7 +612,7 @@ paths:
       tags: [health]
       security: []
       responses:
-        '200':
+        "200":
           description: Platform is healthy
           headers:
             X-Correlation-ID:
@@ -566,13 +620,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthStatus'
-        '503':
+                $ref: "#/components/schemas/HealthStatus"
+        "503":
           description: Platform is degraded or down
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthStatus'
+                $ref: "#/components/schemas/HealthStatus"
 
   # ── System ──────────────────────────────────────────────────────────────────
   /v1/system/info:
@@ -582,12 +636,12 @@ paths:
       tags: [system]
       security: []
       responses:
-        '200':
+        "200":
           description: System information
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SystemInfo'
+                $ref: "#/components/schemas/SystemInfo"
 
   # ── Auth — Registration ──────────────────────────────────────────────────────
   /v1/auth/register:
@@ -604,26 +658,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterRequest'
+              $ref: "#/components/schemas/RegisterRequest"
       responses:
-        '201':
+        "201":
           description: Account created successfully (pending activation)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
-        '409':
+                $ref: "#/components/schemas/UserProfile"
+        "409":
           description: Email or phone number already registered
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '422':
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
           description: Validation error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   # ── Auth — Login ──────────────────────────────────────────────────────────────
   /v1/auth/login:
@@ -641,32 +695,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              $ref: "#/components/schemas/LoginRequest"
       responses:
-        '200':
+        "200":
           description: Authentication successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginResponse'
-        '401':
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
           description: Invalid credentials
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '403':
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "403":
           description: Account not active or locked
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '429':
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "429":
           description: Too many login attempts
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   # ── Auth — Logout ─────────────────────────────────────────────────────────────
   /v1/auth/logout:
@@ -680,16 +734,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RefreshRequest'
+              $ref: "#/components/schemas/RefreshRequest"
       responses:
-        '200':
+        "200":
           description: Logged out successfully
-        '401':
+        "401":
           description: Not authenticated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   # ── Auth — Refresh ───────────────────────────────────────────────────────────
   /v1/auth/refresh:
@@ -707,20 +761,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RefreshRequest'
+              $ref: "#/components/schemas/RefreshRequest"
       responses:
-        '200':
+        "200":
           description: Tokens refreshed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthTokens'
-        '401':
+                $ref: "#/components/schemas/AuthTokens"
+        "401":
           description: Invalid, expired, or revoked refresh token
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   # ── Auth — Me ────────────────────────────────────────────────────────────────
   /v1/auth/me:
@@ -729,18 +783,18 @@ paths:
       summary: Get current authenticated user profile
       tags: [auth]
       responses:
-        '200':
+        "200":
           description: Current user profile
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
-        '401':
+                $ref: "#/components/schemas/UserProfile"
+        "401":
           description: Not authenticated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   # ── Auth — Password Change ───────────────────────────────────────────────────
   /v1/auth/password/change:
@@ -754,22 +808,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ChangePasswordRequest'
+              $ref: "#/components/schemas/ChangePasswordRequest"
       responses:
-        '200':
+        "200":
           description: Password changed successfully
-        '400':
+        "400":
           description: Current password is incorrect
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '401':
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
           description: Not authenticated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   # ── Auth — Password Reset ─────────────────────────────────────────────────────
   /v1/auth/password/reset/request:
@@ -787,9 +841,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PasswordResetRequestBody'
+              $ref: "#/components/schemas/PasswordResetRequestBody"
       responses:
-        '200':
+        "200":
           description: Reset instructions sent (if account exists)
 
   /v1/auth/password/reset/confirm:
@@ -804,16 +858,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PasswordResetConfirmBody'
+              $ref: "#/components/schemas/PasswordResetConfirmBody"
       responses:
-        '200':
+        "200":
           description: Password reset successful
-        '400':
+        "400":
           description: Invalid or expired reset token
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   # ── Users (Admin) ─────────────────────────────────────────────────────────────
   /v1/users:
@@ -839,26 +893,26 @@ paths:
         - name: status
           in: query
           schema:
-            $ref: '#/components/schemas/UserStatus'
+            $ref: "#/components/schemas/UserStatus"
         - name: role
           in: query
           schema:
-            $ref: '#/components/schemas/UserRole'
+            $ref: "#/components/schemas/UserRole"
         - name: search
           in: query
           description: Search by name or email (partial match)
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Paginated user list
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedUsers'
-        '401':
+                $ref: "#/components/schemas/PaginatedUsers"
+        "401":
           description: Not authenticated
-        '403':
+        "403":
           description: Insufficient permissions
 
   /v1/users/{id}:
@@ -874,21 +928,21 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: User profile
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
-        '404':
+                $ref: "#/components/schemas/UserProfile"
+        "404":
           description: User not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '401':
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
           description: Not authenticated
-        '403':
+        "403":
           description: Insufficient permissions
 
   # ── Wallet ──────────────────────────────────────────────────────────────────
@@ -899,18 +953,18 @@ paths:
       description: Returns the authoritative wallet balance and minimum-balance rule. The wallet is created on first access.
       tags: [wallet]
       responses:
-        '200':
+        "200":
           description: Wallet summary
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WalletSummary'
-        '401':
+                $ref: "#/components/schemas/WalletSummary"
+        "401":
           description: Not authenticated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   /v1/wallet/topup:
     post:
@@ -926,26 +980,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TopUpRequest'
+              $ref: "#/components/schemas/TopUpRequest"
       responses:
-        '201':
+        "201":
           description: Top-up completed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TopUpResponse'
-        '403':
+                $ref: "#/components/schemas/TopUpResponse"
+        "403":
           description: Wallet suspended
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '422':
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "422":
           description: Validation error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   /v1/wallet/transactions:
     get:
@@ -969,20 +1023,20 @@ paths:
         - name: type
           in: query
           schema:
-            $ref: '#/components/schemas/TransactionType'
+            $ref: "#/components/schemas/TransactionType"
       responses:
-        '200':
+        "200":
           description: Paginated transactions (newest first)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedTransactions'
-        '401':
+                $ref: "#/components/schemas/PaginatedTransactions"
+        "401":
           description: Not authenticated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   # ── Charging ────────────────────────────────────────────────────────────────
   /v1/stations:
@@ -991,20 +1045,20 @@ paths:
       summary: List charging stations
       tags: [charging]
       responses:
-        '200':
+        "200":
           description: Charging stations with live availability
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Station'
-        '401':
+                  $ref: "#/components/schemas/Station"
+        "401":
           description: Not authenticated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   /v1/sessions:
     get:
@@ -1026,18 +1080,18 @@ paths:
             maximum: 100
             default: 20
       responses:
-        '200':
+        "200":
           description: Paginated sessions (newest first)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedSessions'
-        '401':
+                $ref: "#/components/schemas/PaginatedSessions"
+        "401":
           description: Not authenticated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   /v1/sessions/active:
     get:
@@ -1046,18 +1100,18 @@ paths:
       description: Returns live server-computed session values, or session=null when no session is active.
       tags: [charging]
       responses:
-        '200':
+        "200":
           description: Active session (or null)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ActiveSessionResponse'
-        '401':
+                $ref: "#/components/schemas/ActiveSessionResponse"
+        "401":
           description: Not authenticated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   /v1/sessions/start:
     post:
@@ -1073,32 +1127,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StartSessionRequest'
+              $ref: "#/components/schemas/StartSessionRequest"
       responses:
-        '201':
+        "201":
           description: Session started
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChargingSession'
-        '402':
+                $ref: "#/components/schemas/ChargingSession"
+        "402":
           description: Insufficient wallet balance
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "404":
           description: Station not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '409':
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "409":
           description: Session already active or station unavailable
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   /v1/sessions/{id}/stop:
     post:
@@ -1113,24 +1167,24 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Session stopped and settled
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChargingSession'
-        '404':
+                $ref: "#/components/schemas/ChargingSession"
+        "404":
           description: Session not found or not owned by caller
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '409':
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "409":
           description: Session is not active
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   # ── Dashboard ───────────────────────────────────────────────────────────────
   /v1/dashboard:
@@ -1140,18 +1194,18 @@ paths:
       description: Wallet, lifetime charging statistics, recent sessions, and recent transactions in a single call.
       tags: [dashboard]
       responses:
-        '200':
+        "200":
           description: Dashboard summary
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DashboardSummary'
-        '401':
+                $ref: "#/components/schemas/DashboardSummary"
+        "401":
           description: Not authenticated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+                $ref: "#/components/schemas/ApiErrorResponse"
 
   /v1/users/{id}/status:
     patch:
@@ -1173,21 +1227,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateUserStatusRequest'
+              $ref: "#/components/schemas/UpdateUserStatusRequest"
       responses:
-        '200':
+        "200":
           description: Status updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
-        '404':
+                $ref: "#/components/schemas/UserProfile"
+        "404":
           description: User not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-        '401':
+                $ref: "#/components/schemas/ApiErrorResponse"
+        "401":
           description: Not authenticated
-        '403':
+        "403":
           description: Insufficient permissions

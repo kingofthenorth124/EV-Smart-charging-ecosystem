@@ -13,16 +13,16 @@
 // ─── User / Identity ─────────────────────────────────────────────────────────
 
 export type UserRole =
-  | 'CUSTOMER'
-  | 'ADMIN_OFFICER'
-  | 'SUPER_ADMIN'
-  | 'OPERATIONS'
-  | 'SUPPORT'
-  | 'FINANCE'
-  | 'TECHNICAL'
-  | 'DEVELOPER';
+  | "CUSTOMER"
+  | "ADMIN_OFFICER"
+  | "SUPER_ADMIN"
+  | "OPERATIONS"
+  | "SUPPORT"
+  | "FINANCE"
+  | "TECHNICAL"
+  | "DEVELOPER";
 
-export type UserStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
+export type UserStatus = "PENDING" | "ACTIVE" | "SUSPENDED" | "DEACTIVATED";
 
 export interface UserProfile {
   id: string;
@@ -45,7 +45,7 @@ export interface AuthTokens {
   refreshToken: string;
   /** Access token TTL in seconds */
   expiresIn: number;
-  tokenType: 'Bearer';
+  tokenType: "Bearer";
 }
 
 export interface LoginResponse {
@@ -93,7 +93,7 @@ export interface ApiErrorResponse {
 
 // ─── System / Health ─────────────────────────────────────────────────────────
 
-export type HealthStatusValue = 'ok' | 'degraded' | 'down';
+export type HealthStatusValue = "ok" | "degraded" | "down";
 
 export interface HealthStatus {
   status: HealthStatusValue;
@@ -109,33 +109,33 @@ export interface SystemInfo {
 
 // ─── Audit ───────────────────────────────────────────────────────────────────
 
-export type AuditResult = 'SUCCESS' | 'FAILURE';
+export type AuditResult = "SUCCESS" | "FAILURE";
 
 export const AUDIT_ACTIONS = {
-  USER_REGISTERED: 'USER_REGISTERED',
-  USER_LOGIN_SUCCESS: 'USER_LOGIN_SUCCESS',
-  USER_LOGIN_FAILED: 'USER_LOGIN_FAILED',
-  USER_LOGOUT: 'USER_LOGOUT',
-  USER_TOKEN_REFRESHED: 'USER_TOKEN_REFRESHED',
-  USER_TOKEN_REVOKED: 'USER_TOKEN_REVOKED',
-  USER_PASSWORD_CHANGED: 'USER_PASSWORD_CHANGED',
-  USER_PASSWORD_RESET_REQUESTED: 'USER_PASSWORD_RESET_REQUESTED',
-  USER_PASSWORD_RESET_COMPLETED: 'USER_PASSWORD_RESET_COMPLETED',
-  USER_STATUS_CHANGED: 'USER_STATUS_CHANGED',
-  USER_ACCOUNT_LOCKED: 'USER_ACCOUNT_LOCKED',
-  ADMIN_USER_VIEWED: 'ADMIN_USER_VIEWED',
-  ADMIN_USERS_LISTED: 'ADMIN_USERS_LISTED',
+  USER_REGISTERED: "USER_REGISTERED",
+  USER_LOGIN_SUCCESS: "USER_LOGIN_SUCCESS",
+  USER_LOGIN_FAILED: "USER_LOGIN_FAILED",
+  USER_LOGOUT: "USER_LOGOUT",
+  USER_TOKEN_REFRESHED: "USER_TOKEN_REFRESHED",
+  USER_TOKEN_REVOKED: "USER_TOKEN_REVOKED",
+  USER_PASSWORD_CHANGED: "USER_PASSWORD_CHANGED",
+  USER_PASSWORD_RESET_REQUESTED: "USER_PASSWORD_RESET_REQUESTED",
+  USER_PASSWORD_RESET_COMPLETED: "USER_PASSWORD_RESET_COMPLETED",
+  USER_STATUS_CHANGED: "USER_STATUS_CHANGED",
+  USER_ACCOUNT_LOCKED: "USER_ACCOUNT_LOCKED",
+  ADMIN_USER_VIEWED: "ADMIN_USER_VIEWED",
+  ADMIN_USERS_LISTED: "ADMIN_USERS_LISTED",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
 
 // ─── Wallet (Module 2) ────────────────────────────────────────────────────────
 
-export type WalletStatus = 'ACTIVE' | 'SUSPENDED' | 'FROZEN';
+export type WalletStatus = "ACTIVE" | "SUSPENDED" | "FROZEN";
 
-export type TransactionType = 'TOP_UP' | 'CHARGE' | 'REFUND' | 'ADJUSTMENT';
-export type TransactionStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REVERSED';
-export type TopUpMethod = 'BANK_TRANSFER' | 'CARD' | 'USSD' | 'SANDBOX';
+export type TransactionType = "TOP_UP" | "CHARGE" | "REFUND" | "ADJUSTMENT";
+export type TransactionStatus = "PENDING" | "COMPLETED" | "FAILED" | "REVERSED";
+export type TopUpMethod = "BANK_TRANSFER" | "CARD" | "USSD" | "SANDBOX";
 
 export interface WalletSummary {
   id: string;
@@ -183,8 +183,8 @@ export interface DashboardSummary {
 
 // ─── Charging / Stations (Module 2) ──────────────────────────────────────────
 
-export type StationStatus = 'AVAILABLE' | 'BUSY' | 'OFFLINE' | 'MAINTENANCE';
-export type SessionStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED' | 'FAILED';
+export type StationStatus = "AVAILABLE" | "BUSY" | "OFFLINE" | "MAINTENANCE";
+export type SessionStatus = "ACTIVE" | "COMPLETED" | "CANCELLED" | "FAILED";
 
 export interface Station {
   id: string;
@@ -254,18 +254,18 @@ export interface EventEnvelope<T = unknown> {
 /** Well-known platform event types */
 export const PLATFORM_EVENTS = {
   // Wallet events
-  WALLET_CREATED: 'wallet.created',
-  WALLET_TOPPED_UP: 'wallet.topped_up',
-  WALLET_CHARGED: 'wallet.charged',
-  WALLET_SUSPENDED: 'wallet.suspended',
+  WALLET_CREATED: "wallet.created",
+  WALLET_TOPPED_UP: "wallet.topped_up",
+  WALLET_CHARGED: "wallet.charged",
+  WALLET_SUSPENDED: "wallet.suspended",
   // Session events
-  SESSION_STARTED: 'session.started',
-  SESSION_STOPPED: 'session.stopped',
-  SESSION_LIMIT_REACHED: 'session.limit_reached',
-  SESSION_BALANCE_EXHAUSTED: 'session.balance_exhausted',
+  SESSION_STARTED: "session.started",
+  SESSION_STOPPED: "session.stopped",
+  SESSION_LIMIT_REACHED: "session.limit_reached",
+  SESSION_BALANCE_EXHAUSTED: "session.balance_exhausted",
   // Identity events
-  USER_REGISTERED: 'user.registered',
-  USER_STATUS_CHANGED: 'user.status_changed',
+  USER_REGISTERED: "user.registered",
+  USER_STATUS_CHANGED: "user.status_changed",
 } as const;
 
 export type PlatformEventType =

@@ -16,12 +16,12 @@ import {
   setBaseUrl,
   setAuthTokenGetter,
   setDefaultHeadersGetter,
-} from '@workspace/api-client-react';
-import type { SdkClientOptions } from './types';
-import { authModule } from './modules/auth';
-import { walletModule } from './modules/wallet';
-import { chargingModule } from './modules/charging';
-import { identityModule } from './modules/identity';
+} from "@workspace/api-client-react";
+import type { SdkClientOptions } from "./types";
+import { authModule } from "./modules/auth";
+import { walletModule } from "./modules/wallet";
+import { chargingModule } from "./modules/charging";
+import { identityModule } from "./modules/identity";
 
 export interface CamelMobilityClient {
   auth: typeof authModule;
@@ -34,7 +34,9 @@ export interface CamelMobilityClient {
  * Initialise and return the Camel Mobility SDK client.
  * Call this once at application bootstrap.
  */
-export function createClient(options: SdkClientOptions = {}): CamelMobilityClient {
+export function createClient(
+  options: SdkClientOptions = {},
+): CamelMobilityClient {
   if (options.baseUrl) {
     setBaseUrl(options.baseUrl);
   }

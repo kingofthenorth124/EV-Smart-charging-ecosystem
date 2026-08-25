@@ -1,4 +1,5 @@
 # Enterprise Architecture Methodology
+
 # Smart EV Charging Payment Platform
 
 This document defines the authoritative architecture methodology for the Smart EV Charging Payment Platform.
@@ -67,17 +68,17 @@ The repository shall use the following structure:
 Smart-EV-Charging-Platform/
 
 ├── apps/
-│   ├── web/
-│   └── api/
+│ ├── web/
+│ └── api/
 │
 ├── packages/
-│   ├── shared-types/
-│   ├── ui/
-│   ├── config/
-│   ├── utils/
-│   ├── auth/
-│   ├── validation/
-│   └── sdk/
+│ ├── shared-types/
+│ ├── ui/
+│ ├── config/
+│ ├── utils/
+│ ├── auth/
+│ ├── validation/
+│ └── sdk/
 │
 ├── prisma/
 │
@@ -88,13 +89,13 @@ Smart-EV-Charging-Platform/
 ├── scripts/
 │
 ├── docs/
-│   ├── architecture.md
-│   ├── business-rules.md
-│   ├── development-standards.md
-│   └── ui-ux-reference.md
+│ ├── architecture.md
+│ ├── business-rules.md
+│ ├── development-standards.md
+│ └── ui-ux-reference.md
 │
 └── .github/
-    └── workflows/
+└── workflows/
 
 The repository structure shall be established and validated by Enterprise Project Foundation (Module 1).
 

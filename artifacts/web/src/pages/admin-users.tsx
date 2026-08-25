@@ -50,13 +50,29 @@ import { Badge } from "@/components/ui/badge";
 const getStatusBadge = (status: UserStatus) => {
   switch (status) {
     case "ACTIVE":
-      return <Badge className="bg-green-100 text-green-800 hover:bg-green-200 shadow-none border-0">ACTIVE</Badge>;
+      return (
+        <Badge className="bg-green-100 text-green-800 hover:bg-green-200 shadow-none border-0">
+          ACTIVE
+        </Badge>
+      );
     case "PENDING":
-      return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200 shadow-none border-0">PENDING</Badge>;
+      return (
+        <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200 shadow-none border-0">
+          PENDING
+        </Badge>
+      );
     case "SUSPENDED":
-      return <Badge variant="destructive" className="shadow-none border-0">SUSPENDED</Badge>;
+      return (
+        <Badge variant="destructive" className="shadow-none border-0">
+          SUSPENDED
+        </Badge>
+      );
     case "DEACTIVATED":
-      return <Badge variant="secondary" className="shadow-none border-0">DEACTIVATED</Badge>;
+      return (
+        <Badge variant="secondary" className="shadow-none border-0">
+          DEACTIVATED
+        </Badge>
+      );
     default:
       return <Badge>{status}</Badge>;
   }
@@ -112,7 +128,10 @@ export default function AdminUsers() {
     }
   };
 
-  const executeStatusChange = async (user: UserProfile, newStatus: UserStatus) => {
+  const executeStatusChange = async (
+    user: UserProfile,
+    newStatus: UserStatus,
+  ) => {
     try {
       await updateStatus.mutateAsync({
         id: user.id,
@@ -123,7 +142,10 @@ export default function AdminUsers() {
         description: `${user.firstName}'s status is now ${newStatus}.`,
       });
       setConfirmAction(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/users"], exact: false });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/v1/users"],
+        exact: false,
+      });
     } catch (err) {
       toast({
         title: "Update Failed",
@@ -133,7 +155,9 @@ export default function AdminUsers() {
     }
   };
 
-  const totalPages = usersResponse ? Math.ceil(usersResponse.total / usersResponse.limit) : 1;
+  const totalPages = usersResponse
+    ? Math.ceil(usersResponse.total / usersResponse.limit)
+    : 1;
 
   return (
     <AppLayout>
@@ -141,7 +165,9 @@ export default function AdminUsers() {
         <div className="flex flex-col sm:flex-row justify-between gap-4 border-b border-border pb-4">
           <div>
             <h1 className="text-xl font-semibold">User Directory</h1>
-            <p className="text-sm text-muted-foreground">Manage platform users and access</p>
+            <p className="text-sm text-muted-foreground">
+              Manage platform users and access
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative w-full sm:w-64">
@@ -158,8 +184,17 @@ export default function AdminUsers() {
         </div>
 
         <div className="flex flex-wrap gap-4 items-center">
-          <Select value={roleFilter} onValueChange={(val) => { setRoleFilter(val); setPage(1); }}>
-            <SelectTrigger className="w-[160px]" data-testid="select-filter-role">
+          <Select
+            value={roleFilter}
+            onValueChange={(val) => {
+              setRoleFilter(val);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger
+              className="w-[160px]"
+              data-testid="select-filter-role"
+            >
               <SelectValue placeholder="Filter by Role" />
             </SelectTrigger>
             <SelectContent>
@@ -170,8 +205,17 @@ export default function AdminUsers() {
             </SelectContent>
           </Select>
 
-          <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setPage(1); }}>
-            <SelectTrigger className="w-[160px]" data-testid="select-filter-status">
+          <Select
+            value={statusFilter}
+            onValueChange={(val) => {
+              setStatusFilter(val);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger
+              className="w-[160px]"
+              data-testid="select-filter-status"
+            >
               <SelectValue placeholder="Filter by Status" />
             </SelectTrigger>
             <SelectContent>
@@ -192,19 +236,27 @@ export default function AdminUsers() {
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Registered</TableHead>
-                {isSuperAdmin && <TableHead className="w-[80px]">Actions</TableHead>}
+                {isSuperAdmin && (
+                  <TableHead className="w-[80px]">Actions</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={isSuperAdmin ? 5 : 4} className="text-center py-12">
+                  <TableCell
+                    colSpan={isSuperAdmin ? 5 : 4}
+                    className="text-center py-12"
+                  >
                     <Loader2 className="size-6 animate-spin text-primary mx-auto" />
                   </TableCell>
                 </TableRow>
               ) : !usersResponse?.data?.length ? (
                 <TableRow>
-                  <TableCell colSpan={isSuperAdmin ? 5 : 4} className="text-center py-12 text-muted-foreground">
+                  <TableCell
+                    colSpan={isSuperAdmin ? 5 : 4}
+                    className="text-center py-12 text-muted-foreground"
+                  >
                     No users found matching your filters.
                   </TableCell>
                 </TableRow>
@@ -212,8 +264,12 @@ export default function AdminUsers() {
                 usersResponse.data.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell>
-                      <div className="font-medium text-foreground">{u.firstName} {u.lastName}</div>
-                      <div className="text-xs text-muted-foreground">{u.email}</div>
+                      <div className="font-medium text-foreground">
+                        {u.firstName} {u.lastName}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {u.email}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <span className="text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-md">
@@ -228,29 +284,41 @@ export default function AdminUsers() {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground"
+                            >
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Change Status</DropdownMenuLabel>
                             {u.status !== "ACTIVE" && (
-                              <DropdownMenuItem onClick={() => initiateStatusChange(u, "ACTIVE")}>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  initiateStatusChange(u, "ACTIVE")
+                                }
+                              >
                                 Set to Active
                               </DropdownMenuItem>
                             )}
                             {u.status !== "SUSPENDED" && (
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                                onClick={() => initiateStatusChange(u, "SUSPENDED")}
+                                onClick={() =>
+                                  initiateStatusChange(u, "SUSPENDED")
+                                }
                               >
                                 Suspend User
                               </DropdownMenuItem>
                             )}
                             {u.status !== "DEACTIVATED" && (
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 className="text-gray-600"
-                                onClick={() => initiateStatusChange(u, "DEACTIVATED")}
+                                onClick={() =>
+                                  initiateStatusChange(u, "DEACTIVATED")
+                                }
                               >
                                 Deactivate User
                               </DropdownMenuItem>
@@ -293,7 +361,10 @@ export default function AdminUsers() {
         )}
       </div>
 
-      <Dialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
+      <Dialog
+        open={!!confirmAction}
+        onOpenChange={(open) => !open && setConfirmAction(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -301,15 +372,22 @@ export default function AdminUsers() {
               Confirm Destructive Action
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to change the status of <strong>{confirmAction?.user.email}</strong> to <strong>{confirmAction?.newStatus}</strong>?
-              This will immediately affect their access to the platform.
+              Are you sure you want to change the status of{" "}
+              <strong>{confirmAction?.user.email}</strong> to{" "}
+              <strong>{confirmAction?.newStatus}</strong>? This will immediately
+              affect their access to the platform.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmAction(null)}>Cancel</Button>
-            <Button 
-              variant="destructive" 
-              onClick={() => confirmAction && executeStatusChange(confirmAction.user, confirmAction.newStatus)}
+            <Button variant="outline" onClick={() => setConfirmAction(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() =>
+                confirmAction &&
+                executeStatusChange(confirmAction.user, confirmAction.newStatus)
+              }
               disabled={updateStatus.isPending}
             >
               {updateStatus.isPending ? "Applying..." : "Yes, change status"}

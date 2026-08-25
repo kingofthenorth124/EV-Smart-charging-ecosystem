@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '../database/prisma.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
+import { PrismaService } from "../database/prisma.service";
 
 export interface CreateAuditLogInput {
   /** User ID (cuid) or 'system' */
@@ -12,7 +12,7 @@ export interface CreateAuditLogInput {
   /** Entity type, e.g. 'user', 'refresh_token' */
   resource: string;
   resourceId?: string;
-  result: 'SUCCESS' | 'FAILURE';
+  result: "SUCCESS" | "FAILURE";
   correlationId?: string;
   ipAddress?: string;
   userAgent?: string;
@@ -42,7 +42,7 @@ export class AuditService {
           action: input.action,
           resource: input.resource,
           resourceId: input.resourceId,
-          result: input.result as 'SUCCESS' | 'FAILURE',
+          result: input.result as "SUCCESS" | "FAILURE",
           correlationId: input.correlationId,
           ipAddress: input.ipAddress,
           userAgent: input.userAgent,
@@ -54,7 +54,7 @@ export class AuditService {
       // Audit failures must not disrupt the calling operation
       this.logger.error(
         { error, action: input.action, actorId: input.actorId },
-        'Failed to write audit log — investigate immediately in production',
+        "Failed to write audit log — investigate immediately in production",
       );
     }
   }

@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { User } from '@prisma/client';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import type { User } from "@prisma/client";
 
 export class UserResponseDto {
   @ApiProperty() id: string;
@@ -10,7 +10,8 @@ export class UserResponseDto {
   @ApiProperty() role: string;
   @ApiProperty() status: string;
   @ApiProperty() registrationSource: string;
-  @ApiPropertyOptional({ type: String, nullable: true }) lastLoginAt: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) lastLoginAt:
+    string | null;
   @ApiProperty() createdAt: string;
   @ApiProperty() updatedAt: string;
 

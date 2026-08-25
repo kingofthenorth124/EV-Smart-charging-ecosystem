@@ -26,8 +26,12 @@ export function AuthLayout({
           {/* Top colored border or hero */}
           <div className="bg-primary p-6 text-center relative overflow-hidden">
             <div className="absolute -top-8 -right-8 w-32 h-32 bg-[#f0a500]/15 rounded-full" />
-            <h1 className="text-xl font-semibold text-primary-foreground relative z-10">{title}</h1>
-            <p className="text-primary-foreground/70 text-sm mt-1 relative z-10">{subtitle}</p>
+            <h1 className="text-xl font-semibold text-primary-foreground relative z-10">
+              {title}
+            </h1>
+            <p className="text-primary-foreground/70 text-sm mt-1 relative z-10">
+              {subtitle}
+            </p>
           </div>
           <div className="p-6">{children}</div>
         </div>

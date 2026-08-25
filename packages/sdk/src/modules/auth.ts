@@ -11,7 +11,7 @@ import {
   requestPasswordReset as apiResetRequest,
   confirmPasswordReset as apiResetConfirm,
   getCurrentUser as apiGetCurrentUser,
-} from '@workspace/api-client-react';
+} from "@workspace/api-client-react";
 import type {
   LoginRequest,
   RegisterRequest,
@@ -19,24 +19,37 @@ import type {
   ChangePasswordRequest,
   PasswordResetRequestBody,
   PasswordResetConfirmBody,
-} from '@workspace/api-client-react';
-import type { LoginResponse, UserProfile, AuthTokens } from '@workspace/shared-types';
-import { SdkError } from '../errors';
+} from "@workspace/api-client-react";
+import type {
+  LoginResponse,
+  UserProfile,
+  AuthTokens,
+} from "@workspace/shared-types";
+import { SdkError } from "../errors";
 
 function wrapApiError(err: unknown): never {
   if (
     err !== null &&
-    typeof err === 'object' &&
-    'status' in err &&
-    'payload' in err
+    typeof err === "object" &&
+    "status" in err &&
+    "payload" in err
   ) {
-    const e = err as { status: number; payload: { message?: string; error?: string; correlationId?: string; details?: unknown[] } };
+    const e = err as {
+      status: number;
+      payload: {
+        message?: string;
+        error?: string;
+        correlationId?: string;
+        details?: unknown[];
+      };
+    };
     throw new SdkError({
       statusCode: e.status,
-      message: e.payload?.message ?? 'Request failed',
+      message: e.payload?.message ?? "Request failed",
       error: e.payload?.error,
       correlationId: e.payload?.correlationId,
-      details: e.payload?.details as import('@workspace/shared-types').ValidationErrorDetail[],
+      details: e.payload
+        ?.details as import("@workspace/shared-types").ValidationErrorDetail[],
     });
   }
   throw err;
@@ -45,7 +58,7 @@ function wrapApiError(err: unknown): never {
 export const authModule = {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      return await apiLogin(credentials) as unknown as LoginResponse;
+      return (await apiLogin(credentials)) as unknown as LoginResponse;
     } catch (err) {
       wrapApiError(err);
     }
@@ -53,7 +66,7 @@ export const authModule = {
 
   async register(data: RegisterRequest): Promise<UserProfile> {
     try {
-      return await apiRegister(data) as unknown as UserProfile;
+      return (await apiRegister(data)) as unknown as UserProfile;
     } catch (err) {
       wrapApiError(err);
     }
@@ -62,7 +75,7 @@ export const authModule = {
   async refresh(refreshToken: string): Promise<AuthTokens> {
     const body: RefreshRequest = { refreshToken };
     try {
-      return await apiRefresh(body) as unknown as AuthTokens;
+      return (await apiRefresh(body)) as unknown as AuthTokens;
     } catch (err) {
       wrapApiError(err);
     }
@@ -78,7 +91,7 @@ export const authModule = {
 
   async getCurrentUser(): Promise<UserProfile> {
     try {
-      return await apiGetCurrentUser() as unknown as UserProfile;
+      return (await apiGetCurrentUser()) as unknown as UserProfile;
     } catch (err) {
       wrapApiError(err);
     }
@@ -101,7 +114,10 @@ export const authModule = {
     }
   },
 
-  async confirmPasswordReset(token: string, newPassword: string): Promise<void> {
+  async confirmPasswordReset(
+    token: string,
+    newPassword: string,
+  ): Promise<void> {
     const body: PasswordResetConfirmBody = { token, newPassword };
     try {
       await apiResetConfirm(body);

@@ -52,12 +52,17 @@ export default function Login() {
   };
 
   return (
-    <AuthLayout title="Welcome Back" subtitle="Sign in to your Camel Mobility Wallet">
+    <AuthLayout
+      title="Welcome Back"
+      subtitle="Sign in to your Camel Mobility Wallet"
+    >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {errorMsg && (
             <Alert variant="destructive">
-              <AlertDescription data-testid="text-login-error">{errorMsg}</AlertDescription>
+              <AlertDescription data-testid="text-login-error">
+                {errorMsg}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -68,7 +73,12 @@ export default function Login() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input autoComplete="email" placeholder="you@example.com" {...field} data-testid="input-email" />
+                  <Input
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    {...field}
+                    data-testid="input-email"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -91,7 +101,13 @@ export default function Login() {
                   </Link>
                 </div>
                 <FormControl>
-                  <Input type="password" autoComplete="current-password" placeholder="••••••••" {...field} data-testid="input-password" />
+                  <Input
+                    type="password"
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    {...field}
+                    data-testid="input-password"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

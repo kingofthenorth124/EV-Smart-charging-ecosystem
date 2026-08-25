@@ -3,10 +3,10 @@ import {
   Logger,
   OnModuleDestroy,
   OnModuleInit,
-} from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
+} from "@nestjs/common";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 
 /**
  * PrismaService wraps PrismaClient for NestJS dependency injection.
@@ -21,7 +21,10 @@ import pg from 'pg';
  * Global singleton via DatabaseModule (isGlobal: true).
  */
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly logger = new Logger(PrismaService.name);
   private readonly pool: pg.Pool;
 
@@ -41,12 +44,12 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     super({
       adapter,
       log:
-        process.env.NODE_ENV === 'development'
+        process.env.NODE_ENV === "development"
           ? [
-              { level: 'error', emit: 'stdout' },
-              { level: 'warn', emit: 'stdout' },
+              { level: "error", emit: "stdout" },
+              { level: "warn", emit: "stdout" },
             ]
-          : [{ level: 'error', emit: 'stdout' }],
+          : [{ level: "error", emit: "stdout" }],
     });
 
     this.pool = pool;
@@ -55,9 +58,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   async onModuleInit(): Promise<void> {
     try {
       await this.$connect();
-      this.logger.log('Database connection established');
+      this.logger.log("Database connection established");
     } catch (error) {
-      this.logger.error('Failed to connect to database', error);
+      this.logger.error("Failed to connect to database", error);
       throw error;
     }
   }
@@ -65,6 +68,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   async onModuleDestroy(): Promise<void> {
     await this.$disconnect();
     await this.pool.end();
-    this.logger.log('Database connection closed');
+    this.logger.log("Database connection closed");
   }
 }

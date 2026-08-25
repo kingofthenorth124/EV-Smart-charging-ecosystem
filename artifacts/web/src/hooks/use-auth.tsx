@@ -9,15 +9,19 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+} from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   getCurrentUser,
   login as apiLogin,
   logout as apiLogout,
   register as apiRegister,
-} from '@workspace/api-client-react';
-import type { LoginResponse, RegisterRequest, UserProfile } from '@workspace/api-client-react';
+} from "@workspace/api-client-react";
+import type {
+  LoginResponse,
+  RegisterRequest,
+  UserProfile,
+} from "@workspace/api-client-react";
 import {
   beginLogout,
   clearTokens,
@@ -25,7 +29,7 @@ import {
   refreshSession,
   setSessionExpiredListener,
   storeTokens,
-} from '@/lib/auth-tokens';
+} from "@/lib/auth-tokens";
 
 interface AuthContextValue {
   /** True while the initial session bootstrap is running. */
@@ -69,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch (error) {
-        console.warn('Session bootstrap failed', error);
+        console.warn("Session bootstrap failed", error);
         clearTokens();
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -108,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (refreshToken) await apiLogout({ refreshToken });
     } catch (error) {
       // Revocation failure must not trap the user in a session.
-      console.warn('Logout revocation failed', error);
+      console.warn("Logout revocation failed", error);
     } finally {
       clearSession();
     }
@@ -138,6 +142,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
   return ctx;
 }

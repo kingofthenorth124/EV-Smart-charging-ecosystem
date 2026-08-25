@@ -8,38 +8,38 @@ Module 1 is **complete and accepted**. All acceptance criteria pass. Three resid
 
 ## Build & typecheck
 
-| Check | Result |
-| --- | --- |
-| `pnpm run typecheck` (all packages, libs, artifacts) | ✅ PASS — zero errors |
-| `pnpm run build` (all packages incl. api-server, web, mockup-sandbox) | ✅ PASS |
-| Prettier format check on touched files | ✅ PASS |
+| Check                                                                 | Result                |
+| --------------------------------------------------------------------- | --------------------- |
+| `pnpm run typecheck` (all packages, libs, artifacts)                  | ✅ PASS — zero errors |
+| `pnpm run build` (all packages incl. api-server, web, mockup-sandbox) | ✅ PASS               |
+| Prettier format check on touched files                                | ✅ PASS               |
 
 ## Test suite
 
-| Suite | Result |
-| --- | --- |
-| Auth/identity integration tests | ✅ PASS |
-| Security regression tests (`src/security/security.integration.spec.ts`) | ✅ PASS |
-| Charging/wallet integration tests | ✅ PASS |
-| **Total** | **65/65 tests, 3/3 suites pass** (`pnpm test:ci`, `--runInBand`) |
+| Suite                                                                   | Result                                                           |
+| ----------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Auth/identity integration tests                                         | ✅ PASS                                                          |
+| Security regression tests (`src/security/security.integration.spec.ts`) | ✅ PASS                                                          |
+| Charging/wallet integration tests                                       | ✅ PASS                                                          |
+| **Total**                                                               | **65/65 tests, 3/3 suites pass** (`pnpm test:ci`, `--runInBand`) |
 
 CI (`.github/workflows/ci.yml`) runs install → codegen → typecheck (libs, packages, api-server, web) → lint → API build → security audit → Prisma schema validation → integration tests against Postgres 16. The same commands were executed locally and pass.
 
 ## Functional acceptance — verified against the running app
 
-| Capability | Result | Evidence |
-| --- | --- | --- |
-| Register → CUSTOMER/PENDING account | ✅ | 201 with profile; `USER_REGISTERED` audit row |
-| Login → user + access/refresh tokens | ✅ | `AuthTokens` shape per contract; `USER_LOGIN_SUCCESS` audit row |
-| `GET /v1/auth/me` with Bearer token | ✅ | Returns profile |
-| Refresh rotation | ✅ | New refresh token issued; old token reuse → 401; `USER_TOKEN_REFRESHED` + `USER_TOKEN_THEFT_DETECTED` audit rows |
-| Logout | ✅ | 204; `USER_LOGOUT` audit row |
-| Password change | ✅ | 204; sessions revoked; `USER_PASSWORD_CHANGED` audit row |
-| Password reset request | ✅ | 202 (non-enumerating); `USER_PASSWORD_RESET_REQUESTED` audit row. Real email delivery via Resend (`RESEND_API_KEY` configured) — production-domain delivery is tracked as its own task |
-| Account lockout after 5 failures | ✅ | 6th attempt with the correct password → 403 "Account is temporarily locked. Try again in 15 minute(s)."; `USER_LOGIN_FAILED` ×5 + `USER_LOGIN_ACCOUNT_LOCKED` audit rows |
-| Login rate limiting | ✅ | 429 with `Retry-After: 900` after per-IP window exhausted |
-| RBAC: CUSTOMER blocked from admin routes | ✅ | `GET /v1/users` with customer token → 403 |
-| Admin login → user directory → activate PENDING customer | ✅ | SUPER_ADMIN (seeded via idempotent `seed:admin`) listed PENDING users and PATCHed status to ACTIVE (200); `ADMIN_USERS_LISTED` + `USER_STATUS_CHANGED` audit rows |
+| Capability                                               | Result | Evidence                                                                                                                                                                               |
+| -------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Register → CUSTOMER/PENDING account                      | ✅     | 201 with profile; `USER_REGISTERED` audit row                                                                                                                                          |
+| Login → user + access/refresh tokens                     | ✅     | `AuthTokens` shape per contract; `USER_LOGIN_SUCCESS` audit row                                                                                                                        |
+| `GET /v1/auth/me` with Bearer token                      | ✅     | Returns profile                                                                                                                                                                        |
+| Refresh rotation                                         | ✅     | New refresh token issued; old token reuse → 401; `USER_TOKEN_REFRESHED` + `USER_TOKEN_THEFT_DETECTED` audit rows                                                                       |
+| Logout                                                   | ✅     | 204; `USER_LOGOUT` audit row                                                                                                                                                           |
+| Password change                                          | ✅     | 204; sessions revoked; `USER_PASSWORD_CHANGED` audit row                                                                                                                               |
+| Password reset request                                   | ✅     | 202 (non-enumerating); `USER_PASSWORD_RESET_REQUESTED` audit row. Real email delivery via Resend (`RESEND_API_KEY` configured) — production-domain delivery is tracked as its own task |
+| Account lockout after 5 failures                         | ✅     | 6th attempt with the correct password → 403 "Account is temporarily locked. Try again in 15 minute(s)."; `USER_LOGIN_FAILED` ×5 + `USER_LOGIN_ACCOUNT_LOCKED` audit rows               |
+| Login rate limiting                                      | ✅     | 429 with `Retry-After: 900` after per-IP window exhausted                                                                                                                              |
+| RBAC: CUSTOMER blocked from admin routes                 | ✅     | `GET /v1/users` with customer token → 403                                                                                                                                              |
+| Admin login → user directory → activate PENDING customer | ✅     | SUPER_ADMIN (seeded via idempotent `seed:admin`) listed PENDING users and PATCHed status to ACTIVE (200); `ADMIN_USERS_LISTED` + `USER_STATUS_CHANGED` audit rows                      |
 
 ## API contract
 
@@ -49,16 +49,16 @@ CI (`.github/workflows/ci.yml`) runs install → codegen → typecheck (libs, pa
 
 ## Security checklist (docs/security/security-smoke-test-runbook.md)
 
-| Check | Result |
-| --- | --- |
-| Helmet headers (CSP, X-Frame-Options, nosniff, Referrer-Policy, HSTS) | ✅ PASS |
-| X-Correlation-ID generated and echoed | ✅ PASS |
-| 404/401 bodies contain no stack traces / internals | ✅ PASS |
-| Validation → 422 with field-level `details` | ✅ PASS (field names now populated — see fixes) |
-| Duplicate email → 409 | ✅ PASS |
-| Rate limit → 429 + `Retry-After` | ✅ PASS |
-| Audit rows for auth events | ✅ PASS (register, login success/failure, lockout, refresh, theft detection, logout, password change/reset, admin actions) |
-| No secrets in logs (`authorization: "[Redacted]"` in pino output) | ✅ PASS — confirmed in live server logs |
+| Check                                                                 | Result                                                                                                                     |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Helmet headers (CSP, X-Frame-Options, nosniff, Referrer-Policy, HSTS) | ✅ PASS                                                                                                                    |
+| X-Correlation-ID generated and echoed                                 | ✅ PASS                                                                                                                    |
+| 404/401 bodies contain no stack traces / internals                    | ✅ PASS                                                                                                                    |
+| Validation → 422 with field-level `details`                           | ✅ PASS (field names now populated — see fixes)                                                                            |
+| Duplicate email → 409                                                 | ✅ PASS                                                                                                                    |
+| Rate limit → 429 + `Retry-After`                                      | ✅ PASS                                                                                                                    |
+| Audit rows for auth events                                            | ✅ PASS (register, login success/failure, lockout, refresh, theft detection, logout, password change/reset, admin actions) |
+| No secrets in logs (`authorization: "[Redacted]"` in pino output)     | ✅ PASS — confirmed in live server logs                                                                                    |
 
 ## Fixes applied during validation
 

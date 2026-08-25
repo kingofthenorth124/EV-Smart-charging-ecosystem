@@ -27,16 +27,17 @@ export interface SdkClientOptions {
 
 /** Generic SDK result wrapper — discriminated union for typed error handling. */
 export type SdkResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: import('./errors').SdkError };
+  { ok: true; data: T } | { ok: false; error: import("./errors").SdkError };
 
 /** Wrap a promise so it never throws — returns a typed SdkResult instead. */
-export async function wrapResult<T>(fn: () => Promise<T>): Promise<SdkResult<T>> {
+export async function wrapResult<T>(
+  fn: () => Promise<T>,
+): Promise<SdkResult<T>> {
   try {
     const data = await fn();
     return { ok: true, data };
   } catch (err) {
-    const { SdkError } = await import('./errors');
+    const { SdkError } = await import("./errors");
     if (err instanceof SdkError) return { ok: false, error: err };
     // Re-throw unexpected non-SDK errors (network failures, etc.)
     throw err;

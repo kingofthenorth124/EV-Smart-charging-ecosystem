@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/app-layout";
-import { 
-  useListStations, 
-  useStartSession, 
-  useGetActiveSession, 
-  useStopSession, 
+import {
+  useListStations,
+  useStartSession,
+  useGetActiveSession,
+  useStopSession,
   useGetWallet,
   getGetActiveSessionQueryKey,
   getGetDashboardQueryKey,
   getGetWalletQueryKey,
   getListSessionsQueryKey,
-  getListTransactionsQueryKey
+  getListTransactionsQueryKey,
 } from "@workspace/api-client-react";
 import { Spinner } from "@/components/ui/spinner";
 import { QueryError } from "@/components/query-error";
@@ -18,7 +18,14 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bolt, MapPin, PlugZap, CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react";
+import {
+  Bolt,
+  MapPin,
+  PlugZap,
+  CheckCircle2,
+  AlertTriangle,
+  AlertCircle,
+} from "lucide-react";
 
 const formatNaira = (kobo: number) => {
   return new Intl.NumberFormat("en-NG", {
@@ -30,7 +37,9 @@ const formatNaira = (kobo: number) => {
 export default function Charge() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
+  const [selectedStationId, setSelectedStationId] = useState<string | null>(
+    null,
+  );
   const [limitNaira, setLimitNaira] = useState<number>(1000);
   const [isStarting, setIsStarting] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
@@ -59,7 +68,7 @@ export default function Charge() {
     query: {
       queryKey: getGetActiveSessionQueryKey(),
       refetchInterval: 3000,
-    }
+    },
   });
 
   const startSessionMutation = useStartSession();
@@ -84,14 +93,16 @@ export default function Charge() {
         data: {
           stationId: selectedStationId,
           limitKobo: limitNaira > 0 ? limitNaira * 100 : undefined,
-        }
+        },
       });
-      
+
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: getGetActiveSessionQueryKey() });
+      queryClient.invalidateQueries({
+        queryKey: getGetActiveSessionQueryKey(),
+      });
       queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetDashboardQueryKey() });
-      
+
       toast({
         title: "Session Started",
         description: "Your charging session has begun successfully.",
@@ -99,7 +110,9 @@ export default function Charge() {
     } catch (error) {
       toast({
         title: "Failed to start session",
-        description: (error as { message?: string }).message ?? "An unexpected error occurred.",
+        description:
+          (error as { message?: string }).message ??
+          "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {
@@ -109,20 +122,24 @@ export default function Charge() {
 
   const handleStopSession = async () => {
     if (!activeSession) return;
-    
+
     try {
       setIsStopping(true);
       await stopSessionMutation.mutateAsync({
-        id: activeSession.id
+        id: activeSession.id,
       });
-      
+
       // Invalidate everything to reflect completed session and accurate wallet state
-      queryClient.invalidateQueries({ queryKey: getGetActiveSessionQueryKey() });
+      queryClient.invalidateQueries({
+        queryKey: getGetActiveSessionQueryKey(),
+      });
       queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetDashboardQueryKey() });
       queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
-      queryClient.invalidateQueries({ queryKey: getListTransactionsQueryKey() });
-      
+      queryClient.invalidateQueries({
+        queryKey: getListTransactionsQueryKey(),
+      });
+
       toast({
         title: "Session Stopped",
         description: "Your charging session has ended.",
@@ -130,7 +147,9 @@ export default function Charge() {
     } catch (error) {
       toast({
         title: "Failed to stop session",
-        description: (error as { message?: string }).message ?? "An unexpected error occurred.",
+        description:
+          (error as { message?: string }).message ??
+          "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {
@@ -171,10 +190,12 @@ export default function Charge() {
   // Active Session View
   if (activeSession) {
     const hours = Math.floor((activeSession.elapsedSeconds || 0) / 3600);
-    const minutes = Math.floor(((activeSession.elapsedSeconds || 0) % 3600) / 60);
+    const minutes = Math.floor(
+      ((activeSession.elapsedSeconds || 0) % 3600) / 60,
+    );
     const seconds = (activeSession.elapsedSeconds || 0) % 60;
-    
-    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    const timeString = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 
     return (
       <AppLayout>
@@ -217,9 +238,9 @@ export default function Charge() {
             </div>
           </div>
 
-          <Button 
-            variant="destructive" 
-            size="lg" 
+          <Button
+            variant="destructive"
+            size="lg"
             className="w-full h-14 text-base font-semibold uppercase tracking-wider"
             onClick={handleStopSession}
             disabled={isStopping}
@@ -232,8 +253,13 @@ export default function Charge() {
     );
   }
 
-  const hasSufficientBalance = walletData ? walletData.balanceKobo >= walletData.minBalanceKobo : false;
-  const missingBalanceAmt = walletData && !hasSufficientBalance ? walletData.minBalanceKobo - walletData.balanceKobo : 0;
+  const hasSufficientBalance = walletData
+    ? walletData.balanceKobo >= walletData.minBalanceKobo
+    : false;
+  const missingBalanceAmt =
+    walletData && !hasSufficientBalance
+      ? walletData.minBalanceKobo - walletData.balanceKobo
+      : 0;
 
   // Station Selection View
   return (
@@ -254,36 +280,55 @@ export default function Charge() {
             {stationsData.map((station) => {
               const isSelected = selectedStationId === station.id;
               const isAvailable = station.status === "AVAILABLE";
-              
+
               return (
                 <div
                   key={station.id}
-                  onClick={() => isAvailable && setSelectedStationId(station.id)}
+                  onClick={() =>
+                    isAvailable && setSelectedStationId(station.id)
+                  }
                   className={`border rounded-xl p-4 transition-all duration-200 ${
                     isSelected
                       ? "border-primary bg-primary/5 shadow-[0_0_0_1px_rgba(var(--primary))] ring-1 ring-primary"
-                      : isAvailable 
+                      : isAvailable
                         ? "border-border bg-card hover:border-primary/50 hover:bg-muted/30 cursor-pointer"
                         : "border-border/50 bg-muted/20 opacity-60 cursor-not-allowed"
                   }`}
                 >
-                  <div className="font-semibold text-sm mb-1">{station.name}</div>
-                  <div className="text-xs text-muted-foreground mb-3">{station.powerKw} kW {station.connectorType}</div>
-                  
+                  <div className="font-semibold text-sm mb-1">
+                    {station.name}
+                  </div>
+                  <div className="text-xs text-muted-foreground mb-3">
+                    {station.powerKw} kW {station.connectorType}
+                  </div>
+
                   <div className="flex items-center justify-between mt-auto">
                     <div className="text-[10px] font-mono text-muted-foreground">
-                      ID: {station.id.split('-')[0].toUpperCase()}
+                      ID: {station.id.split("-")[0].toUpperCase()}
                     </div>
-                    <div className={`flex items-center gap-1.5 text-[11px] font-bold ${
-                      isAvailable ? "text-green-600" : 
-                      station.status === "BUSY" ? "text-amber-600" : "text-gray-500"
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        isAvailable ? "bg-green-600" : 
-                        station.status === "BUSY" ? "bg-amber-600" : "bg-gray-500"
-                      }`} />
-                      {station.status === "AVAILABLE" ? "AVAILABLE" : 
-                       station.status === "BUSY" ? "IN USE" : "OFFLINE"}
+                    <div
+                      className={`flex items-center gap-1.5 text-[11px] font-bold ${
+                        isAvailable
+                          ? "text-green-600"
+                          : station.status === "BUSY"
+                            ? "text-amber-600"
+                            : "text-gray-500"
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          isAvailable
+                            ? "bg-green-600"
+                            : station.status === "BUSY"
+                              ? "bg-amber-600"
+                              : "bg-gray-500"
+                        }`}
+                      />
+                      {station.status === "AVAILABLE"
+                        ? "AVAILABLE"
+                        : station.status === "BUSY"
+                          ? "IN USE"
+                          : "OFFLINE"}
                     </div>
                   </div>
                 </div>
@@ -293,19 +338,25 @@ export default function Charge() {
         ) : (
           <div className="text-center py-10 bg-card border border-border border-dashed rounded-xl mb-8">
             <AlertCircle className="size-8 mx-auto text-muted-foreground mb-3" />
-            <p className="text-sm font-medium text-foreground">No stations found</p>
-            <p className="text-xs text-muted-foreground mt-1">Check back later for available chargers.</p>
+            <p className="text-sm font-medium text-foreground">
+              No stations found
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Check back later for available chargers.
+            </p>
           </div>
         )}
 
-        <div className={`transition-opacity duration-300 ${selectedStationId ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+        <div
+          className={`transition-opacity duration-300 ${selectedStationId ? "opacity-100" : "opacity-40 pointer-events-none"}`}
+        >
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                 Spend Limit (Optional)
               </label>
               <div className="font-mono text-sm font-bold text-primary">
-                {limitNaira === 0 ? 'No limit' : formatNaira(limitNaira * 100)}
+                {limitNaira === 0 ? "No limit" : formatNaira(limitNaira * 100)}
               </div>
             </div>
             <Slider
@@ -327,12 +378,16 @@ export default function Charge() {
               <AlertTriangle className="size-5 shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold">Insufficient Balance</p>
-                <p className="text-xs mt-1">You need at least {formatNaira(walletData.minBalanceKobo)} to start charging. Please top up your wallet by {formatNaira(missingBalanceAmt)} or more.</p>
+                <p className="text-xs mt-1">
+                  You need at least {formatNaira(walletData.minBalanceKobo)} to
+                  start charging. Please top up your wallet by{" "}
+                  {formatNaira(missingBalanceAmt)} or more.
+                </p>
               </div>
             </div>
           )}
 
-          <Button 
+          <Button
             className="w-full h-14 text-base font-semibold"
             onClick={handleStartSession}
             disabled={!selectedStationId || isStarting || !hasSufficientBalance}

@@ -1,5 +1,5 @@
-import { useColorScheme } from 'react-native';
-import colors from '@/constants/colors';
+import { useColorScheme } from "react-native";
+import colors from "@/constants/colors";
 
 /**
  * Returns the design tokens for the current color scheme.
@@ -16,7 +16,7 @@ import colors from '@/constants/colors';
 export function useColors() {
   const scheme = useColorScheme();
   const palette: typeof colors.light =
-    scheme === 'dark' && 'dark' in colors
+    scheme === "dark" && "dark" in colors
       ? (colors.dark as unknown as typeof colors.light)
       : colors.light;
   return { ...palette, radius: colors.radius };

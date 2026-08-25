@@ -9,10 +9,10 @@
  * Format a Date or ISO string as a human-readable local date.
  */
 export function formatDate(date: string | Date): string {
-  return new Intl.DateTimeFormat('en-NG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
+  return new Intl.DateTimeFormat("en-NG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   }).format(new Date(date));
 }
 
@@ -20,12 +20,12 @@ export function formatDate(date: string | Date): string {
  * Format a Date or ISO string as a local date-time string.
  */
 export function formatDateTime(date: string | Date): string {
-  return new Intl.DateTimeFormat('en-NG', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Intl.DateTimeFormat("en-NG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(new Date(date));
 }
 
@@ -48,7 +48,7 @@ export function formatDuration(seconds: number): string {
  */
 export function truncate(str: string, maxLength: number): string {
   if (str.length <= maxLength) return str;
-  return str.slice(0, maxLength - 1) + '…';
+  return str.slice(0, maxLength - 1) + "…";
 }
 
 /**
@@ -57,7 +57,7 @@ export function truncate(str: string, maxLength: number): string {
  */
 export function maskCardId(cardIdentifier: string): string {
   if (cardIdentifier.length <= 4) return cardIdentifier;
-  return '*'.repeat(cardIdentifier.length - 4) + cardIdentifier.slice(-4);
+  return "*".repeat(cardIdentifier.length - 4) + cardIdentifier.slice(-4);
 }
 
 /**

@@ -29,13 +29,13 @@ export interface ApiErrorResponse {
   details?: ValidationErrorDetail[];
 }
 
-export type HealthStatusStatus = typeof HealthStatusStatus[keyof typeof HealthStatusStatus];
-
+export type HealthStatusStatus =
+  (typeof HealthStatusStatus)[keyof typeof HealthStatusStatus];
 
 export const HealthStatusStatus = {
-  ok: 'ok',
-  degraded: 'degraded',
-  down: 'down',
+  ok: "ok",
+  degraded: "degraded",
+  down: "down",
 } as const;
 
 export interface HealthStatus {
@@ -50,28 +50,26 @@ export interface SystemInfo {
   uptime: number;
 }
 
-export type UserRole = typeof UserRole[keyof typeof UserRole];
-
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export const UserRole = {
-  CUSTOMER: 'CUSTOMER',
-  ADMIN_OFFICER: 'ADMIN_OFFICER',
-  SUPER_ADMIN: 'SUPER_ADMIN',
-  OPERATIONS: 'OPERATIONS',
-  SUPPORT: 'SUPPORT',
-  FINANCE: 'FINANCE',
-  TECHNICAL: 'TECHNICAL',
-  DEVELOPER: 'DEVELOPER',
+  CUSTOMER: "CUSTOMER",
+  ADMIN_OFFICER: "ADMIN_OFFICER",
+  SUPER_ADMIN: "SUPER_ADMIN",
+  OPERATIONS: "OPERATIONS",
+  SUPPORT: "SUPPORT",
+  FINANCE: "FINANCE",
+  TECHNICAL: "TECHNICAL",
+  DEVELOPER: "DEVELOPER",
 } as const;
 
-export type UserStatus = typeof UserStatus[keyof typeof UserStatus];
-
+export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus];
 
 export const UserStatus = {
-  PENDING: 'PENDING',
-  ACTIVE: 'ACTIVE',
-  SUSPENDED: 'SUSPENDED',
-  DEACTIVATED: 'DEACTIVATED',
+  PENDING: "PENDING",
+  ACTIVE: "ACTIVE",
+  SUSPENDED: "SUSPENDED",
+  DEACTIVATED: "DEACTIVATED",
 } as const;
 
 export interface UserProfile {
@@ -97,14 +95,14 @@ export interface PaginatedUsers {
 
 export interface RegisterRequest {
   /**
-     * @minLength 1
-     * @maxLength 100
-     */
+   * @minLength 1
+   * @maxLength 100
+   */
   firstName: string;
   /**
-     * @minLength 1
-     * @maxLength 100
-     */
+   * @minLength 1
+   * @maxLength 100
+   */
   lastName: string;
   email: string;
   phone: string;
@@ -112,11 +110,11 @@ export interface RegisterRequest {
   password: string;
 }
 
-export type AuthTokensTokenType = typeof AuthTokensTokenType[keyof typeof AuthTokensTokenType];
-
+export type AuthTokensTokenType =
+  (typeof AuthTokensTokenType)[keyof typeof AuthTokensTokenType];
 
 export const AuthTokensTokenType = {
-  Bearer: 'Bearer',
+  Bearer: "Bearer",
 } as const;
 
 export interface AuthTokens {
@@ -163,12 +161,11 @@ export interface UpdateUserStatusRequest {
   status: UserStatus;
 }
 
-export type WalletStatus = typeof WalletStatus[keyof typeof WalletStatus];
-
+export type WalletStatus = (typeof WalletStatus)[keyof typeof WalletStatus];
 
 export const WalletStatus = {
-  ACTIVE: 'ACTIVE',
-  SUSPENDED: 'SUSPENDED',
+  ACTIVE: "ACTIVE",
+  SUSPENDED: "SUSPENDED",
 } as const;
 
 export interface WalletSummary {
@@ -182,32 +179,31 @@ export interface WalletSummary {
   updatedAt: string;
 }
 
-export type TransactionType = typeof TransactionType[keyof typeof TransactionType];
-
+export type TransactionType =
+  (typeof TransactionType)[keyof typeof TransactionType];
 
 export const TransactionType = {
-  TOPUP: 'TOPUP',
-  CHARGE: 'CHARGE',
-  REFUND: 'REFUND',
-  ADJUSTMENT: 'ADJUSTMENT',
+  TOPUP: "TOPUP",
+  CHARGE: "CHARGE",
+  REFUND: "REFUND",
+  ADJUSTMENT: "ADJUSTMENT",
 } as const;
 
-export type TransactionStatus = typeof TransactionStatus[keyof typeof TransactionStatus];
-
+export type TransactionStatus =
+  (typeof TransactionStatus)[keyof typeof TransactionStatus];
 
 export const TransactionStatus = {
-  PENDING: 'PENDING',
-  COMPLETED: 'COMPLETED',
-  FAILED: 'FAILED',
+  PENDING: "PENDING",
+  COMPLETED: "COMPLETED",
+  FAILED: "FAILED",
 } as const;
 
-export type TopUpMethod = typeof TopUpMethod[keyof typeof TopUpMethod];
-
+export type TopUpMethod = (typeof TopUpMethod)[keyof typeof TopUpMethod];
 
 export const TopUpMethod = {
-  BANK_TRANSFER: 'BANK_TRANSFER',
-  CARD: 'CARD',
-  USSD: 'USSD',
+  BANK_TRANSFER: "BANK_TRANSFER",
+  CARD: "CARD",
+  USSD: "USSD",
 } as const;
 
 export interface WalletTransaction {
@@ -233,10 +229,10 @@ export interface PaginatedTransactions {
 
 export interface TopUpRequest {
   /**
-     * Top-up amount in kobo (min ₦100)
-     * @minimum 10000
-     * @maximum 100000000
-     */
+   * Top-up amount in kobo (min ₦100)
+   * @minimum 10000
+   * @maximum 100000000
+   */
   amountKobo: number;
   method: TopUpMethod;
 }
@@ -246,13 +242,12 @@ export interface TopUpResponse {
   wallet: WalletSummary;
 }
 
-export type StationStatus = typeof StationStatus[keyof typeof StationStatus];
-
+export type StationStatus = (typeof StationStatus)[keyof typeof StationStatus];
 
 export const StationStatus = {
-  AVAILABLE: 'AVAILABLE',
-  BUSY: 'BUSY',
-  OFFLINE: 'OFFLINE',
+  AVAILABLE: "AVAILABLE",
+  BUSY: "BUSY",
+  OFFLINE: "OFFLINE",
 } as const;
 
 export interface Station {
@@ -268,14 +263,13 @@ export interface Station {
   status: StationStatus;
 }
 
-export type SessionStatus = typeof SessionStatus[keyof typeof SessionStatus];
-
+export type SessionStatus = (typeof SessionStatus)[keyof typeof SessionStatus];
 
 export const SessionStatus = {
-  ACTIVE: 'ACTIVE',
-  COMPLETED: 'COMPLETED',
-  STOPPED: 'STOPPED',
-  FAULTED: 'FAULTED',
+  ACTIVE: "ACTIVE",
+  COMPLETED: "COMPLETED",
+  STOPPED: "STOPPED",
+  FAULTED: "FAULTED",
 } as const;
 
 export interface ChargingSession {
@@ -314,9 +308,9 @@ export interface PaginatedSessions {
 export interface StartSessionRequest {
   stationId: string;
   /**
-     * Optional spend limit for this session, in kobo
-     * @minimum 10000
-     */
+   * Optional spend limit for this session, in kobo
+   * @minimum 10000
+   */
   limitKobo?: number | null;
 }
 
@@ -334,45 +328,44 @@ export interface DashboardSummary {
 }
 
 export type ListUsersParams = {
-/**
- * @minimum 1
- */
-page?: number;
-/**
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
-status?: UserStatus;
-role?: UserRole;
-/**
- * Search by name or email (partial match)
- */
-search?: string;
+  /**
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+  status?: UserStatus;
+  role?: UserRole;
+  /**
+   * Search by name or email (partial match)
+   */
+  search?: string;
 };
 
 export type ListTransactionsParams = {
-/**
- * @minimum 1
- */
-page?: number;
-/**
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
-type?: TransactionType;
+  /**
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+  type?: TransactionType;
 };
 
 export type ListSessionsParams = {
-/**
- * @minimum 1
- */
-page?: number;
-/**
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
+  /**
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
 };
-

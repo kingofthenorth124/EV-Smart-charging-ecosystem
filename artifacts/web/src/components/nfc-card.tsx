@@ -1,6 +1,14 @@
 import { Wifi } from "lucide-react";
 
-export function NfcCard({ title, value, id }: { title: string; value: string; id: string }) {
+export function NfcCard({
+  title,
+  value,
+  id,
+}: {
+  title: string;
+  value: string;
+  id: string;
+}) {
   return (
     <div className="w-full h-48 bg-gradient-to-br from-[#0f4c35] via-[#1a6b4a] to-[#0a3526] rounded-2xl p-5 relative overflow-hidden mb-5 shadow-lg select-none">
       {/* Decorative amber circle */}

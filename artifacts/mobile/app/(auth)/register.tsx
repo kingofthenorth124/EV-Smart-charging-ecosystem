@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -8,15 +8,15 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import * as Haptics from 'expo-haptics';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
-import { useColors } from '@/hooks/useColors';
-import { useAuth } from '@/context/AuthContext';
-import { ApiError } from '@workspace/api-client-react';
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
+import * as Haptics from "expo-haptics";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
+import { useColors } from "@/hooks/useColors";
+import { useAuth } from "@/context/AuthContext";
+import { ApiError } from "@workspace/api-client-react";
 
 export default function RegisterScreen() {
   const colors = useColors();
@@ -24,11 +24,11 @@ export default function RegisterScreen() {
   const { register } = useAuth();
 
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    password: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,12 +39,18 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     const { firstName, lastName, email, phone, password } = form;
-    if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim() || !password) {
-      setError('Please fill in all fields.');
+    if (
+      !firstName.trim() ||
+      !lastName.trim() ||
+      !email.trim() ||
+      !phone.trim() ||
+      !password
+    ) {
+      setError("Please fill in all fields.");
       return;
     }
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
+      setError("Password must be at least 8 characters.");
       return;
     }
     setError(null);
@@ -63,12 +69,12 @@ export default function RegisterScreen() {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       if (err instanceof ApiError) {
         if (err.status === 409) {
-          setError('An account with this email or phone already exists.');
+          setError("An account with this email or phone already exists.");
         } else {
-          setError(err.message ?? 'Registration failed. Please try again.');
+          setError(err.message ?? "Registration failed. Please try again.");
         }
       } else {
-        setError('Could not connect to the server. Check your connection.');
+        setError("Could not connect to the server. Check your connection.");
       }
     } finally {
       setIsLoading(false);
@@ -80,18 +86,25 @@ export default function RegisterScreen() {
   if (registered) {
     return (
       <View style={[styles.successContainer, { paddingTop: insets.top }]}>
-        <LinearGradient colors={['#0F4C35', '#1a6647']} style={StyleSheet.absoluteFill} />
+        <LinearGradient
+          colors={["#0F4C35", "#1a6647"]}
+          style={StyleSheet.absoluteFill}
+        />
         <View style={styles.successContent}>
           <View style={styles.checkCircle}>
             <Text style={styles.checkIcon}>✓</Text>
           </View>
           <Text style={styles.successTitle}>Account created!</Text>
           <Text style={styles.successBody}>
-            Your account is pending activation. An administrator will review and activate it shortly. You'll be able to sign in once activated.
+            Your account is pending activation. An administrator will review and
+            activate it shortly. You'll be able to sign in once activated.
           </Text>
           <Pressable
-            style={({ pressed }) => [styles.successButton, pressed && { opacity: 0.8 }]}
-            onPress={() => router.replace('/(auth)/login')}
+            style={({ pressed }) => [
+              styles.successButton,
+              pressed && { opacity: 0.8 },
+            ]}
+            onPress={() => router.replace("/(auth)/login")}
           >
             <Text style={styles.successButtonText}>Back to sign in</Text>
           </Pressable>
@@ -103,7 +116,7 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <KeyboardAwareScrollViewCompat
         contentContainerStyle={{ flexGrow: 1 }}
@@ -112,7 +125,7 @@ export default function RegisterScreen() {
         bounces={false}
       >
         {/* Brand header */}
-        <LinearGradient colors={['#0F4C35', '#1a6647']} style={styles.header}>
+        <LinearGradient colors={["#0F4C35", "#1a6647"]} style={styles.header}>
           <View style={[styles.headerContent, { paddingTop: insets.top + 32 }]}>
             <Pressable
               style={styles.backButton}
@@ -140,7 +153,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={styles.input}
                 value={form.firstName}
-                onChangeText={update('firstName')}
+                onChangeText={update("firstName")}
                 placeholder="Amara"
                 placeholderTextColor={colors.mutedForeground}
                 autoCapitalize="words"
@@ -153,7 +166,7 @@ export default function RegisterScreen() {
               <TextInput
                 style={styles.input}
                 value={form.lastName}
-                onChangeText={update('lastName')}
+                onChangeText={update("lastName")}
                 placeholder="Okonkwo"
                 placeholderTextColor={colors.mutedForeground}
                 autoCapitalize="words"
@@ -168,7 +181,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               value={form.email}
-              onChangeText={update('email')}
+              onChangeText={update("email")}
               placeholder="you@example.com"
               placeholderTextColor={colors.mutedForeground}
               keyboardType="email-address"
@@ -184,7 +197,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               value={form.phone}
-              onChangeText={update('phone')}
+              onChangeText={update("phone")}
               placeholder="+2348012345678"
               placeholderTextColor={colors.mutedForeground}
               keyboardType="phone-pad"
@@ -198,7 +211,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               value={form.password}
-              onChangeText={update('password')}
+              onChangeText={update("password")}
               placeholder="8+ characters"
               placeholderTextColor={colors.mutedForeground}
               secureTextEntry
@@ -209,7 +222,11 @@ export default function RegisterScreen() {
           </View>
 
           <Pressable
-            style={({ pressed }) => [styles.primaryButton, pressed && { opacity: 0.8 }, isLoading && { opacity: 0.6 }]}
+            style={({ pressed }) => [
+              styles.primaryButton,
+              pressed && { opacity: 0.8 },
+              isLoading && { opacity: 0.6 },
+            ]}
             onPress={handleRegister}
             disabled={isLoading}
             testID="register-submit"
@@ -228,42 +245,45 @@ export default function RegisterScreen() {
   );
 }
 
-function makeStyles(colors: ReturnType<typeof import('@/hooks/useColors').useColors>, insets: { top: number; bottom: number }) {
+function makeStyles(
+  colors: ReturnType<typeof import("@/hooks/useColors").useColors>,
+  insets: { top: number; bottom: number },
+) {
   return StyleSheet.create({
     successContainer: {
       flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
     },
     successContent: {
-      alignItems: 'center',
+      alignItems: "center",
       paddingHorizontal: 40,
     },
     checkCircle: {
       width: 72,
       height: 72,
       borderRadius: 36,
-      backgroundColor: 'rgba(255,255,255,0.2)',
-      alignItems: 'center',
-      justifyContent: 'center',
+      backgroundColor: "rgba(255,255,255,0.2)",
+      alignItems: "center",
+      justifyContent: "center",
       marginBottom: 24,
     },
     checkIcon: {
       fontSize: 32,
-      color: '#FFFFFF',
+      color: "#FFFFFF",
     },
     successTitle: {
       fontSize: 26,
-      fontFamily: 'Inter_700Bold',
-      color: '#FFFFFF',
+      fontFamily: "Inter_700Bold",
+      color: "#FFFFFF",
       marginBottom: 16,
-      textAlign: 'center',
+      textAlign: "center",
     },
     successBody: {
       fontSize: 15,
-      fontFamily: 'Inter_400Regular',
-      color: 'rgba(255,255,255,0.8)',
-      textAlign: 'center',
+      fontFamily: "Inter_400Regular",
+      color: "rgba(255,255,255,0.8)",
+      textAlign: "center",
       lineHeight: 22,
       marginBottom: 32,
     },
@@ -275,8 +295,8 @@ function makeStyles(colors: ReturnType<typeof import('@/hooks/useColors').useCol
     },
     successButtonText: {
       fontSize: 16,
-      fontFamily: 'Inter_600SemiBold',
-      color: '#1A1910',
+      fontFamily: "Inter_600SemiBold",
+      color: "#1A1910",
     },
     header: {
       minHeight: 180,
@@ -290,19 +310,19 @@ function makeStyles(colors: ReturnType<typeof import('@/hooks/useColors').useCol
     },
     backButtonText: {
       fontSize: 15,
-      fontFamily: 'Inter_500Medium',
-      color: 'rgba(255,255,255,0.8)',
+      fontFamily: "Inter_500Medium",
+      color: "rgba(255,255,255,0.8)",
     },
     brandName: {
       fontSize: 26,
-      fontFamily: 'Inter_700Bold',
-      color: '#FFFFFF',
+      fontFamily: "Inter_700Bold",
+      color: "#FFFFFF",
       letterSpacing: -0.5,
     },
     tagline: {
       fontSize: 14,
-      fontFamily: 'Inter_400Regular',
-      color: 'rgba(255,255,255,0.7)',
+      fontFamily: "Inter_400Regular",
+      color: "rgba(255,255,255,0.7)",
       marginTop: 4,
     },
     formCard: {
@@ -315,18 +335,18 @@ function makeStyles(colors: ReturnType<typeof import('@/hooks/useColors').useCol
       paddingHorizontal: 24,
     },
     row: {
-      flexDirection: 'row',
+      flexDirection: "row",
       gap: 12,
     },
     errorBanner: {
-      backgroundColor: colors.destructive + '18',
+      backgroundColor: colors.destructive + "18",
       borderRadius: 8,
       padding: 12,
       marginBottom: 16,
     },
     errorText: {
       fontSize: 14,
-      fontFamily: 'Inter_400Regular',
+      fontFamily: "Inter_400Regular",
       color: colors.destructive,
     },
     fieldGroup: {
@@ -334,10 +354,10 @@ function makeStyles(colors: ReturnType<typeof import('@/hooks/useColors').useCol
     },
     label: {
       fontSize: 13,
-      fontFamily: 'Inter_500Medium',
+      fontFamily: "Inter_500Medium",
       color: colors.mutedForeground,
       marginBottom: 6,
-      textTransform: 'uppercase',
+      textTransform: "uppercase",
       letterSpacing: 0.5,
     },
     input: {
@@ -347,7 +367,7 @@ function makeStyles(colors: ReturnType<typeof import('@/hooks/useColors').useCol
       borderColor: colors.border,
       paddingHorizontal: 16,
       fontSize: 16,
-      fontFamily: 'Inter_400Regular',
+      fontFamily: "Inter_400Regular",
       color: colors.foreground,
       backgroundColor: colors.card,
     },
@@ -355,14 +375,14 @@ function makeStyles(colors: ReturnType<typeof import('@/hooks/useColors').useCol
       height: 52,
       borderRadius: 10,
       backgroundColor: colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
       marginTop: 8,
     },
     primaryButtonText: {
       fontSize: 16,
-      fontFamily: 'Inter_600SemiBold',
-      color: '#FFFFFF',
+      fontFamily: "Inter_600SemiBold",
+      color: "#FFFFFF",
     },
   });
 }

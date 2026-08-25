@@ -16,28 +16,25 @@
  *
  * OpenAPI spec version: 1.0.0
  */
-import * as zod from 'zod/v4';
-
+import * as zod from "zod/v4";
 
 /**
  * Returns platform health status. Used by load balancers and monitoring.
  * @summary Platform health check
  */
 export const HealthCheckResponse = zod.object({
-  "status": zod.enum(['ok', 'degraded', 'down'])
-})
-
+  status: zod.enum(["ok", "degraded", "down"]),
+});
 
 /**
  * @summary Platform version and system information
  */
 export const GetSystemInfoResponse = zod.object({
-  "version": zod.string(),
-  "environment": zod.string(),
-  "timestamp": zod.coerce.date(),
-  "uptime": zod.number().describe('Process uptime in seconds')
-})
-
+  version: zod.string(),
+  environment: zod.string(),
+  timestamp: zod.coerce.date(),
+  uptime: zod.number().describe("Process uptime in seconds"),
+});
 
 /**
  * Creates a new customer account with PENDING status.
@@ -50,30 +47,36 @@ export const registerBodyLastNameMax = 100;
 
 export const registerBodyPasswordMin = 8;
 
-
-
 export const RegisterBody = zod.object({
-  "firstName": zod.string().min(1).max(registerBodyFirstNameMax),
-  "lastName": zod.string().min(1).max(registerBodyLastNameMax),
-  "email": zod.email(),
-  "phone": zod.string(),
-  "password": zod.string().min(registerBodyPasswordMin)
-})
+  firstName: zod.string().min(1).max(registerBodyFirstNameMax),
+  lastName: zod.string().min(1).max(registerBodyLastNameMax),
+  email: zod.email(),
+  phone: zod.string(),
+  password: zod.string().min(registerBodyPasswordMin),
+});
 
 export const RegisterResponse = zod.object({
-  "id": zod.string(),
-  "firstName": zod.string(),
-  "lastName": zod.string(),
-  "email": zod.email(),
-  "phone": zod.string(),
-  "role": zod.enum(['CUSTOMER', 'ADMIN_OFFICER', 'SUPER_ADMIN', 'OPERATIONS', 'SUPPORT', 'FINANCE', 'TECHNICAL', 'DEVELOPER']),
-  "status": zod.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED']),
-  "registrationSource": zod.string(),
-  "lastLoginAt": zod.coerce.date().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-
+  id: zod.string(),
+  firstName: zod.string(),
+  lastName: zod.string(),
+  email: zod.email(),
+  phone: zod.string(),
+  role: zod.enum([
+    "CUSTOMER",
+    "ADMIN_OFFICER",
+    "SUPER_ADMIN",
+    "OPERATIONS",
+    "SUPPORT",
+    "FINANCE",
+    "TECHNICAL",
+    "DEVELOPER",
+  ]),
+  status: zod.enum(["PENDING", "ACTIVE", "SUSPENDED", "DEACTIVATED"]),
+  registrationSource: zod.string(),
+  lastLoginAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
 
 /**
  * Returns access and refresh tokens on success.
@@ -82,43 +85,54 @@ export const RegisterResponse = zod.object({
  * @summary Authenticate with email and password
  */
 export const LoginBody = zod.object({
-  "email": zod.email(),
-  "password": zod.string()
-})
+  email: zod.email(),
+  password: zod.string(),
+});
 
 export const LoginResponse = zod.object({
-  "user": zod.object({
-  "id": zod.string(),
-  "firstName": zod.string(),
-  "lastName": zod.string(),
-  "email": zod.email(),
-  "phone": zod.string(),
-  "role": zod.enum(['CUSTOMER', 'ADMIN_OFFICER', 'SUPER_ADMIN', 'OPERATIONS', 'SUPPORT', 'FINANCE', 'TECHNICAL', 'DEVELOPER']),
-  "status": zod.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED']),
-  "registrationSource": zod.string(),
-  "lastLoginAt": zod.coerce.date().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-}),
-  "tokens": zod.object({
-  "accessToken": zod.string().describe('Short-lived JWT access token (15 minutes)'),
-  "refreshToken": zod.string().describe('Opaque long-lived refresh token (7 days)'),
-  "expiresIn": zod.number().describe('Access token TTL in seconds'),
-  "tokenType": zod.enum(['Bearer'])
-})
-})
-
+  user: zod.object({
+    id: zod.string(),
+    firstName: zod.string(),
+    lastName: zod.string(),
+    email: zod.email(),
+    phone: zod.string(),
+    role: zod.enum([
+      "CUSTOMER",
+      "ADMIN_OFFICER",
+      "SUPER_ADMIN",
+      "OPERATIONS",
+      "SUPPORT",
+      "FINANCE",
+      "TECHNICAL",
+      "DEVELOPER",
+    ]),
+    status: zod.enum(["PENDING", "ACTIVE", "SUSPENDED", "DEACTIVATED"]),
+    registrationSource: zod.string(),
+    lastLoginAt: zod.coerce.date().nullish(),
+    createdAt: zod.coerce.date(),
+    updatedAt: zod.coerce.date(),
+  }),
+  tokens: zod.object({
+    accessToken: zod
+      .string()
+      .describe("Short-lived JWT access token (15 minutes)"),
+    refreshToken: zod
+      .string()
+      .describe("Opaque long-lived refresh token (7 days)"),
+    expiresIn: zod.number().describe("Access token TTL in seconds"),
+    tokenType: zod.enum(["Bearer"]),
+  }),
+});
 
 /**
  * Revokes the provided refresh token. The access token expires naturally.
  * @summary Revoke current session
  */
 export const LogoutBody = zod.object({
-  "refreshToken": zod.string()
-})
+  refreshToken: zod.string(),
+});
 
-export const LogoutResponse = zod.unknown()
-
+export const LogoutResponse = zod.unknown();
 
 /**
  * Exchanges a valid refresh token for a new token pair.
@@ -127,34 +141,45 @@ export const LogoutResponse = zod.unknown()
  * @summary Rotate refresh token and obtain new access token
  */
 export const RefreshTokensBody = zod.object({
-  "refreshToken": zod.string()
-})
+  refreshToken: zod.string(),
+});
 
 export const RefreshTokensResponse = zod.object({
-  "accessToken": zod.string().describe('Short-lived JWT access token (15 minutes)'),
-  "refreshToken": zod.string().describe('Opaque long-lived refresh token (7 days)'),
-  "expiresIn": zod.number().describe('Access token TTL in seconds'),
-  "tokenType": zod.enum(['Bearer'])
-})
-
+  accessToken: zod
+    .string()
+    .describe("Short-lived JWT access token (15 minutes)"),
+  refreshToken: zod
+    .string()
+    .describe("Opaque long-lived refresh token (7 days)"),
+  expiresIn: zod.number().describe("Access token TTL in seconds"),
+  tokenType: zod.enum(["Bearer"]),
+});
 
 /**
  * @summary Get current authenticated user profile
  */
 export const GetCurrentUserResponse = zod.object({
-  "id": zod.string(),
-  "firstName": zod.string(),
-  "lastName": zod.string(),
-  "email": zod.email(),
-  "phone": zod.string(),
-  "role": zod.enum(['CUSTOMER', 'ADMIN_OFFICER', 'SUPER_ADMIN', 'OPERATIONS', 'SUPPORT', 'FINANCE', 'TECHNICAL', 'DEVELOPER']),
-  "status": zod.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED']),
-  "registrationSource": zod.string(),
-  "lastLoginAt": zod.coerce.date().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-
+  id: zod.string(),
+  firstName: zod.string(),
+  lastName: zod.string(),
+  email: zod.email(),
+  phone: zod.string(),
+  role: zod.enum([
+    "CUSTOMER",
+    "ADMIN_OFFICER",
+    "SUPER_ADMIN",
+    "OPERATIONS",
+    "SUPPORT",
+    "FINANCE",
+    "TECHNICAL",
+    "DEVELOPER",
+  ]),
+  status: zod.enum(["PENDING", "ACTIVE", "SUSPENDED", "DEACTIVATED"]),
+  registrationSource: zod.string(),
+  lastLoginAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
 
 /**
  * Requires current password verification. All refresh tokens are revoked on success.
@@ -162,15 +187,12 @@ export const GetCurrentUserResponse = zod.object({
  */
 export const changePasswordBodyNewPasswordMin = 8;
 
-
-
 export const ChangePasswordBody = zod.object({
-  "currentPassword": zod.string(),
-  "newPassword": zod.string().min(changePasswordBodyNewPasswordMin)
-})
+  currentPassword: zod.string(),
+  newPassword: zod.string().min(changePasswordBodyNewPasswordMin),
+});
 
-export const ChangePasswordResponse = zod.unknown()
-
+export const ChangePasswordResponse = zod.unknown();
 
 /**
  * Sends a password reset token to the user's email address.
@@ -179,11 +201,10 @@ export const ChangePasswordResponse = zod.unknown()
  * @summary Request a password reset token
  */
 export const RequestPasswordResetBody = zod.object({
-  "email": zod.email()
-})
+  email: zod.email(),
+});
 
-export const RequestPasswordResetResponse = zod.unknown()
-
+export const RequestPasswordResetResponse = zod.unknown();
 
 /**
  * Verifies the reset token and updates the password. Token is single-use.
@@ -191,15 +212,12 @@ export const RequestPasswordResetResponse = zod.unknown()
  */
 export const confirmPasswordResetBodyNewPasswordMin = 8;
 
-
-
 export const ConfirmPasswordResetBody = zod.object({
-  "token": zod.string(),
-  "newPassword": zod.string().min(confirmPasswordResetBodyNewPasswordMin)
-})
+  token: zod.string(),
+  newPassword: zod.string().min(confirmPasswordResetBodyNewPasswordMin),
+});
 
-export const ConfirmPasswordResetResponse = zod.unknown()
-
+export const ConfirmPasswordResetResponse = zod.unknown();
 
 /**
  * Paginated list of all users. Requires ADMIN_OFFICER or SUPER_ADMIN role.
@@ -210,72 +228,111 @@ export const listUsersQueryPageDefault = 1;
 export const listUsersQueryLimitDefault = 20;
 export const listUsersQueryLimitMax = 100;
 
-
-
 export const ListUsersQueryParams = zod.object({
-  "page": zod.coerce.number().min(1).default(listUsersQueryPageDefault),
-  "limit": zod.coerce.number().min(1).max(listUsersQueryLimitMax).default(listUsersQueryLimitDefault),
-  "status": zod.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED']).optional(),
-  "role": zod.enum(['CUSTOMER', 'ADMIN_OFFICER', 'SUPER_ADMIN', 'OPERATIONS', 'SUPPORT', 'FINANCE', 'TECHNICAL', 'DEVELOPER']).optional(),
-  "search": zod.coerce.string().optional().describe('Search by name or email (partial match)')
-})
+  page: zod.coerce.number().min(1).default(listUsersQueryPageDefault),
+  limit: zod.coerce
+    .number()
+    .min(1)
+    .max(listUsersQueryLimitMax)
+    .default(listUsersQueryLimitDefault),
+  status: zod
+    .enum(["PENDING", "ACTIVE", "SUSPENDED", "DEACTIVATED"])
+    .optional(),
+  role: zod
+    .enum([
+      "CUSTOMER",
+      "ADMIN_OFFICER",
+      "SUPER_ADMIN",
+      "OPERATIONS",
+      "SUPPORT",
+      "FINANCE",
+      "TECHNICAL",
+      "DEVELOPER",
+    ])
+    .optional(),
+  search: zod.coerce
+    .string()
+    .optional()
+    .describe("Search by name or email (partial match)"),
+});
 
 export const ListUsersResponse = zod.object({
-  "data": zod.array(zod.object({
-  "id": zod.string(),
-  "firstName": zod.string(),
-  "lastName": zod.string(),
-  "email": zod.email(),
-  "phone": zod.string(),
-  "role": zod.enum(['CUSTOMER', 'ADMIN_OFFICER', 'SUPER_ADMIN', 'OPERATIONS', 'SUPPORT', 'FINANCE', 'TECHNICAL', 'DEVELOPER']),
-  "status": zod.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED']),
-  "registrationSource": zod.string(),
-  "lastLoginAt": zod.coerce.date().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})),
-  "total": zod.number(),
-  "page": zod.number(),
-  "limit": zod.number()
-})
-
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      firstName: zod.string(),
+      lastName: zod.string(),
+      email: zod.email(),
+      phone: zod.string(),
+      role: zod.enum([
+        "CUSTOMER",
+        "ADMIN_OFFICER",
+        "SUPER_ADMIN",
+        "OPERATIONS",
+        "SUPPORT",
+        "FINANCE",
+        "TECHNICAL",
+        "DEVELOPER",
+      ]),
+      status: zod.enum(["PENDING", "ACTIVE", "SUSPENDED", "DEACTIVATED"]),
+      registrationSource: zod.string(),
+      lastLoginAt: zod.coerce.date().nullish(),
+      createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  limit: zod.number(),
+});
 
 /**
  * Requires ADMIN_OFFICER or SUPER_ADMIN role.
  * @summary Get user by ID (Admin)
  */
 export const GetUserByIdParams = zod.object({
-  "id": zod.coerce.string()
-})
+  id: zod.coerce.string(),
+});
 
 export const GetUserByIdResponse = zod.object({
-  "id": zod.string(),
-  "firstName": zod.string(),
-  "lastName": zod.string(),
-  "email": zod.email(),
-  "phone": zod.string(),
-  "role": zod.enum(['CUSTOMER', 'ADMIN_OFFICER', 'SUPER_ADMIN', 'OPERATIONS', 'SUPPORT', 'FINANCE', 'TECHNICAL', 'DEVELOPER']),
-  "status": zod.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED']),
-  "registrationSource": zod.string(),
-  "lastLoginAt": zod.coerce.date().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-
+  id: zod.string(),
+  firstName: zod.string(),
+  lastName: zod.string(),
+  email: zod.email(),
+  phone: zod.string(),
+  role: zod.enum([
+    "CUSTOMER",
+    "ADMIN_OFFICER",
+    "SUPER_ADMIN",
+    "OPERATIONS",
+    "SUPPORT",
+    "FINANCE",
+    "TECHNICAL",
+    "DEVELOPER",
+  ]),
+  status: zod.enum(["PENDING", "ACTIVE", "SUSPENDED", "DEACTIVATED"]),
+  registrationSource: zod.string(),
+  lastLoginAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});
 
 /**
  * Returns the authoritative wallet balance and minimum-balance rule. The wallet is created on first access.
  * @summary Get current user's wallet summary
  */
 export const GetWalletResponse = zod.object({
-  "id": zod.string(),
-  "balanceKobo": zod.number().describe('Current balance in kobo (NGN minor units)'),
-  "minBalanceKobo": zod.number().describe('Minimum balance required to start a charging session, in kobo'),
-  "currency": zod.string(),
-  "status": zod.enum(['ACTIVE', 'SUSPENDED']),
-  "updatedAt": zod.coerce.date()
-})
-
+  id: zod.string(),
+  balanceKobo: zod
+    .number()
+    .describe("Current balance in kobo (NGN minor units)"),
+  minBalanceKobo: zod
+    .number()
+    .describe("Minimum balance required to start a charging session, in kobo"),
+  currency: zod.string(),
+  status: zod.enum(["ACTIVE", "SUSPENDED"]),
+  updatedAt: zod.coerce.date(),
+});
 
 /**
  * Initiates a wallet top-up through the selected payment method.
@@ -286,36 +343,45 @@ export const GetWalletResponse = zod.object({
 export const topUpWalletBodyAmountKoboMin = 10000;
 export const topUpWalletBodyAmountKoboMax = 100000000;
 
-
-
 export const TopUpWalletBody = zod.object({
-  "amountKobo": zod.number().min(topUpWalletBodyAmountKoboMin).max(topUpWalletBodyAmountKoboMax).describe('Top-up amount in kobo (min ₦100)'),
-  "method": zod.enum(['BANK_TRANSFER', 'CARD', 'USSD'])
-})
+  amountKobo: zod
+    .number()
+    .min(topUpWalletBodyAmountKoboMin)
+    .max(topUpWalletBodyAmountKoboMax)
+    .describe("Top-up amount in kobo (min ₦100)"),
+  method: zod.enum(["BANK_TRANSFER", "CARD", "USSD"]),
+});
 
 export const TopUpWalletResponse = zod.object({
-  "transaction": zod.object({
-  "id": zod.string(),
-  "type": zod.enum(['TOPUP', 'CHARGE', 'REFUND', 'ADJUSTMENT']),
-  "status": zod.enum(['PENDING', 'COMPLETED', 'FAILED']),
-  "amountKobo": zod.number().describe('Signed amount in kobo (positive = credit, negative = debit)'),
-  "balanceAfterKobo": zod.number(),
-  "reference": zod.string(),
-  "description": zod.string(),
-  "method": zod.string().nullish(),
-  "sessionId": zod.string().nullish(),
-  "createdAt": zod.coerce.date()
-}),
-  "wallet": zod.object({
-  "id": zod.string(),
-  "balanceKobo": zod.number().describe('Current balance in kobo (NGN minor units)'),
-  "minBalanceKobo": zod.number().describe('Minimum balance required to start a charging session, in kobo'),
-  "currency": zod.string(),
-  "status": zod.enum(['ACTIVE', 'SUSPENDED']),
-  "updatedAt": zod.coerce.date()
-})
-})
-
+  transaction: zod.object({
+    id: zod.string(),
+    type: zod.enum(["TOPUP", "CHARGE", "REFUND", "ADJUSTMENT"]),
+    status: zod.enum(["PENDING", "COMPLETED", "FAILED"]),
+    amountKobo: zod
+      .number()
+      .describe("Signed amount in kobo (positive = credit, negative = debit)"),
+    balanceAfterKobo: zod.number(),
+    reference: zod.string(),
+    description: zod.string(),
+    method: zod.string().nullish(),
+    sessionId: zod.string().nullish(),
+    createdAt: zod.coerce.date(),
+  }),
+  wallet: zod.object({
+    id: zod.string(),
+    balanceKobo: zod
+      .number()
+      .describe("Current balance in kobo (NGN minor units)"),
+    minBalanceKobo: zod
+      .number()
+      .describe(
+        "Minimum balance required to start a charging session, in kobo",
+      ),
+    currency: zod.string(),
+    status: zod.enum(["ACTIVE", "SUSPENDED"]),
+    updatedAt: zod.coerce.date(),
+  }),
+});
 
 /**
  * @summary List wallet transactions
@@ -325,49 +391,55 @@ export const listTransactionsQueryPageDefault = 1;
 export const listTransactionsQueryLimitDefault = 20;
 export const listTransactionsQueryLimitMax = 100;
 
-
-
 export const ListTransactionsQueryParams = zod.object({
-  "page": zod.coerce.number().min(1).default(listTransactionsQueryPageDefault),
-  "limit": zod.coerce.number().min(1).max(listTransactionsQueryLimitMax).default(listTransactionsQueryLimitDefault),
-  "type": zod.enum(['TOPUP', 'CHARGE', 'REFUND', 'ADJUSTMENT']).optional()
-})
+  page: zod.coerce.number().min(1).default(listTransactionsQueryPageDefault),
+  limit: zod.coerce
+    .number()
+    .min(1)
+    .max(listTransactionsQueryLimitMax)
+    .default(listTransactionsQueryLimitDefault),
+  type: zod.enum(["TOPUP", "CHARGE", "REFUND", "ADJUSTMENT"]).optional(),
+});
 
 export const ListTransactionsResponse = zod.object({
-  "data": zod.array(zod.object({
-  "id": zod.string(),
-  "type": zod.enum(['TOPUP', 'CHARGE', 'REFUND', 'ADJUSTMENT']),
-  "status": zod.enum(['PENDING', 'COMPLETED', 'FAILED']),
-  "amountKobo": zod.number().describe('Signed amount in kobo (positive = credit, negative = debit)'),
-  "balanceAfterKobo": zod.number(),
-  "reference": zod.string(),
-  "description": zod.string(),
-  "method": zod.string().nullish(),
-  "sessionId": zod.string().nullish(),
-  "createdAt": zod.coerce.date()
-})),
-  "total": zod.number(),
-  "page": zod.number(),
-  "limit": zod.number()
-})
-
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      type: zod.enum(["TOPUP", "CHARGE", "REFUND", "ADJUSTMENT"]),
+      status: zod.enum(["PENDING", "COMPLETED", "FAILED"]),
+      amountKobo: zod
+        .number()
+        .describe(
+          "Signed amount in kobo (positive = credit, negative = debit)",
+        ),
+      balanceAfterKobo: zod.number(),
+      reference: zod.string(),
+      description: zod.string(),
+      method: zod.string().nullish(),
+      sessionId: zod.string().nullish(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  limit: zod.number(),
+});
 
 /**
  * @summary List charging stations
  */
 export const ListStationsResponseItem = zod.object({
-  "id": zod.string(),
-  "name": zod.string(),
-  "location": zod.string(),
-  "powerKw": zod.number(),
-  "connectorType": zod.string(),
-  "connectorsTotal": zod.number(),
-  "connectorsAvailable": zod.number(),
-  "tariffKoboPerKwh": zod.number().describe('Energy tariff in kobo per kWh'),
-  "status": zod.enum(['AVAILABLE', 'BUSY', 'OFFLINE'])
-})
-export const ListStationsResponse = zod.array(ListStationsResponseItem)
-
+  id: zod.string(),
+  name: zod.string(),
+  location: zod.string(),
+  powerKw: zod.number(),
+  connectorType: zod.string(),
+  connectorsTotal: zod.number(),
+  connectorsAvailable: zod.number(),
+  tariffKoboPerKwh: zod.number().describe("Energy tariff in kobo per kWh"),
+  status: zod.enum(["AVAILABLE", "BUSY", "OFFLINE"]),
+});
+export const ListStationsResponse = zod.array(ListStationsResponseItem);
 
 /**
  * @summary List the current user's charging sessions
@@ -377,59 +449,84 @@ export const listSessionsQueryPageDefault = 1;
 export const listSessionsQueryLimitDefault = 20;
 export const listSessionsQueryLimitMax = 100;
 
-
-
 export const ListSessionsQueryParams = zod.object({
-  "page": zod.coerce.number().min(1).default(listSessionsQueryPageDefault),
-  "limit": zod.coerce.number().min(1).max(listSessionsQueryLimitMax).default(listSessionsQueryLimitDefault)
-})
+  page: zod.coerce.number().min(1).default(listSessionsQueryPageDefault),
+  limit: zod.coerce
+    .number()
+    .min(1)
+    .max(listSessionsQueryLimitMax)
+    .default(listSessionsQueryLimitDefault),
+});
 
 export const ListSessionsResponse = zod.object({
-  "data": zod.array(zod.object({
-  "id": zod.string(),
-  "status": zod.enum(['ACTIVE', 'COMPLETED', 'STOPPED', 'FAULTED']),
-  "stationId": zod.string(),
-  "stationName": zod.string(),
-  "stationLocation": zod.string(),
-  "powerKw": zod.number(),
-  "tariffKoboPerKwh": zod.number(),
-  "energyWh": zod.number().describe('Energy delivered in watt-hours'),
-  "costKobo": zod.number().describe('Session cost in kobo (live value while active, final when ended)'),
-  "limitKobo": zod.number().nullish(),
-  "elapsedSeconds": zod.number().optional().describe('Seconds since session start (server-computed)'),
-  "startedAt": zod.coerce.date(),
-  "endedAt": zod.coerce.date().nullish(),
-  "stopReason": zod.string().nullish().describe('USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED')
-})),
-  "total": zod.number(),
-  "page": zod.number(),
-  "limit": zod.number()
-})
-
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      status: zod.enum(["ACTIVE", "COMPLETED", "STOPPED", "FAULTED"]),
+      stationId: zod.string(),
+      stationName: zod.string(),
+      stationLocation: zod.string(),
+      powerKw: zod.number(),
+      tariffKoboPerKwh: zod.number(),
+      energyWh: zod.number().describe("Energy delivered in watt-hours"),
+      costKobo: zod
+        .number()
+        .describe(
+          "Session cost in kobo (live value while active, final when ended)",
+        ),
+      limitKobo: zod.number().nullish(),
+      elapsedSeconds: zod
+        .number()
+        .optional()
+        .describe("Seconds since session start (server-computed)"),
+      startedAt: zod.coerce.date(),
+      endedAt: zod.coerce.date().nullish(),
+      stopReason: zod
+        .string()
+        .nullish()
+        .describe("USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED"),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  limit: zod.number(),
+});
 
 /**
  * Returns live server-computed session values, or session=null when no session is active.
  * @summary Get the current active charging session
  */
 export const GetActiveSessionResponse = zod.object({
-  "session": zod.object({
-  "id": zod.string(),
-  "status": zod.enum(['ACTIVE', 'COMPLETED', 'STOPPED', 'FAULTED']),
-  "stationId": zod.string(),
-  "stationName": zod.string(),
-  "stationLocation": zod.string(),
-  "powerKw": zod.number(),
-  "tariffKoboPerKwh": zod.number(),
-  "energyWh": zod.number().describe('Energy delivered in watt-hours'),
-  "costKobo": zod.number().describe('Session cost in kobo (live value while active, final when ended)'),
-  "limitKobo": zod.number().nullish(),
-  "elapsedSeconds": zod.number().optional().describe('Seconds since session start (server-computed)'),
-  "startedAt": zod.coerce.date(),
-  "endedAt": zod.coerce.date().nullish(),
-  "stopReason": zod.string().nullish().describe('USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED')
-}).nullish().describe('The active charging session, or null when none is active')
-})
-
+  session: zod
+    .object({
+      id: zod.string(),
+      status: zod.enum(["ACTIVE", "COMPLETED", "STOPPED", "FAULTED"]),
+      stationId: zod.string(),
+      stationName: zod.string(),
+      stationLocation: zod.string(),
+      powerKw: zod.number(),
+      tariffKoboPerKwh: zod.number(),
+      energyWh: zod.number().describe("Energy delivered in watt-hours"),
+      costKobo: zod
+        .number()
+        .describe(
+          "Session cost in kobo (live value while active, final when ended)",
+        ),
+      limitKobo: zod.number().nullish(),
+      elapsedSeconds: zod
+        .number()
+        .optional()
+        .describe("Seconds since session start (server-computed)"),
+      startedAt: zod.coerce.date(),
+      endedAt: zod.coerce.date().nullish(),
+      stopReason: zod
+        .string()
+        .nullish()
+        .describe("USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED"),
+    })
+    .nullish()
+    .describe("The active charging session, or null when none is active"),
+});
 
 /**
  * Authorizes and starts a charging session at the selected station.
@@ -439,119 +536,176 @@ export const GetActiveSessionResponse = zod.object({
  */
 export const startSessionBodyLimitKoboMin = 10000;
 
-
-
 export const StartSessionBody = zod.object({
-  "stationId": zod.string(),
-  "limitKobo": zod.number().min(startSessionBodyLimitKoboMin).nullish().describe('Optional spend limit for this session, in kobo')
-})
+  stationId: zod.string(),
+  limitKobo: zod
+    .number()
+    .min(startSessionBodyLimitKoboMin)
+    .nullish()
+    .describe("Optional spend limit for this session, in kobo"),
+});
 
 export const StartSessionResponse = zod.object({
-  "id": zod.string(),
-  "status": zod.enum(['ACTIVE', 'COMPLETED', 'STOPPED', 'FAULTED']),
-  "stationId": zod.string(),
-  "stationName": zod.string(),
-  "stationLocation": zod.string(),
-  "powerKw": zod.number(),
-  "tariffKoboPerKwh": zod.number(),
-  "energyWh": zod.number().describe('Energy delivered in watt-hours'),
-  "costKobo": zod.number().describe('Session cost in kobo (live value while active, final when ended)'),
-  "limitKobo": zod.number().nullish(),
-  "elapsedSeconds": zod.number().optional().describe('Seconds since session start (server-computed)'),
-  "startedAt": zod.coerce.date(),
-  "endedAt": zod.coerce.date().nullish(),
-  "stopReason": zod.string().nullish().describe('USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED')
-})
-
+  id: zod.string(),
+  status: zod.enum(["ACTIVE", "COMPLETED", "STOPPED", "FAULTED"]),
+  stationId: zod.string(),
+  stationName: zod.string(),
+  stationLocation: zod.string(),
+  powerKw: zod.number(),
+  tariffKoboPerKwh: zod.number(),
+  energyWh: zod.number().describe("Energy delivered in watt-hours"),
+  costKobo: zod
+    .number()
+    .describe(
+      "Session cost in kobo (live value while active, final when ended)",
+    ),
+  limitKobo: zod.number().nullish(),
+  elapsedSeconds: zod
+    .number()
+    .optional()
+    .describe("Seconds since session start (server-computed)"),
+  startedAt: zod.coerce.date(),
+  endedAt: zod.coerce.date().nullish(),
+  stopReason: zod
+    .string()
+    .nullish()
+    .describe("USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED"),
+});
 
 /**
  * Finalizes the session, debits the wallet, and records a CHARGE transaction.
  * @summary Stop a charging session
  */
 export const StopSessionParams = zod.object({
-  "id": zod.coerce.string()
-})
+  id: zod.coerce.string(),
+});
 
 export const StopSessionResponse = zod.object({
-  "id": zod.string(),
-  "status": zod.enum(['ACTIVE', 'COMPLETED', 'STOPPED', 'FAULTED']),
-  "stationId": zod.string(),
-  "stationName": zod.string(),
-  "stationLocation": zod.string(),
-  "powerKw": zod.number(),
-  "tariffKoboPerKwh": zod.number(),
-  "energyWh": zod.number().describe('Energy delivered in watt-hours'),
-  "costKobo": zod.number().describe('Session cost in kobo (live value while active, final when ended)'),
-  "limitKobo": zod.number().nullish(),
-  "elapsedSeconds": zod.number().optional().describe('Seconds since session start (server-computed)'),
-  "startedAt": zod.coerce.date(),
-  "endedAt": zod.coerce.date().nullish(),
-  "stopReason": zod.string().nullish().describe('USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED')
-})
-
+  id: zod.string(),
+  status: zod.enum(["ACTIVE", "COMPLETED", "STOPPED", "FAULTED"]),
+  stationId: zod.string(),
+  stationName: zod.string(),
+  stationLocation: zod.string(),
+  powerKw: zod.number(),
+  tariffKoboPerKwh: zod.number(),
+  energyWh: zod.number().describe("Energy delivered in watt-hours"),
+  costKobo: zod
+    .number()
+    .describe(
+      "Session cost in kobo (live value while active, final when ended)",
+    ),
+  limitKobo: zod.number().nullish(),
+  elapsedSeconds: zod
+    .number()
+    .optional()
+    .describe("Seconds since session start (server-computed)"),
+  startedAt: zod.coerce.date(),
+  endedAt: zod.coerce.date().nullish(),
+  stopReason: zod
+    .string()
+    .nullish()
+    .describe("USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED"),
+});
 
 /**
  * Wallet, lifetime charging statistics, recent sessions, and recent transactions in a single call.
  * @summary Customer dashboard summary
  */
 export const GetDashboardResponse = zod.object({
-  "wallet": zod.object({
-  "id": zod.string(),
-  "balanceKobo": zod.number().describe('Current balance in kobo (NGN minor units)'),
-  "minBalanceKobo": zod.number().describe('Minimum balance required to start a charging session, in kobo'),
-  "currency": zod.string(),
-  "status": zod.enum(['ACTIVE', 'SUSPENDED']),
-  "updatedAt": zod.coerce.date()
-}),
-  "sessionsCount": zod.number().describe('Total completed charging sessions'),
-  "totalEnergyWh": zod.number().describe('Lifetime energy consumed in watt-hours'),
-  "totalSpentKobo": zod.number().describe('Lifetime charging spend in kobo'),
-  "recentSessions": zod.array(zod.object({
-  "id": zod.string(),
-  "status": zod.enum(['ACTIVE', 'COMPLETED', 'STOPPED', 'FAULTED']),
-  "stationId": zod.string(),
-  "stationName": zod.string(),
-  "stationLocation": zod.string(),
-  "powerKw": zod.number(),
-  "tariffKoboPerKwh": zod.number(),
-  "energyWh": zod.number().describe('Energy delivered in watt-hours'),
-  "costKobo": zod.number().describe('Session cost in kobo (live value while active, final when ended)'),
-  "limitKobo": zod.number().nullish(),
-  "elapsedSeconds": zod.number().optional().describe('Seconds since session start (server-computed)'),
-  "startedAt": zod.coerce.date(),
-  "endedAt": zod.coerce.date().nullish(),
-  "stopReason": zod.string().nullish().describe('USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED')
-})),
-  "recentTransactions": zod.array(zod.object({
-  "id": zod.string(),
-  "type": zod.enum(['TOPUP', 'CHARGE', 'REFUND', 'ADJUSTMENT']),
-  "status": zod.enum(['PENDING', 'COMPLETED', 'FAILED']),
-  "amountKobo": zod.number().describe('Signed amount in kobo (positive = credit, negative = debit)'),
-  "balanceAfterKobo": zod.number(),
-  "reference": zod.string(),
-  "description": zod.string(),
-  "method": zod.string().nullish(),
-  "sessionId": zod.string().nullish(),
-  "createdAt": zod.coerce.date()
-})),
-  "activeSession": zod.object({
-  "id": zod.string(),
-  "status": zod.enum(['ACTIVE', 'COMPLETED', 'STOPPED', 'FAULTED']),
-  "stationId": zod.string(),
-  "stationName": zod.string(),
-  "stationLocation": zod.string(),
-  "powerKw": zod.number(),
-  "tariffKoboPerKwh": zod.number(),
-  "energyWh": zod.number().describe('Energy delivered in watt-hours'),
-  "costKobo": zod.number().describe('Session cost in kobo (live value while active, final when ended)'),
-  "limitKobo": zod.number().nullish(),
-  "elapsedSeconds": zod.number().optional().describe('Seconds since session start (server-computed)'),
-  "startedAt": zod.coerce.date(),
-  "endedAt": zod.coerce.date().nullish(),
-  "stopReason": zod.string().nullish().describe('USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED')
-}).nullable()
-})
-
+  wallet: zod.object({
+    id: zod.string(),
+    balanceKobo: zod
+      .number()
+      .describe("Current balance in kobo (NGN minor units)"),
+    minBalanceKobo: zod
+      .number()
+      .describe(
+        "Minimum balance required to start a charging session, in kobo",
+      ),
+    currency: zod.string(),
+    status: zod.enum(["ACTIVE", "SUSPENDED"]),
+    updatedAt: zod.coerce.date(),
+  }),
+  sessionsCount: zod.number().describe("Total completed charging sessions"),
+  totalEnergyWh: zod
+    .number()
+    .describe("Lifetime energy consumed in watt-hours"),
+  totalSpentKobo: zod.number().describe("Lifetime charging spend in kobo"),
+  recentSessions: zod.array(
+    zod.object({
+      id: zod.string(),
+      status: zod.enum(["ACTIVE", "COMPLETED", "STOPPED", "FAULTED"]),
+      stationId: zod.string(),
+      stationName: zod.string(),
+      stationLocation: zod.string(),
+      powerKw: zod.number(),
+      tariffKoboPerKwh: zod.number(),
+      energyWh: zod.number().describe("Energy delivered in watt-hours"),
+      costKobo: zod
+        .number()
+        .describe(
+          "Session cost in kobo (live value while active, final when ended)",
+        ),
+      limitKobo: zod.number().nullish(),
+      elapsedSeconds: zod
+        .number()
+        .optional()
+        .describe("Seconds since session start (server-computed)"),
+      startedAt: zod.coerce.date(),
+      endedAt: zod.coerce.date().nullish(),
+      stopReason: zod
+        .string()
+        .nullish()
+        .describe("USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED"),
+    }),
+  ),
+  recentTransactions: zod.array(
+    zod.object({
+      id: zod.string(),
+      type: zod.enum(["TOPUP", "CHARGE", "REFUND", "ADJUSTMENT"]),
+      status: zod.enum(["PENDING", "COMPLETED", "FAILED"]),
+      amountKobo: zod
+        .number()
+        .describe(
+          "Signed amount in kobo (positive = credit, negative = debit)",
+        ),
+      balanceAfterKobo: zod.number(),
+      reference: zod.string(),
+      description: zod.string(),
+      method: zod.string().nullish(),
+      sessionId: zod.string().nullish(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+  activeSession: zod
+    .object({
+      id: zod.string(),
+      status: zod.enum(["ACTIVE", "COMPLETED", "STOPPED", "FAULTED"]),
+      stationId: zod.string(),
+      stationName: zod.string(),
+      stationLocation: zod.string(),
+      powerKw: zod.number(),
+      tariffKoboPerKwh: zod.number(),
+      energyWh: zod.number().describe("Energy delivered in watt-hours"),
+      costKobo: zod
+        .number()
+        .describe(
+          "Session cost in kobo (live value while active, final when ended)",
+        ),
+      limitKobo: zod.number().nullish(),
+      elapsedSeconds: zod
+        .number()
+        .optional()
+        .describe("Seconds since session start (server-computed)"),
+      startedAt: zod.coerce.date(),
+      endedAt: zod.coerce.date().nullish(),
+      stopReason: zod
+        .string()
+        .nullish()
+        .describe("USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED"),
+    })
+    .nullable(),
+});
 
 /**
  * Changes the account status of any user.
@@ -560,25 +714,32 @@ export const GetDashboardResponse = zod.object({
  * @summary Update user account status (Super Admin)
  */
 export const UpdateUserStatusParams = zod.object({
-  "id": zod.coerce.string()
-})
+  id: zod.coerce.string(),
+});
 
 export const UpdateUserStatusBody = zod.object({
-  "status": zod.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED'])
-})
+  status: zod.enum(["PENDING", "ACTIVE", "SUSPENDED", "DEACTIVATED"]),
+});
 
 export const UpdateUserStatusResponse = zod.object({
-  "id": zod.string(),
-  "firstName": zod.string(),
-  "lastName": zod.string(),
-  "email": zod.email(),
-  "phone": zod.string(),
-  "role": zod.enum(['CUSTOMER', 'ADMIN_OFFICER', 'SUPER_ADMIN', 'OPERATIONS', 'SUPPORT', 'FINANCE', 'TECHNICAL', 'DEVELOPER']),
-  "status": zod.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED']),
-  "registrationSource": zod.string(),
-  "lastLoginAt": zod.coerce.date().nullish(),
-  "createdAt": zod.coerce.date(),
-  "updatedAt": zod.coerce.date()
-})
-
-
+  id: zod.string(),
+  firstName: zod.string(),
+  lastName: zod.string(),
+  email: zod.email(),
+  phone: zod.string(),
+  role: zod.enum([
+    "CUSTOMER",
+    "ADMIN_OFFICER",
+    "SUPER_ADMIN",
+    "OPERATIONS",
+    "SUPPORT",
+    "FINANCE",
+    "TECHNICAL",
+    "DEVELOPER",
+  ]),
+  status: zod.enum(["PENDING", "ACTIVE", "SUSPENDED", "DEACTIVATED"]),
+  registrationSource: zod.string(),
+  lastLoginAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date(),
+});

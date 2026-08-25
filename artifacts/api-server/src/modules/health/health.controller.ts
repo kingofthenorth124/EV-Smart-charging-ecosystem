@@ -4,13 +4,13 @@ import {
   HttpCode,
   HttpStatus,
   ServiceUnavailableException,
-} from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { SkipThrottle } from '@nestjs/throttler';
-import { Public } from '../../common/decorators/public.decorator';
-import { HealthService } from './health.service';
+} from "@nestjs/common";
+import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { SkipThrottle } from "@nestjs/throttler";
+import { Public } from "../../common/decorators/public.decorator";
+import { HealthService } from "./health.service";
 
-@ApiTags('health')
+@ApiTags("health")
 @Controller()
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
@@ -21,16 +21,16 @@ export class HealthController {
    */
   @Public()
   @SkipThrottle()
-  @Get('healthz')
+  @Get("healthz")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Platform health check' })
-  @ApiResponse({ status: 200, description: 'Platform is healthy' })
-  @ApiResponse({ status: 503, description: 'Platform is degraded' })
+  @ApiOperation({ summary: "Platform health check" })
+  @ApiResponse({ status: 200, description: "Platform is healthy" })
+  @ApiResponse({ status: 503, description: "Platform is degraded" })
   async healthCheck(): Promise<{ status: string }> {
     const result = await this.healthService.check();
 
-    if (result.status === 'down') {
-      throw new ServiceUnavailableException({ status: 'down' });
+    if (result.status === "down") {
+      throw new ServiceUnavailableException({ status: "down" });
     }
 
     return { status: result.status };
@@ -41,10 +41,10 @@ export class HealthController {
    */
   @Public()
   @SkipThrottle()
-  @Get('v1/system/info')
+  @Get("v1/system/info")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Platform version and system information' })
-  @ApiTags('system')
+  @ApiOperation({ summary: "Platform version and system information" })
+  @ApiTags("system")
   systemInfo(): {
     version: string;
     environment: string;
@@ -52,8 +52,8 @@ export class HealthController {
     uptime: number;
   } {
     return {
-      version: process.env.npm_package_version ?? '1.0.0',
-      environment: process.env.NODE_ENV ?? 'development',
+      version: process.env.npm_package_version ?? "1.0.0",
+      environment: process.env.NODE_ENV ?? "development",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
     };

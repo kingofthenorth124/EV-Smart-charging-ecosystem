@@ -9,11 +9,11 @@
  * - Silent refresh rotates the pair ~60s before the access token expires.
  * - Single-flight: concurrent callers share one refresh request.
  */
-import * as SecureStore from 'expo-secure-store';
-import { refreshTokens as apiRefreshTokens } from '@workspace/api-client-react';
-import type { AuthTokens } from '@workspace/api-client-react';
+import * as SecureStore from "expo-secure-store";
+import { refreshTokens as apiRefreshTokens } from "@workspace/api-client-react";
+import type { AuthTokens } from "@workspace/api-client-react";
 
-const REFRESH_TOKEN_KEY = 'camel_refresh_token';
+const REFRESH_TOKEN_KEY = "camel_refresh_token";
 /** Refresh this many ms before the access token actually expires. */
 const REFRESH_SKEW_MS = 60_000;
 
@@ -53,7 +53,9 @@ export function storeTokens(tokens: AuthTokens): void {
   _accessTokenExpiresAt = Date.now() + tokens.expiresIn * 1000;
   _refreshToken = tokens.refreshToken;
   scheduleSilentRefresh(tokens.expiresIn * 1000);
-  SecureStore.setItemAsync(REFRESH_TOKEN_KEY, tokens.refreshToken).catch(() => {});
+  SecureStore.setItemAsync(REFRESH_TOKEN_KEY, tokens.refreshToken).catch(
+    () => {},
+  );
 }
 
 export function clearTokens(): void {
@@ -84,10 +86,9 @@ export function refreshSession(): Promise<string | null> {
   if (!_refreshToken) return Promise.resolve(null);
 
   // skipAuth prevents the getter from triggering a nested refresh — deadlock guard.
-  _refreshInFlight = apiRefreshTokens(
-    { refreshToken: _refreshToken },
-    { skipAuth: true } as RequestInit,
-  )
+  _refreshInFlight = apiRefreshTokens({ refreshToken: _refreshToken }, {
+    skipAuth: true,
+  } as RequestInit)
     .then((tokens) => {
       storeTokens(tokens);
       return tokens.accessToken;
@@ -95,7 +96,7 @@ export function refreshSession(): Promise<string | null> {
     .catch((error: unknown) => {
       clearTokens();
       _onSessionExpired?.();
-      console.warn('[auth-tokens] Session refresh failed', error);
+      console.warn("[auth-tokens] Session refresh failed", error);
       return null;
     })
     .finally(() => {

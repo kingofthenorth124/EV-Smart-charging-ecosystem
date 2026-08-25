@@ -1,7 +1,17 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { Zap, LogOut, Shield, Users, Home, CreditCard, BatteryCharging, Wallet, History } from "lucide-react";
+import {
+  Zap,
+  LogOut,
+  Shield,
+  Users,
+  Home,
+  CreditCard,
+  BatteryCharging,
+  Wallet,
+  History,
+} from "lucide-react";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();

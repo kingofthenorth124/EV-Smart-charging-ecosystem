@@ -3,7 +3,7 @@
  * Deletes rows created by test fixtures without touching unrelated data.
  * Cascading FK constraints handle child rows automatically (refreshTokens, etc.).
  */
-import { PrismaService } from '../modules/database/prisma.service';
+import { PrismaService } from "../modules/database/prisma.service";
 
 export async function cleanupTestUsers(
   prisma: PrismaService,

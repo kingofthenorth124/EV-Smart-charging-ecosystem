@@ -1,8 +1,13 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import type { Request } from 'express';
-import type { JwtPayload, UserRole } from '../types/auth.types';
-import { ROLES_KEY } from '../decorators/roles.decorator';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import type { Request } from "express";
+import type { JwtPayload, UserRole } from "../types/auth.types";
+import { ROLES_KEY } from "../decorators/roles.decorator";
 
 /**
  * RBAC Roles Guard.
@@ -18,10 +23,10 @@ export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     if (!requiredRoles || requiredRoles.length === 0) return true;
 
@@ -31,12 +36,12 @@ export class RolesGuard implements CanActivate {
     const user = request.user;
 
     if (!user) {
-      throw new ForbiddenException('Access denied');
+      throw new ForbiddenException("Access denied");
     }
 
     if (!requiredRoles.includes(user.role as UserRole)) {
       throw new ForbiddenException(
-        `Requires one of the following roles: ${requiredRoles.join(', ')}`,
+        `Requires one of the following roles: ${requiredRoles.join(", ")}`,
       );
     }
 

@@ -7,9 +7,9 @@
 
 // ─── Platform ─────────────────────────────────────────────────────────────────
 
-export const API_VERSION = 'v1' as const;
-export const PLATFORM_VERSION = '1.0.0' as const;
-export const PLATFORM_NAME = 'Camel Mobility Wallet' as const;
+export const API_VERSION = "v1" as const;
+export const PLATFORM_VERSION = "1.0.0" as const;
+export const PLATFORM_NAME = "Camel Mobility Wallet" as const;
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
 
@@ -20,10 +20,10 @@ export const MAX_PAGE_SIZE = 100;
 // ─── Authentication ───────────────────────────────────────────────────────────
 
 /** Default access token TTL — override with JWT_ACCESS_EXPIRES_IN env var. */
-export const DEFAULT_ACCESS_TOKEN_EXPIRES_IN = '15m' as const;
+export const DEFAULT_ACCESS_TOKEN_EXPIRES_IN = "15m" as const;
 
 /** Default refresh token TTL — override with JWT_REFRESH_EXPIRES_IN env var. */
-export const DEFAULT_REFRESH_TOKEN_EXPIRES_IN = '7d' as const;
+export const DEFAULT_REFRESH_TOKEN_EXPIRES_IN = "7d" as const;
 
 /** Access token TTL in seconds (for AuthTokens.expiresIn). Must match DEFAULT_ACCESS_TOKEN_EXPIRES_IN. */
 export const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
@@ -44,8 +44,8 @@ export const DEFAULT_BCRYPT_ROUNDS = 12;
 
 // ─── Frontend storage keys ────────────────────────────────────────────────────
 
-export const AUTH_ACCESS_TOKEN_KEY = 'cmw_access_token' as const;
-export const AUTH_REFRESH_TOKEN_KEY = 'cmw_refresh_token' as const;
+export const AUTH_ACCESS_TOKEN_KEY = "cmw_access_token" as const;
+export const AUTH_REFRESH_TOKEN_KEY = "cmw_refresh_token" as const;
 
 // ─── Wallet (Module 2) ────────────────────────────────────────────────────────
 
@@ -78,19 +78,15 @@ export const SESSION_POLL_INTERVAL_MS = 5_000;
 // ─── API ──────────────────────────────────────────────────────────────────────
 
 /** Correlation ID header name (echoed on every response). */
-export const CORRELATION_ID_HEADER = 'x-correlation-id' as const;
+export const CORRELATION_ID_HEADER = "x-correlation-id" as const;
 
 /** Acceptance-test throttle bypass header (non-production only). */
-export const ACCEPTANCE_TEST_HEADER = 'x-acceptance-test' as const;
+export const ACCEPTANCE_TEST_HEADER = "x-acceptance-test" as const;
 
 // ─── Environment helpers ─────────────────────────────────────────────────────
 
 export type AppEnvironment =
-  | 'development'
-  | 'test'
-  | 'sandbox'
-  | 'staging'
-  | 'production';
+  "development" | "test" | "sandbox" | "staging" | "production";
 
 /**
  * Resolve the current runtime environment from NODE_ENV.
@@ -98,30 +94,30 @@ export type AppEnvironment =
  */
 export function resolveEnvironment(): AppEnvironment {
   const env = (
-    typeof process !== 'undefined' ? process.env.NODE_ENV : undefined
+    typeof process !== "undefined" ? process.env.NODE_ENV : undefined
   ) as string | undefined;
   switch (env) {
-    case 'production':
-      return 'production';
-    case 'test':
-      return 'test';
-    case 'staging':
-      return 'staging';
-    case 'sandbox':
-      return 'sandbox';
+    case "production":
+      return "production";
+    case "test":
+      return "test";
+    case "staging":
+      return "staging";
+    case "sandbox":
+      return "sandbox";
     default:
-      return 'development';
+      return "development";
   }
 }
 
 export function isProduction(): boolean {
-  return resolveEnvironment() === 'production';
+  return resolveEnvironment() === "production";
 }
 
 export function isDevelopment(): boolean {
-  return resolveEnvironment() === 'development';
+  return resolveEnvironment() === "development";
 }
 
 export function isTest(): boolean {
-  return resolveEnvironment() === 'test';
+  return resolveEnvironment() === "test";
 }

@@ -1,4 +1,4 @@
-import type { ApiErrorResponse } from '@workspace/shared-types';
+import type { ApiErrorResponse } from "@workspace/shared-types";
 
 /**
  * Structured SDK error — wraps API error responses with typed access.
@@ -12,13 +12,13 @@ export class SdkError extends Error {
   /** Server-generated correlation ID for log tracing */
   readonly correlationId: string | undefined;
   /** Field-level validation errors, when available */
-  readonly details: ApiErrorResponse['details'];
+  readonly details: ApiErrorResponse["details"];
   /** Raw response body */
   readonly raw: ApiErrorResponse;
 
   constructor(response: ApiErrorResponse) {
     super(response.message);
-    this.name = 'SdkError';
+    this.name = "SdkError";
     this.statusCode = response.statusCode;
     this.error = response.error;
     this.correlationId = response.correlationId;
@@ -45,7 +45,10 @@ export class SdkError extends Error {
   }
 
   get isValidationError(): boolean {
-    return this.statusCode === 422 || (this.statusCode === 400 && !!this.details?.length);
+    return (
+      this.statusCode === 422 ||
+      (this.statusCode === 400 && !!this.details?.length)
+    );
   }
 
   get isServerError(): boolean {
@@ -72,6 +75,6 @@ export function isSdkError(error: unknown): error is SdkError {
 export function extractErrorMessage(error: unknown): string {
   if (error instanceof SdkError) return error.message;
   if (error instanceof Error) return error.message;
-  if (typeof error === 'string') return error;
-  return 'An unexpected error occurred. Please try again.';
+  if (typeof error === "string") return error;
+  return "An unexpected error occurred. Please try again.";
 }

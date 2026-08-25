@@ -3,18 +3,21 @@ import {
   Injectable,
   Logger,
   NotFoundException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcryptjs';
-import { Prisma, type User } from '@prisma/client';
-import { PrismaService } from '../database/prisma.service';
-import { AuditService } from '../audit/audit.service';
-import { AUDIT_ACTIONS } from './audit-actions';
-import { RegisterUserDto } from './dto/register-user.dto';
-import { UpdateUserStatusDto } from './dto/update-user-status.dto';
-import { UserResponseDto } from './dto/user-response.dto';
-import { paginate, type PaginatedResult } from '../../common/dto/pagination.dto';
-import type { ListUsersQueryDto } from './dto/list-users-query.dto';
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as bcrypt from "bcryptjs";
+import { Prisma, type User } from "@prisma/client";
+import { PrismaService } from "../database/prisma.service";
+import { AuditService } from "../audit/audit.service";
+import { AUDIT_ACTIONS } from "./audit-actions";
+import { RegisterUserDto } from "./dto/register-user.dto";
+import { UpdateUserStatusDto } from "./dto/update-user-status.dto";
+import { UserResponseDto } from "./dto/user-response.dto";
+import {
+  paginate,
+  type PaginatedResult,
+} from "../../common/dto/pagination.dto";
+import type { ListUsersQueryDto } from "./dto/list-users-query.dto";
 
 @Injectable()
 export class IdentityService {
@@ -41,11 +44,12 @@ export class IdentityService {
     });
 
     if (existing) {
-      const field = existing.email === dto.email ? 'email address' : 'phone number';
+      const field =
+        existing.email === dto.email ? "email address" : "phone number";
       throw new ConflictException(`This ${field} is already registered`);
     }
 
-    const rounds = this.configService.get<number>('security.bcryptRounds', 12);
+    const rounds = this.configService.get<number>("security.bcryptRounds", 12);
     const passwordHash = await bcrypt.hash(dto.password, rounds);
 
     let user;
@@ -57,9 +61,9 @@ export class IdentityService {
           email: dto.email,
           phone: dto.phone,
           passwordHash,
-          role: 'CUSTOMER',
-          status: 'PENDING',
-          registrationSource: 'SELF_REGISTER',
+          role: "CUSTOMER",
+          status: "PENDING",
+          registrationSource: "SELF_REGISTER",
         },
       });
     } catch (e) {
@@ -68,10 +72,12 @@ export class IdentityService {
       // the client always gets a deterministic conflict response, never a 500.
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
-        e.code === 'P2002'
+        e.code === "P2002"
       ) {
         const target = (e.meta as { target?: string[] } | undefined)?.target;
-        const field = target?.includes('email') ? 'email address' : 'phone number';
+        const field = target?.includes("email")
+          ? "email address"
+          : "phone number";
         throw new ConflictException(`This ${field} is already registered`);
       }
       throw e;
@@ -81,15 +87,15 @@ export class IdentityService {
       actorId: user.id,
       actorEmail: user.email,
       action: AUDIT_ACTIONS.USER_REGISTERED,
-      resource: 'user',
+      resource: "user",
       resourceId: user.id,
-      result: 'SUCCESS',
+      result: "SUCCESS",
       correlationId,
     });
 
     this.logger.log(
       { userId: user.id, email: user.email },
-      'New user registered',
+      "New user registered",
     );
 
     return UserResponseDto.from(user);
@@ -99,7 +105,7 @@ export class IdentityService {
 
   async findById(id: string): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException("User not found");
     return UserResponseDto.from(user);
   }
 
@@ -128,9 +134,9 @@ export class IdentityService {
       ...(role && { role }),
       ...(search && {
         OR: [
-          { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
+          { firstName: { contains: search, mode: "insensitive" } },
+          { lastName: { contains: search, mode: "insensitive" } },
+          { email: { contains: search, mode: "insensitive" } },
         ],
       }),
     };
@@ -140,7 +146,7 @@ export class IdentityService {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       }),
       this.prisma.user.count({ where }),
     ]);
@@ -148,8 +154,8 @@ export class IdentityService {
     await this.auditService.log({
       actorId,
       action: AUDIT_ACTIONS.ADMIN_USERS_LISTED,
-      resource: 'user',
-      result: 'SUCCESS',
+      resource: "user",
+      result: "SUCCESS",
       correlationId,
       metadata: { page, limit, filters: { status, role, search: !!search } },
     });
@@ -169,14 +175,14 @@ export class IdentityService {
       where: { id },
       select: { id: true, email: true, status: true },
     });
-    if (!existing) throw new NotFoundException('User not found');
+    if (!existing) throw new NotFoundException("User not found");
 
     const user = await this.prisma.user.update({
       where: { id },
       data: {
         status: dto.status,
         // Activating a user clears any lockout so they can log in immediately
-        ...(dto.status === 'ACTIVE' && {
+        ...(dto.status === "ACTIVE" && {
           failedLoginAttempts: 0,
           lockedUntil: null,
         }),
@@ -184,16 +190,16 @@ export class IdentityService {
     });
 
     // Revoke all refresh tokens when suspending or deactivating
-    if (dto.status === 'SUSPENDED' || dto.status === 'DEACTIVATED') {
+    if (dto.status === "SUSPENDED" || dto.status === "DEACTIVATED") {
       await this.revokeAllRefreshTokens(id);
     }
 
     await this.auditService.log({
       actorId,
       action: AUDIT_ACTIONS.USER_STATUS_CHANGED,
-      resource: 'user',
+      resource: "user",
       resourceId: id,
-      result: 'SUCCESS',
+      result: "SUCCESS",
       correlationId,
       metadata: {
         previousStatus: existing.status,
@@ -204,7 +210,7 @@ export class IdentityService {
 
     this.logger.log(
       { userId: id, from: existing.status, to: dto.status, by: actorId },
-      'User status updated',
+      "User status updated",
     );
 
     return UserResponseDto.from(user);

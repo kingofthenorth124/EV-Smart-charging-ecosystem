@@ -23,7 +23,9 @@ export function QueryError({
       }`}
       role="alert"
     >
-      <AlertTriangle className={`text-destructive ${compact ? "size-5" : "size-7"}`} />
+      <AlertTriangle
+        className={`text-destructive ${compact ? "size-5" : "size-7"}`}
+      />
       <div>
         <p className="font-semibold text-foreground">{title}</p>
         <p className="text-sm text-muted-foreground mt-1">

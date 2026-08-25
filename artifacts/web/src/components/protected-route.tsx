@@ -1,11 +1,11 @@
 /**
  * Route guards: authentication + role-based access.
  */
-import { type ComponentType, type ReactNode } from 'react';
-import { Redirect } from 'wouter';
-import type { UserRole } from '@workspace/api-client-react';
-import { useAuth } from '@/hooks/use-auth';
-import { Spinner } from '@/components/ui/spinner';
+import { type ComponentType, type ReactNode } from "react";
+import { Redirect } from "wouter";
+import type { UserRole } from "@workspace/api-client-react";
+import { useAuth } from "@/hooks/use-auth";
+import { Spinner } from "@/components/ui/spinner";
 
 function FullPageLoader() {
   return (
@@ -32,7 +32,11 @@ export function ProtectedRoute({
 }
 
 /** Redirect authenticated users away from guest-only pages (login/register). */
-export function GuestRoute({ component: Component }: { component: ComponentType }) {
+export function GuestRoute({
+  component: Component,
+}: {
+  component: ComponentType;
+}) {
   const { isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) return <FullPageLoader />;

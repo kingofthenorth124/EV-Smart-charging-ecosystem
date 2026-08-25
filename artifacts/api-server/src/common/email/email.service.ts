@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 
 export interface SendEmailOptions {
   to: string;
@@ -25,36 +25,36 @@ export class EmailService {
   private readonly fromAddress: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.apiKey = this.configService.get<string>('email.resendApiKey');
+    this.apiKey = this.configService.get<string>("email.resendApiKey");
     this.fromAddress = this.configService.get<string>(
-      'email.fromAddress',
-      'noreply@camel-wallet.app',
+      "email.fromAddress",
+      "noreply@camel-wallet.app",
     );
   }
 
   async send(options: SendEmailOptions): Promise<void> {
     if (!this.apiKey) {
-      if (this.configService.get<string>('nodeEnv') !== 'production') {
+      if (this.configService.get<string>("nodeEnv") !== "production") {
         this.logger.warn(
           `[DEV] Email to: ${options.to} | Subject: ${options.subject}`,
-          'EmailService',
+          "EmailService",
         );
         this.logger.warn(
           `[DEV] Body:\n${options.text ?? options.html}`,
-          'EmailService',
+          "EmailService",
         );
         return;
       }
       throw new Error(
-        'RESEND_API_KEY is not configured. Cannot send email in production.',
+        "RESEND_API_KEY is not configured. Cannot send email in production.",
       );
     }
 
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         from: this.fromAddress,
@@ -66,10 +66,8 @@ export class EmailService {
     });
 
     if (!response.ok) {
-      const body = await response.text().catch(() => '(no body)');
-      throw new Error(
-        `Resend API error ${response.status}: ${body}`,
-      );
+      const body = await response.text().catch(() => "(no body)");
+      throw new Error(`Resend API error ${response.status}: ${body}`);
     }
   }
 }

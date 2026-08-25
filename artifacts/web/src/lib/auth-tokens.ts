@@ -9,10 +9,10 @@
  *   (single-flight) if the access token is missing/expired when a request
  *   needs it.
  */
-import { refreshTokens as apiRefreshTokens } from '@workspace/api-client-react';
-import type { AuthTokens } from '@workspace/api-client-react';
+import { refreshTokens as apiRefreshTokens } from "@workspace/api-client-react";
+import type { AuthTokens } from "@workspace/api-client-react";
 
-const REFRESH_TOKEN_KEY = 'camel_refresh_token';
+const REFRESH_TOKEN_KEY = "camel_refresh_token";
 /** Refresh this many ms before the access token actually expires. */
 const REFRESH_SKEW_MS = 60_000;
 
@@ -24,7 +24,9 @@ let refreshInFlight: Promise<string | null> | null = null;
 type SessionExpiredListener = () => void;
 let onSessionExpired: SessionExpiredListener | null = null;
 
-export function setSessionExpiredListener(listener: SessionExpiredListener | null) {
+export function setSessionExpiredListener(
+  listener: SessionExpiredListener | null,
+) {
   onSessionExpired = listener;
 }
 
@@ -82,7 +84,9 @@ export function refreshSession(): Promise<string | null> {
 
   // skipAuth: the refresh call must NOT consult the auth-token getter —
   // the getter awaits this very promise, which would deadlock.
-  refreshInFlight = apiRefreshTokens({ refreshToken }, { skipAuth: true } as RequestInit)
+  refreshInFlight = apiRefreshTokens({ refreshToken }, {
+    skipAuth: true,
+  } as RequestInit)
     .then((tokens) => {
       storeTokens(tokens);
       return tokens.accessToken;
@@ -91,7 +95,7 @@ export function refreshSession(): Promise<string | null> {
       // Refresh token invalid/expired/revoked — the session is over.
       clearTokens();
       onSessionExpired?.();
-      console.warn('Session refresh failed', error);
+      console.warn("Session refresh failed", error);
       return null;
     })
     .finally(() => {

@@ -1,21 +1,25 @@
-import { setAuthTokenGetter, setBaseUrl, setDefaultHeadersGetter } from '@workspace/api-client-react';
-import { getAccessToken } from '@/lib/auth-tokens';
+import {
+  setAuthTokenGetter,
+  setBaseUrl,
+  setDefaultHeadersGetter,
+} from "@workspace/api-client-react";
+import { getAccessToken } from "@/lib/auth-tokens";
 import {
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
   useFonts,
-} from '@expo-google-fonts/inter';
-import { router, Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import React, { useEffect } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
+} from "@expo-google-fonts/inter";
+import { router, Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import React, { useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 
 // ── API client bootstrap (module-level, runs once on bundle load) ─────────────
 
@@ -24,7 +28,7 @@ if (process.env.EXPO_PUBLIC_DOMAIN) {
 }
 setAuthTokenGetter(getAccessToken);
 setDefaultHeadersGetter(() => ({
-  'X-Correlation-ID': `mob-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+  "X-Correlation-ID": `mob-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
 }));
 
 // ── App bootstrap ─────────────────────────────────────────────────────────────
@@ -51,9 +55,9 @@ function RootLayoutNav() {
   useEffect(() => {
     if (isLoading) return;
     if (isAuthenticated) {
-      router.replace('/(tabs)');
+      router.replace("/(tabs)");
     } else {
-      router.replace('/(auth)/login');
+      router.replace("/(auth)/login");
     }
   }, [isAuthenticated, isLoading]);
 

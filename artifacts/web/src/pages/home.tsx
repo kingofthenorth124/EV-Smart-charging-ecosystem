@@ -3,7 +3,13 @@ import { AppLayout } from "@/components/app-layout";
 import { NfcCard } from "@/components/nfc-card";
 import { useGetDashboard } from "@workspace/api-client-react";
 import { Spinner } from "@/components/ui/spinner";
-import { Bolt, Calendar, BatteryCharging, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import {
+  Bolt,
+  Calendar,
+  BatteryCharging,
+  ArrowUpRight,
+  ArrowDownRight,
+} from "lucide-react";
 import { format } from "date-fns";
 import { Link } from "wouter";
 
@@ -111,11 +117,11 @@ export default function Home() {
                   .sort(
                     (a, b) =>
                       new Date(
-                        "startedAt" in b ? b.startedAt : b.createdAt
+                        "startedAt" in b ? b.startedAt : b.createdAt,
                       ).getTime() -
                       new Date(
-                        "startedAt" in a ? a.startedAt : a.createdAt
-                      ).getTime()
+                        "startedAt" in a ? a.startedAt : a.createdAt,
+                      ).getTime(),
                   )
                   .slice(0, 5)
                   .map((item) => {
@@ -137,7 +143,7 @@ export default function Home() {
                               <Calendar className="size-3" />
                               {format(
                                 new Date(item.startedAt),
-                                "MMM d, h:mm a"
+                                "MMM d, h:mm a",
                               )}
                             </div>
                           </div>
@@ -180,7 +186,7 @@ export default function Home() {
                               <Calendar className="size-3" />
                               {format(
                                 new Date(item.createdAt),
-                                "MMM d, h:mm a"
+                                "MMM d, h:mm a",
                               )}
                             </div>
                           </div>

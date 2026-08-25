@@ -8,6 +8,7 @@ The web app's tsconfig.json uses `references` pointing to `lib/api-client-react`
 **Why:** The dist/index.d.ts is stale until rebuilt; new hooks added by codegen are invisible to the web app typecheck, causing TS2305 "no exported member" errors for every new hook.
 
 **How to apply:** After any codegen run:
+
 1. Check `lib/api-client-react/src/index.ts` for duplicate `export * from './generated/api'` and `export * from './generated/api.schemas'` lines — Orval appends them; remove the duplicates.
 2. Rebuild the dist: `cd lib/api-client-react && npx tsc -b tsconfig.json`
 3. Now `pnpm --filter @workspace/web typecheck` will see the updated hooks.

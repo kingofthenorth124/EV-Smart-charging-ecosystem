@@ -4,14 +4,21 @@
  * Manages authentication state: login, register, logout, and session
  * restoration on app startup. Token lifecycle is handled by lib/auth-tokens.ts.
  */
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   getCurrentUser,
   login as apiLogin,
   logout as apiLogout,
   register as apiRegister,
-} from '@workspace/api-client-react';
-import type { UserProfile, RegisterRequest } from '@workspace/api-client-react';
+} from "@workspace/api-client-react";
+import type { UserProfile, RegisterRequest } from "@workspace/api-client-react";
 import {
   beginLogout,
   clearTokens,
@@ -20,7 +27,7 @@ import {
   refreshSession,
   setSessionExpiredListener,
   storeTokens,
-} from '@/lib/auth-tokens';
+} from "@/lib/auth-tokens";
 
 interface AuthContextValue {
   user: UserProfile | null;
@@ -76,12 +83,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(response.user);
   }, []);
 
-  const register = useCallback(async (data: RegisterRequest): Promise<UserProfile> => {
-    const profile = await apiRegister(data);
-    // Registration creates a PENDING account — no tokens issued yet.
-    // Admin must activate before the customer can log in.
-    return profile;
-  }, []);
+  const register = useCallback(
+    async (data: RegisterRequest): Promise<UserProfile> => {
+      const profile = await apiRegister(data);
+      // Registration creates a PENDING account — no tokens issued yet.
+      // Admin must activate before the customer can log in.
+      return profile;
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
     const rt = await beginLogout();
@@ -99,7 +109,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: user !== null, isLoading, login, register, logout }}
+      value={{
+        user,
+        isAuthenticated: user !== null,
+        isLoading,
+        login,
+        register,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>
@@ -108,6 +125,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
   return ctx;
 }

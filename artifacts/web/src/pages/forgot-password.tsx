@@ -16,7 +16,10 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2 } from "lucide-react";
 import { useRequestPasswordReset } from "@workspace/api-client-react";
-import { passwordResetRequestSchema, type PasswordResetRequestInput } from "@workspace/validation";
+import {
+  passwordResetRequestSchema,
+  type PasswordResetRequestInput,
+} from "@workspace/validation";
 
 export default function ForgotPassword() {
   const [success, setSuccess] = useState(false);
@@ -49,13 +52,21 @@ export default function ForgotPassword() {
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            If an account exists for that email, we've sent a link to reset your password.
+            If an account exists for that email, we've sent a link to reset your
+            password.
           </p>
           <div className="pt-4 border-t border-border mt-6">
             <p className="text-xs text-muted-foreground mb-4">
-              (For development: check your email for a link to <code className="bg-muted px-1 rounded">/reset-password?token=...</code>)
+              (For development: check your email for a link to{" "}
+              <code className="bg-muted px-1 rounded">
+                /reset-password?token=...
+              </code>
+              )
             </p>
-            <Link href="/login" className="text-primary text-sm font-medium hover:underline">
+            <Link
+              href="/login"
+              className="text-primary text-sm font-medium hover:underline"
+            >
               Return to sign in
             </Link>
           </div>
@@ -70,7 +81,9 @@ export default function ForgotPassword() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {requestReset.isError && (
             <Alert variant="destructive">
-              <AlertDescription>Failed to request password reset. Please try again.</AlertDescription>
+              <AlertDescription>
+                Failed to request password reset. Please try again.
+              </AlertDescription>
             </Alert>
           )}
 
@@ -81,7 +94,12 @@ export default function ForgotPassword() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input autoComplete="email" placeholder="you@example.com" {...field} data-testid="input-email" />
+                  <Input
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    {...field}
+                    data-testid="input-email"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -98,7 +116,10 @@ export default function ForgotPassword() {
           </Button>
 
           <div className="text-center text-sm mt-6">
-            <Link href="/login" className="text-primary font-medium hover:underline">
+            <Link
+              href="/login"
+              className="text-primary font-medium hover:underline"
+            >
               Back to sign in
             </Link>
           </div>

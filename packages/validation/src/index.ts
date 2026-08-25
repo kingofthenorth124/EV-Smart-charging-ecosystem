@@ -12,37 +12,37 @@
  * (v3 API). Zod v4 schemas throw errors with `.issues` instead, which the
  * resolver does not recognise, silently producing no field-level errors.
  */
-import { z } from 'zod';
+import { z } from "zod";
 
 // ─── Primitive schemas ────────────────────────────────────────────────────────
 
 export const emailSchema = z
-  .string({ required_error: 'Email is required' })
-  .min(1, 'Email is required')
-  .email('Enter a valid email address')
+  .string({ required_error: "Email is required" })
+  .min(1, "Email is required")
+  .email("Enter a valid email address")
   .transform((s) => s.toLowerCase());
 
 export const passwordSchema = z
-  .string({ required_error: 'Password is required' })
-  .min(8, 'Password must be at least 8 characters')
-  .max(128, 'Password must not exceed 128 characters');
+  .string({ required_error: "Password is required" })
+  .min(8, "Password must be at least 8 characters")
+  .max(128, "Password must not exceed 128 characters");
 
 export const phoneSchema = z
-  .string({ required_error: 'Phone number is required' })
-  .min(10, 'Enter a valid phone number')
-  .max(20, 'Phone number is too long')
-  .regex(/^\+?[0-9\s\-()]{10,20}$/, 'Enter a valid phone number');
+  .string({ required_error: "Phone number is required" })
+  .min(10, "Enter a valid phone number")
+  .max(20, "Phone number is too long")
+  .regex(/^\+?[0-9\s\-()]{10,20}$/, "Enter a valid phone number");
 
 export const nameSchema = z
-  .string({ required_error: 'This field is required' })
-  .min(1, 'This field is required')
-  .max(100, 'Must not exceed 100 characters')
+  .string({ required_error: "This field is required" })
+  .min(1, "This field is required")
+  .max(100, "Must not exceed 100 characters")
   .trim();
 
 export const cuidSchema = z
   .string()
-  .min(1, 'ID is required')
-  .regex(/^c[a-z0-9]{24}$/, 'Invalid ID format');
+  .min(1, "ID is required")
+  .regex(/^c[a-z0-9]{24}$/, "Invalid ID format");
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
 
@@ -66,26 +66,26 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
   email: emailSchema,
   password: z
-    .string({ required_error: 'Password is required' })
-    .min(1, 'Password is required'),
+    .string({ required_error: "Password is required" })
+    .min(1, "Password is required"),
 });
 
 export const refreshTokenSchema = z.object({
   refreshToken: z
-    .string({ required_error: 'Refresh token is required' })
-    .min(1, 'Refresh token is required'),
+    .string({ required_error: "Refresh token is required" })
+    .min(1, "Refresh token is required"),
 });
 
 export const changePasswordSchema = z
   .object({
     currentPassword: z
-      .string({ required_error: 'Current password is required' })
-      .min(1, 'Current password is required'),
+      .string({ required_error: "Current password is required" })
+      .min(1, "Current password is required"),
     newPassword: passwordSchema,
   })
   .refine((data) => data.currentPassword !== data.newPassword, {
-    message: 'New password must differ from current password',
-    path: ['newPassword'],
+    message: "New password must differ from current password",
+    path: ["newPassword"],
   });
 
 export const passwordResetRequestSchema = z.object({
@@ -94,15 +94,15 @@ export const passwordResetRequestSchema = z.object({
 
 export const passwordResetConfirmSchema = z.object({
   token: z
-    .string({ required_error: 'Reset token is required' })
-    .min(1, 'Reset token is required'),
+    .string({ required_error: "Reset token is required" })
+    .min(1, "Reset token is required"),
   newPassword: passwordSchema,
 });
 
 // ─── Admin schemas ────────────────────────────────────────────────────────────
 
 export const updateUserStatusSchema = z.object({
-  status: z.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'DEACTIVATED']),
+  status: z.enum(["PENDING", "ACTIVE", "SUSPENDED", "DEACTIVATED"]),
 });
 
 // ─── Wallet schemas ───────────────────────────────────────────────────────────
@@ -114,12 +114,12 @@ const MAX_TOPUP_KOBO = 50_000_000;
 
 export const topUpSchema = z.object({
   amountKobo: z
-    .number({ required_error: 'Amount is required' })
-    .int('Amount must be a whole number of kobo')
+    .number({ required_error: "Amount is required" })
+    .int("Amount must be a whole number of kobo")
     .min(MIN_TOPUP_KOBO, `Minimum top-up is ₦${MIN_TOPUP_KOBO / 100}`)
     .max(MAX_TOPUP_KOBO, `Maximum top-up is ₦${MAX_TOPUP_KOBO / 100}`),
-  method: z.enum(['BANK_TRANSFER', 'CARD', 'USSD', 'SANDBOX']),
-  idempotencyKey: z.string().min(1, 'Idempotency key is required'),
+  method: z.enum(["BANK_TRANSFER", "CARD", "USSD", "SANDBOX"]),
+  idempotencyKey: z.string().min(1, "Idempotency key is required"),
 });
 
 export type TopUpInput = z.infer<typeof topUpSchema>;
@@ -130,10 +130,10 @@ export type TopUpInput = z.infer<typeof topUpSchema>;
 const MIN_SESSION_LIMIT_KOBO = 1_000;
 
 export const startSessionSchema = z.object({
-  stationId: z.string().min(1, 'Station ID is required'),
+  stationId: z.string().min(1, "Station ID is required"),
   limitKobo: z
     .number()
-    .int('Limit must be a whole number of kobo')
+    .int("Limit must be a whole number of kobo")
     .min(
       MIN_SESSION_LIMIT_KOBO,
       `Minimum spend cap is ₦${MIN_SESSION_LIMIT_KOBO / 100}`,
@@ -149,6 +149,10 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
-export type PasswordResetRequestInput = z.infer<typeof passwordResetRequestSchema>;
-export type PasswordResetConfirmInput = z.infer<typeof passwordResetConfirmSchema>;
+export type PasswordResetRequestInput = z.infer<
+  typeof passwordResetRequestSchema
+>;
+export type PasswordResetConfirmInput = z.infer<
+  typeof passwordResetConfirmSchema
+>;
 export type UpdateUserStatusInput = z.infer<typeof updateUserStatusSchema>;

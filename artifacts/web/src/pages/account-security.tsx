@@ -48,7 +48,11 @@ export default function AccountSecurity() {
 
   const form = useForm<SecurityFormInput>({
     resolver: zodResolver(securityFormSchema),
-    defaultValues: { currentPassword: "", newPassword: "", confirmPassword: "" },
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
   });
 
   const onSubmit = async (values: SecurityFormInput) => {
@@ -62,7 +66,8 @@ export default function AccountSecurity() {
 
       toast({
         title: "Password Updated",
-        description: "Your password has been changed successfully. Please sign in again.",
+        description:
+          "Your password has been changed successfully. Please sign in again.",
       });
 
       clearSession();
@@ -70,7 +75,9 @@ export default function AccountSecurity() {
     } catch (err) {
       const apiErr = (err as { data?: ApiErrorResponse }).data;
       form.setError("root", {
-        message: apiErr?.message ?? "Failed to change password. Please verify your current password.",
+        message:
+          apiErr?.message ??
+          "Failed to change password. Please verify your current password.",
       });
     }
   };
@@ -84,7 +91,9 @@ export default function AccountSecurity() {
           </div>
           <div>
             <h1 className="text-xl font-semibold">Account Security</h1>
-            <p className="text-sm text-muted-foreground">Manage your password and security settings</p>
+            <p className="text-sm text-muted-foreground">
+              Manage your password and security settings
+            </p>
           </div>
         </div>
 
@@ -92,7 +101,9 @@ export default function AccountSecurity() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {form.formState.errors.root && (
               <Alert variant="destructive">
-                <AlertDescription>{form.formState.errors.root.message}</AlertDescription>
+                <AlertDescription>
+                  {form.formState.errors.root.message}
+                </AlertDescription>
               </Alert>
             )}
 
@@ -103,7 +114,12 @@ export default function AccountSecurity() {
                 <FormItem>
                   <FormLabel>Current Password</FormLabel>
                   <FormControl>
-                    <Input type="password" autoComplete="current-password" placeholder="••••••••" {...field} />
+                    <Input
+                      type="password"
+                      autoComplete="current-password"
+                      placeholder="••••••••"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -117,7 +133,12 @@ export default function AccountSecurity() {
                 <FormItem>
                   <FormLabel>New Password</FormLabel>
                   <FormControl>
-                    <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} />
+                    <Input
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="••••••••"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -131,7 +152,12 @@ export default function AccountSecurity() {
                 <FormItem>
                   <FormLabel>Confirm New Password</FormLabel>
                   <FormControl>
-                    <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} />
+                    <Input
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="••••••••"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

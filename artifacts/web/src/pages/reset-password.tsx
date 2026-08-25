@@ -35,7 +35,8 @@ export default function ResetPassword() {
   const confirmReset = useConfirmPasswordReset();
 
   // Parse token from URL if available
-  const tokenParam = new URLSearchParams(window.location.search).get("token") ?? "";
+  const tokenParam =
+    new URLSearchParams(window.location.search).get("token") ?? "";
 
   const form = useForm<ResetFormInput>({
     resolver: zodResolver(resetFormSchema),
@@ -51,14 +52,19 @@ export default function ResetPassword() {
     } catch (err) {
       const apiErr = (err as { data?: ApiErrorResponse }).data;
       form.setError("root", {
-        message: apiErr?.message ?? "Failed to reset password. The token may be invalid or expired.",
+        message:
+          apiErr?.message ??
+          "Failed to reset password. The token may be invalid or expired.",
       });
     }
   };
 
   if (success) {
     return (
-      <AuthLayout title="Password Reset" subtitle="Your password has been changed">
+      <AuthLayout
+        title="Password Reset"
+        subtitle="Your password has been changed"
+      >
         <div className="text-center py-4 space-y-4">
           <div className="flex justify-center">
             <div className="size-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -66,10 +72,14 @@ export default function ResetPassword() {
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            You can now sign in with your new password. All other sessions have been revoked.
+            You can now sign in with your new password. All other sessions have
+            been revoked.
           </p>
           <div className="pt-4 border-t border-border mt-6">
-            <Link href="/login" className="inline-flex items-center justify-center h-10 px-4 py-2 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/90 w-full">
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center h-10 px-4 py-2 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/90 w-full"
+            >
               Sign in now
             </Link>
           </div>
@@ -79,12 +89,17 @@ export default function ResetPassword() {
   }
 
   return (
-    <AuthLayout title="Choose New Password" subtitle="Enter your new password below">
+    <AuthLayout
+      title="Choose New Password"
+      subtitle="Enter your new password below"
+    >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {form.formState.errors.root && (
             <Alert variant="destructive">
-              <AlertDescription>{form.formState.errors.root.message}</AlertDescription>
+              <AlertDescription>
+                {form.formState.errors.root.message}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -96,7 +111,11 @@ export default function ResetPassword() {
                 <FormItem>
                   <FormLabel>Reset Token</FormLabel>
                   <FormControl>
-                    <Input placeholder="Paste token here" {...field} data-testid="input-token" />
+                    <Input
+                      placeholder="Paste token here"
+                      {...field}
+                      data-testid="input-token"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -111,7 +130,12 @@ export default function ResetPassword() {
               <FormItem>
                 <FormLabel>New Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} data-testid="input-newpassword" />
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    {...field}
+                    data-testid="input-newpassword"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -125,7 +149,12 @@ export default function ResetPassword() {
               <FormItem>
                 <FormLabel>Confirm New Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} data-testid="input-confirmpassword" />
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    {...field}
+                    data-testid="input-confirmpassword"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

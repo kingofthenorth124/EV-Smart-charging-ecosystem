@@ -48,15 +48,15 @@ The script is **idempotent** — re-running it with the same email is safe. If t
 
 ### Shared packages (`packages/`)
 
-| Package | Purpose |
-|---|---|
-| `@workspace/shared-types` | Canonical domain types: wallets, sessions, stations, events, audit |
-| `@workspace/config` | Runtime constants (kobo/naira, session limits) + env helpers |
-| `@workspace/validation` | Zod v4 schemas for all request bodies; import from `zod/v4` subpath |
-| `@workspace/auth` | RBAC helpers: `hasPermission`, `isAdminRole`, `isCustomerRole` |
-| `@workspace/utils` | Pure formatters: `formatDate`, `formatNaira`, `maskCardId`, etc. |
-| `@workspace/ui` | React component library (20 components). Variants live in `src/lib/variants.ts` (no JSX, fully testable in node). Consuming apps need `@source "../../../packages/ui/src"` in their CSS. |
-| `@workspace/sdk` | Typed API client wrapping the generated `@workspace/api-client-react`. Use `createClient()`. SDK methods throw `SdkError` by default; wrap with `wrapResult()` for Result-style handling. |
+| Package                   | Purpose                                                                                                                                                                                   |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@workspace/shared-types` | Canonical domain types: wallets, sessions, stations, events, audit                                                                                                                        |
+| `@workspace/config`       | Runtime constants (kobo/naira, session limits) + env helpers                                                                                                                              |
+| `@workspace/validation`   | Zod v4 schemas for all request bodies; import from `zod/v4` subpath                                                                                                                       |
+| `@workspace/auth`         | RBAC helpers: `hasPermission`, `isAdminRole`, `isCustomerRole`                                                                                                                            |
+| `@workspace/utils`        | Pure formatters: `formatDate`, `formatNaira`, `maskCardId`, etc.                                                                                                                          |
+| `@workspace/ui`           | React component library (20 components). Variants live in `src/lib/variants.ts` (no JSX, fully testable in node). Consuming apps need `@source "../../../packages/ui/src"` in their CSS.  |
+| `@workspace/sdk`          | Typed API client wrapping the generated `@workspace/api-client-react`. Use `createClient()`. SDK methods throw `SdkError` by default; wrap with `wrapResult()` for Result-style handling. |
 
 ## Architecture decisions
 
@@ -71,6 +71,7 @@ The script is **idempotent** — re-running it with the same email is safe. If t
 ## Product
 
 **Module 1 — Identity & Access (complete, validated 2026-08-15; see `docs/module-1-completion-report.md`):**
+
 - Self-registration (CUSTOMER/PENDING), login with JWT access + rotating opaque refresh tokens, logout, `GET /me`
 - Password change and password reset (email delivery via Resend, non-enumerating 202)
 - Account lockout after 5 failed logins (15 min), per-IP login rate limiting (429 + Retry-After)

@@ -63,7 +63,9 @@ export default function Register() {
         if (apiErr.message.toLowerCase().includes("email")) {
           form.setError("email", { message: "Email is already registered" });
         } else if (apiErr.message.toLowerCase().includes("phone")) {
-          form.setError("phone", { message: "Phone number is already registered" });
+          form.setError("phone", {
+            message: "Phone number is already registered",
+          });
         } else {
           setErrorMsg(apiErr.message);
         }
@@ -79,7 +81,9 @@ export default function Register() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {errorMsg && (
             <Alert variant="destructive">
-              <AlertDescription data-testid="text-register-error">{errorMsg}</AlertDescription>
+              <AlertDescription data-testid="text-register-error">
+                {errorMsg}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -91,7 +95,11 @@ export default function Register() {
                 <FormItem>
                   <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Amina" {...field} data-testid="input-firstname" />
+                    <Input
+                      placeholder="Amina"
+                      {...field}
+                      data-testid="input-firstname"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -104,7 +112,11 @@ export default function Register() {
                 <FormItem>
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Bello" {...field} data-testid="input-lastname" />
+                    <Input
+                      placeholder="Bello"
+                      {...field}
+                      data-testid="input-lastname"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -119,7 +131,12 @@ export default function Register() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input autoComplete="email" placeholder="amina@example.com" {...field} data-testid="input-email" />
+                  <Input
+                    autoComplete="email"
+                    placeholder="amina@example.com"
+                    {...field}
+                    data-testid="input-email"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -133,7 +150,11 @@ export default function Register() {
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="+2348012345678" {...field} data-testid="input-phone" />
+                  <Input
+                    placeholder="+2348012345678"
+                    {...field}
+                    data-testid="input-phone"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -147,7 +168,13 @@ export default function Register() {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} data-testid="input-password" />
+                  <Input
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="••••••••"
+                    {...field}
+                    data-testid="input-password"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -161,7 +188,13 @@ export default function Register() {
               <FormItem>
                 <FormLabel>Confirm Password</FormLabel>
                 <FormControl>
-                  <Input type="password" autoComplete="new-password" placeholder="••••••••" {...field} data-testid="input-confirmpassword" />
+                  <Input
+                    type="password"
+                    autoComplete="new-password"
+                    placeholder="••••••••"
+                    {...field}
+                    data-testid="input-confirmpassword"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -179,7 +212,11 @@ export default function Register() {
 
           <div className="text-center text-sm text-muted-foreground mt-6">
             Already have an account?{" "}
-            <Link href="/login" className="text-primary font-medium hover:underline" data-testid="link-login">
+            <Link
+              href="/login"
+              className="text-primary font-medium hover:underline"
+              data-testid="link-login"
+            >
               Sign in
             </Link>
           </div>

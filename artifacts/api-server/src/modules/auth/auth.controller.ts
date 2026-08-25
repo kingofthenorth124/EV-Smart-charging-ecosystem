@@ -8,28 +8,31 @@ import {
   Ip,
   Post,
   Req,
-} from '@nestjs/common';
+} from "@nestjs/common";
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
   ApiTags,
-} from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
-import type { Request } from 'express';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { Public } from '../../common/decorators/public.decorator';
-import type { JwtPayload } from '../../common/types/auth.types';
-import { AuthService } from './auth.service';
-import { IdentityService } from '../identity/identity.service';
-import { LoginDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/refresh.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
-import { ConfirmPasswordResetDto, RequestPasswordResetDto } from './dto/reset-password.dto';
-import { RegisterUserDto } from '../identity/dto/register-user.dto';
+} from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
+import type { Request } from "express";
+import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import { Public } from "../../common/decorators/public.decorator";
+import type { JwtPayload } from "../../common/types/auth.types";
+import { AuthService } from "./auth.service";
+import { IdentityService } from "../identity/identity.service";
+import { LoginDto } from "./dto/login.dto";
+import { RefreshTokenDto } from "./dto/refresh.dto";
+import { ChangePasswordDto } from "./dto/change-password.dto";
+import {
+  ConfirmPasswordResetDto,
+  RequestPasswordResetDto,
+} from "./dto/reset-password.dto";
+import { RegisterUserDto } from "../identity/dto/register-user.dto";
 
-@ApiTags('auth')
-@Controller('v1/auth')
+@ApiTags("auth")
+@Controller("v1/auth")
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
@@ -42,12 +45,15 @@ export class AuthController {
    */
   @Public()
   @Throttle({ default: { limit: 5, ttl: 900000 } })
-  @Post('register')
+  @Post("register")
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Register a new customer account' })
-  @ApiResponse({ status: 201, description: 'Account created' })
-  @ApiResponse({ status: 409, description: 'Email or phone already registered' })
-  @ApiResponse({ status: 422, description: 'Validation errors' })
+  @ApiOperation({ summary: "Register a new customer account" })
+  @ApiResponse({ status: 201, description: "Account created" })
+  @ApiResponse({
+    status: 409,
+    description: "Email or phone already registered",
+  })
+  @ApiResponse({ status: 422, description: "Validation errors" })
   async register(
     @Body() dto: RegisterUserDto,
     @Req() req: Request & { correlationId?: string },
@@ -61,19 +67,28 @@ export class AuthController {
    */
   @Public()
   @Throttle({ default: { limit: 10, ttl: 900000 } })
-  @Post('login')
+  @Post("login")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Authenticate and receive JWT tokens' })
-  @ApiResponse({ status: 200, description: 'Authenticated — returns user + tokens' })
-  @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  @ApiResponse({ status: 403, description: 'Account locked or suspended' })
+  @ApiOperation({ summary: "Authenticate and receive JWT tokens" })
+  @ApiResponse({
+    status: 200,
+    description: "Authenticated — returns user + tokens",
+  })
+  @ApiResponse({ status: 401, description: "Invalid credentials" })
+  @ApiResponse({ status: 403, description: "Account locked or suspended" })
   async login(
     @Body() dto: LoginDto,
     @Ip() ip: string,
-    @Headers('user-agent') userAgent: string,
+    @Headers("user-agent") userAgent: string,
     @Req() req: Request & { correlationId?: string },
   ) {
-    return this.authService.login(dto.email, dto.password, ip, userAgent, req.correlationId);
+    return this.authService.login(
+      dto.email,
+      dto.password,
+      ip,
+      userAgent,
+      req.correlationId,
+    );
   }
 
   /**
@@ -81,11 +96,11 @@ export class AuthController {
    * Rotate refresh token — public (uses opaque token, not JWT)
    */
   @Public()
-  @Post('refresh')
+  @Post("refresh")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Rotate refresh token and receive new token pair' })
-  @ApiResponse({ status: 200, description: 'New token pair' })
-  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
+  @ApiOperation({ summary: "Rotate refresh token and receive new token pair" })
+  @ApiResponse({ status: 200, description: "New token pair" })
+  @ApiResponse({ status: 401, description: "Invalid or expired refresh token" })
   async refresh(
     @Body() dto: RefreshTokenDto,
     @Req() req: Request & { correlationId?: string },
@@ -97,30 +112,34 @@ export class AuthController {
    * POST /api/v1/auth/logout
    * Revoke the current session's refresh token
    */
-  @ApiBearerAuth('BearerAuth')
-  @Post('logout')
+  @ApiBearerAuth("BearerAuth")
+  @Post("logout")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Log out (revoke refresh token)' })
-  @ApiResponse({ status: 204, description: 'Logged out' })
-  @ApiResponse({ status: 401, description: 'Not authenticated' })
+  @ApiOperation({ summary: "Log out (revoke refresh token)" })
+  @ApiResponse({ status: 204, description: "Logged out" })
+  @ApiResponse({ status: 401, description: "Not authenticated" })
   async logout(
     @Body() dto: RefreshTokenDto,
     @CurrentUser() user: JwtPayload,
     @Req() req: Request & { correlationId?: string },
   ) {
-    await this.authService.logout(user.sub, dto.refreshToken, req.correlationId);
+    await this.authService.logout(
+      user.sub,
+      dto.refreshToken,
+      req.correlationId,
+    );
   }
 
   /**
    * GET /api/v1/auth/me
    * Current authenticated user's profile
    */
-  @ApiBearerAuth('BearerAuth')
-  @Get('me')
+  @ApiBearerAuth("BearerAuth")
+  @Get("me")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Get the current authenticated user profile' })
-  @ApiResponse({ status: 200, description: 'Current user profile' })
-  @ApiResponse({ status: 401, description: 'Not authenticated' })
+  @ApiOperation({ summary: "Get the current authenticated user profile" })
+  @ApiResponse({ status: 200, description: "Current user profile" })
+  @ApiResponse({ status: 401, description: "Not authenticated" })
   async me(@CurrentUser() user: JwtPayload) {
     return this.identityService.findById(user.sub);
   }
@@ -129,12 +148,18 @@ export class AuthController {
    * POST /api/v1/auth/password/change
    * Change password for authenticated user
    */
-  @ApiBearerAuth('BearerAuth')
-  @Post('password/change')
+  @ApiBearerAuth("BearerAuth")
+  @Post("password/change")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Change password (requires current password)' })
-  @ApiResponse({ status: 204, description: 'Password changed — all sessions revoked' })
-  @ApiResponse({ status: 401, description: 'Current password incorrect or not authenticated' })
+  @ApiOperation({ summary: "Change password (requires current password)" })
+  @ApiResponse({
+    status: 204,
+    description: "Password changed — all sessions revoked",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Current password incorrect or not authenticated",
+  })
   async changePassword(
     @Body() dto: ChangePasswordDto,
     @CurrentUser() user: JwtPayload,
@@ -154,16 +179,22 @@ export class AuthController {
    */
   @Public()
   @Throttle({ default: { limit: 5, ttl: 900000 } })
-  @Post('password/reset/request')
+  @Post("password/reset/request")
   @HttpCode(HttpStatus.ACCEPTED)
-  @ApiOperation({ summary: 'Request password reset email' })
-  @ApiResponse({ status: 202, description: 'Reset email sent (if account exists)' })
+  @ApiOperation({ summary: "Request password reset email" })
+  @ApiResponse({
+    status: 202,
+    description: "Reset email sent (if account exists)",
+  })
   async requestPasswordReset(
     @Body() dto: RequestPasswordResetDto,
     @Req() req: Request & { correlationId?: string },
   ) {
     await this.authService.requestPasswordReset(dto.email, req.correlationId);
-    return { message: 'If an account exists with this email, a reset link has been sent.' };
+    return {
+      message:
+        "If an account exists with this email, a reset link has been sent.",
+    };
   }
 
   /**
@@ -172,15 +203,22 @@ export class AuthController {
    */
   @Public()
   @Throttle({ default: { limit: 10, ttl: 900000 } })
-  @Post('password/reset/confirm')
+  @Post("password/reset/confirm")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Reset password using email token' })
-  @ApiResponse({ status: 204, description: 'Password reset — all sessions revoked' })
-  @ApiResponse({ status: 400, description: 'Token invalid or expired' })
+  @ApiOperation({ summary: "Reset password using email token" })
+  @ApiResponse({
+    status: 204,
+    description: "Password reset — all sessions revoked",
+  })
+  @ApiResponse({ status: 400, description: "Token invalid or expired" })
   async confirmPasswordReset(
     @Body() dto: ConfirmPasswordResetDto,
     @Req() req: Request & { correlationId?: string },
   ) {
-    await this.authService.confirmPasswordReset(dto.token, dto.newPassword, req.correlationId);
+    await this.authService.confirmPasswordReset(
+      dto.token,
+      dto.newPassword,
+      req.correlationId,
+    );
   }
 }

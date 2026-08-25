@@ -4,20 +4,20 @@ import {
   Injectable,
   Logger,
   UnauthorizedException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcryptjs';
-import { createHash, randomBytes } from 'crypto';
-import { v4 as uuidv4 } from 'uuid';
-import type { User } from '@prisma/client';
-import { PrismaService } from '../database/prisma.service';
-import { AuditService } from '../audit/audit.service';
-import { IdentityService } from '../identity/identity.service';
-import { EmailService } from '../../common/email/email.service';
-import { AUTH_AUDIT_ACTIONS } from './audit-actions';
-import type { AuthTokensDto, LoginResponseDto } from './dto/auth-tokens.dto';
-import { UserResponseDto } from '../identity/dto/user-response.dto';
+} from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
+import * as bcrypt from "bcryptjs";
+import { createHash, randomBytes } from "crypto";
+import { v4 as uuidv4 } from "uuid";
+import type { User } from "@prisma/client";
+import { PrismaService } from "../database/prisma.service";
+import { AuditService } from "../audit/audit.service";
+import { IdentityService } from "../identity/identity.service";
+import { EmailService } from "../../common/email/email.service";
+import { AUTH_AUDIT_ACTIONS } from "./audit-actions";
+import type { AuthTokensDto, LoginResponseDto } from "./dto/auth-tokens.dto";
+import { UserResponseDto } from "../identity/dto/user-response.dto";
 
 @Injectable()
 export class AuthService {
@@ -47,8 +47,8 @@ export class AuthService {
     const user = await this.identityService.findByEmailInternal(email);
     if (!user) {
       // Constant-time delay to prevent timing attacks
-      await bcrypt.compare(password, '$2a$12$invaliddummyhashfortimingatk');
-      throw new UnauthorizedException('Invalid credentials');
+      await bcrypt.compare(password, "$2a$12$invaliddummyhashfortimingatk");
+      throw new UnauthorizedException("Invalid credentials");
     }
 
     // Check account lockout
@@ -57,9 +57,9 @@ export class AuthService {
         actorId: user.id,
         actorEmail: user.email,
         action: AUTH_AUDIT_ACTIONS.LOGIN_LOCKED,
-        resource: 'user',
+        resource: "user",
         resourceId: user.id,
-        result: 'FAILURE',
+        result: "FAILURE",
         correlationId,
         ...auditMeta,
       });
@@ -74,9 +74,12 @@ export class AuthService {
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      const maxAttempts = this.configService.get<number>('security.lockoutAttempts', 5);
+      const maxAttempts = this.configService.get<number>(
+        "security.lockoutAttempts",
+        5,
+      );
       const lockoutMinutes = this.configService.get<number>(
-        'security.lockoutDurationMinutes',
+        "security.lockoutDurationMinutes",
         15,
       );
 
@@ -94,7 +97,7 @@ export class AuthService {
       if (lockedUntil) {
         this.logger.warn(
           { userId: user.id, email: user.email, attempts },
-          'Account locked after failed login attempts',
+          "Account locked after failed login attempts",
         );
       }
 
@@ -102,19 +105,19 @@ export class AuthService {
         actorId: user.id,
         actorEmail: user.email,
         action: AUTH_AUDIT_ACTIONS.LOGIN_FAILED,
-        resource: 'user',
+        resource: "user",
         resourceId: user.id,
-        result: 'FAILURE',
+        result: "FAILURE",
         correlationId,
         metadata: { failedAttempts: attempts },
         ...auditMeta,
       });
 
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException("Invalid credentials");
     }
 
     // Check account status
-    if (user.status !== 'ACTIVE' && user.status !== 'PENDING') {
+    if (user.status !== "ACTIVE" && user.status !== "PENDING") {
       throw new ForbiddenException(
         `Account is ${user.status.toLowerCase()}. Contact support.`,
       );
@@ -125,7 +128,9 @@ export class AuthService {
     // reached the threshold and set lockedUntil during our bcrypt.compare, the
     // WHERE clause won't match and wasLocked comes back true — we must refuse
     // to issue tokens so the earned lockout is not silently bypassed.
-    const { wasLocked } = await this.identityService.resetFailedAttempts(user.id);
+    const { wasLocked } = await this.identityService.resetFailedAttempts(
+      user.id,
+    );
     if (wasLocked) {
       const lockedState = await this.identityService.findByIdInternal(user.id);
       const minutesRemaining = lockedState?.lockedUntil
@@ -135,9 +140,9 @@ export class AuthService {
         actorId: user.id,
         actorEmail: user.email,
         action: AUTH_AUDIT_ACTIONS.LOGIN_LOCKED,
-        resource: 'user',
+        resource: "user",
         resourceId: user.id,
-        result: 'FAILURE',
+        result: "FAILURE",
         correlationId,
         ...auditMeta,
       });
@@ -154,9 +159,9 @@ export class AuthService {
       actorId: user.id,
       actorEmail: user.email,
       action: AUTH_AUDIT_ACTIONS.LOGIN_SUCCESS,
-      resource: 'user',
+      resource: "user",
       resourceId: user.id,
-      result: 'SUCCESS',
+      result: "SUCCESS",
       correlationId,
       ...auditMeta,
     });
@@ -193,9 +198,9 @@ export class AuthService {
     await this.auditService.log({
       actorId: userId,
       action: AUTH_AUDIT_ACTIONS.LOGOUT,
-      resource: 'refresh_token',
+      resource: "refresh_token",
       resourceId: stored?.id,
-      result: 'SUCCESS',
+      result: "SUCCESS",
       correlationId,
     });
   }
@@ -214,14 +219,14 @@ export class AuthService {
     });
 
     if (!stored) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException("Invalid refresh token");
     }
 
     // Theft detection: token was already revoked
     if (stored.revokedAt) {
       this.logger.warn(
         { family: stored.family, userId: stored.userId },
-        'Refresh token reuse detected — revoking token family',
+        "Refresh token reuse detected — revoking token family",
       );
       await this.prisma.refreshToken.updateMany({
         where: { family: stored.family },
@@ -230,22 +235,24 @@ export class AuthService {
       await this.auditService.log({
         actorId: stored.userId,
         action: AUTH_AUDIT_ACTIONS.TOKEN_THEFT_DETECTED,
-        resource: 'refresh_token',
+        resource: "refresh_token",
         resourceId: stored.id,
-        result: 'FAILURE',
+        result: "FAILURE",
         correlationId,
         metadata: { family: stored.family },
       });
       throw new UnauthorizedException(
-        'Refresh token has been revoked. Please log in again.',
+        "Refresh token has been revoked. Please log in again.",
       );
     }
 
     if (stored.expiresAt < new Date()) {
-      throw new UnauthorizedException('Refresh token has expired. Please log in again.');
+      throw new UnauthorizedException(
+        "Refresh token has expired. Please log in again.",
+      );
     }
 
-    if (stored.user.status !== 'ACTIVE' && stored.user.status !== 'PENDING') {
+    if (stored.user.status !== "ACTIVE" && stored.user.status !== "PENDING") {
       throw new ForbiddenException(
         `Account is ${stored.user.status.toLowerCase()}. Contact support.`,
       );
@@ -262,8 +269,8 @@ export class AuthService {
     await this.auditService.log({
       actorId: stored.userId,
       action: AUTH_AUDIT_ACTIONS.TOKEN_REFRESHED,
-      resource: 'refresh_token',
-      result: 'SUCCESS',
+      resource: "refresh_token",
+      result: "SUCCESS",
       correlationId,
     });
 
@@ -279,7 +286,7 @@ export class AuthService {
     correlationId?: string,
   ): Promise<void> {
     const user = await this.identityService.findByIdInternal(userId);
-    if (!user) throw new UnauthorizedException('User not found');
+    if (!user) throw new UnauthorizedException("User not found");
 
     const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isValid) {
@@ -287,45 +294,51 @@ export class AuthService {
         actorId: userId,
         actorEmail: user.email,
         action: AUTH_AUDIT_ACTIONS.PASSWORD_CHANGE_FAILED,
-        resource: 'user',
+        resource: "user",
         resourceId: userId,
-        result: 'FAILURE',
+        result: "FAILURE",
         correlationId,
       });
-      throw new UnauthorizedException('Current password is incorrect');
+      throw new UnauthorizedException("Current password is incorrect");
     }
 
     // Enforce new password differs from current
     const isSame = await bcrypt.compare(newPassword, user.passwordHash);
     if (isSame) {
-      throw new BadRequestException('New password must be different from current password');
+      throw new BadRequestException(
+        "New password must be different from current password",
+      );
     }
 
-    const rounds = this.configService.get<number>('security.bcryptRounds', 12);
+    const rounds = this.configService.get<number>("security.bcryptRounds", 12);
     const newHash = await bcrypt.hash(newPassword, rounds);
 
     await this.identityService.updatePassword(userId, newHash);
 
     // Revoke all refresh tokens — force re-login on all devices
-    const revokedCount = await this.identityService.revokeAllRefreshTokens(userId);
+    const revokedCount =
+      await this.identityService.revokeAllRefreshTokens(userId);
 
     await this.auditService.log({
       actorId: userId,
       actorEmail: user.email,
       action: AUTH_AUDIT_ACTIONS.PASSWORD_CHANGED,
-      resource: 'user',
+      resource: "user",
       resourceId: userId,
-      result: 'SUCCESS',
+      result: "SUCCESS",
       correlationId,
       metadata: { sessionsRevoked: revokedCount },
     });
 
-    this.logger.log({ userId }, 'Password changed — all sessions revoked');
+    this.logger.log({ userId }, "Password changed — all sessions revoked");
   }
 
   // ── Password Reset ────────────────────────────────────────────────────────────
 
-  async requestPasswordReset(email: string, correlationId?: string): Promise<void> {
+  async requestPasswordReset(
+    email: string,
+    correlationId?: string,
+  ): Promise<void> {
     const user = await this.identityService.findByEmailInternal(email);
 
     // Always return success to prevent email enumeration
@@ -337,12 +350,15 @@ export class AuthService {
       data: { expiresAt: new Date() }, // expire immediately
     });
 
-    const plainToken = randomBytes(32).toString('hex');
+    const plainToken = randomBytes(32).toString("hex");
     const tokenHash = this.hashToken(plainToken);
     const expiresAt = new Date();
     expiresAt.setMinutes(
       expiresAt.getMinutes() +
-        this.configService.get<number>('security.passwordResetExpiresMinutes', 60),
+        this.configService.get<number>(
+          "security.passwordResetExpiresMinutes",
+          60,
+        ),
     );
 
     await this.prisma.passwordResetToken.create({
@@ -361,8 +377,8 @@ export class AuthService {
       actorId: user.id,
       actorEmail: user.email,
       action: AUTH_AUDIT_ACTIONS.PASSWORD_RESET_REQUESTED,
-      resource: 'password_reset_token',
-      result: 'SUCCESS',
+      resource: "password_reset_token",
+      result: "SUCCESS",
       correlationId,
     });
   }
@@ -381,16 +397,16 @@ export class AuthService {
 
     if (!stored || stored.expiresAt < new Date() || stored.usedAt) {
       await this.auditService.log({
-        actorId: 'system',
+        actorId: "system",
         action: AUTH_AUDIT_ACTIONS.PASSWORD_RESET_INVALID_TOKEN,
-        resource: 'password_reset_token',
-        result: 'FAILURE',
+        resource: "password_reset_token",
+        result: "FAILURE",
         correlationId,
       });
-      throw new BadRequestException('Reset token is invalid or has expired');
+      throw new BadRequestException("Reset token is invalid or has expired");
     }
 
-    const rounds = this.configService.get<number>('security.bcryptRounds', 12);
+    const rounds = this.configService.get<number>("security.bcryptRounds", 12);
     const newHash = await bcrypt.hash(newPassword, rounds);
 
     await this.prisma.$transaction([
@@ -411,9 +427,9 @@ export class AuthService {
       actorId: stored.userId,
       actorEmail: stored.user.email,
       action: AUTH_AUDIT_ACTIONS.PASSWORD_RESET_COMPLETED,
-      resource: 'user',
+      resource: "user",
       resourceId: stored.userId,
-      result: 'SUCCESS',
+      result: "SUCCESS",
       correlationId,
     });
   }
@@ -432,7 +448,7 @@ export class AuthService {
       role: user.role,
     });
 
-    const plainToken = randomBytes(32).toString('hex');
+    const plainToken = randomBytes(32).toString("hex");
     const tokenHash = this.hashToken(plainToken);
 
     const expiresAt = this.getRefreshTokenExpiry();
@@ -444,8 +460,8 @@ export class AuthService {
     return {
       accessToken,
       refreshToken: plainToken,
-      expiresIn: this.configService.get<number>('jwt.accessTtlSeconds', 900),
-      tokenType: 'Bearer',
+      expiresIn: this.configService.get<number>("jwt.accessTtlSeconds", 900),
+      tokenType: "Bearer",
     };
   }
 
@@ -453,7 +469,7 @@ export class AuthService {
    *  SHA-256 is appropriate here because the token is 32 bytes of
    *  cryptographically random data (256 bits of entropy), not user input. */
   private hashToken(token: string): string {
-    return createHash('sha256').update(token).digest('hex');
+    return createHash("sha256").update(token).digest("hex");
   }
 
   // ── Email helpers ─────────────────────────────────────────────────────────
@@ -462,8 +478,8 @@ export class AuthService {
 
   private getRefreshTokenExpiry(): Date {
     const expiry = new Date();
-    const raw = this.configService.get<string>('jwt.refreshExpiresIn', '7d');
-    const days = parseInt(raw.replace('d', ''), 10);
+    const raw = this.configService.get<string>("jwt.refreshExpiresIn", "7d");
+    const days = parseInt(raw.replace("d", ""), 10);
     expiry.setDate(expiry.getDate() + (isNaN(days) ? 7 : days));
     return expiry;
   }
@@ -477,17 +493,20 @@ export class AuthService {
    * the database and must not reveal whether the address exists, so a delivery
    * failure is silent to the HTTP response.
    */
-  private async notifyPasswordReset(email: string, token: string): Promise<void> {
+  private async notifyPasswordReset(
+    email: string,
+    token: string,
+  ): Promise<void> {
     const frontendUrl = this.configService.get<string>(
-      'email.frontendUrl',
-      'http://localhost:5173',
+      "email.frontendUrl",
+      "http://localhost:5173",
     );
     const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
     try {
       await this.emailService.send({
         to: email,
-        subject: 'Reset your Camel Wallet password',
+        subject: "Reset your Camel Wallet password",
         html: buildPasswordResetEmail(resetUrl),
         text:
           `You requested a password reset for your Camel Wallet account.\n\n` +
@@ -496,10 +515,7 @@ export class AuthService {
           `If you did not request this, you can safely ignore this email.`,
       });
     } catch (err) {
-      this.logger.error(
-        { err, email },
-        'Failed to send password reset email',
-      );
+      this.logger.error({ err, email }, "Failed to send password reset email");
     }
   }
 }
@@ -549,4 +565,3 @@ function buildPasswordResetEmail(resetUrl: string): string {
 </body>
 </html>`;
 }
-

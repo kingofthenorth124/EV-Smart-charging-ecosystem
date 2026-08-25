@@ -18,18 +18,18 @@
  */
 
 // Client factory
-export { createClient } from './client';
-export type { CamelMobilityClient } from './client';
+export { createClient } from "./client";
+export type { CamelMobilityClient } from "./client";
 
 // Configuration
-export type { SdkClientOptions, SdkResult } from './types';
-export { wrapResult } from './types';
+export type { SdkClientOptions, SdkResult } from "./types";
+export { wrapResult } from "./types";
 
 // Error handling
-export { SdkError, isSdkError, extractErrorMessage } from './errors';
+export { SdkError, isSdkError, extractErrorMessage } from "./errors";
 
 // Module re-exports (for granular imports)
-export { authModule } from './modules/auth';
-export { walletModule } from './modules/wallet';
-export { chargingModule } from './modules/charging';
-export { identityModule } from './modules/identity';
+export { authModule } from "./modules/auth";
+export { walletModule } from "./modules/wallet";
+export { chargingModule } from "./modules/charging";
+export { identityModule } from "./modules/identity";

@@ -3,13 +3,13 @@ import {
   ExecutionContext,
   Injectable,
   NestInterceptor,
-} from '@nestjs/common';
-import type { Request, Response } from 'express';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { v4 as uuidv4 } from 'uuid';
+} from "@nestjs/common";
+import type { Request, Response } from "express";
+import { Observable } from "rxjs";
+import { tap } from "rxjs/operators";
+import { v4 as uuidv4 } from "uuid";
 
-const CORRELATION_ID_HEADER = 'x-correlation-id';
+const CORRELATION_ID_HEADER = "x-correlation-id";
 
 /**
  * Correlation ID Interceptor.
@@ -31,7 +31,8 @@ export class CorrelationIdInterceptor implements NestInterceptor {
     const response = context.switchToHttp().getResponse<Response>();
 
     const correlationId =
-      (request.headers[CORRELATION_ID_HEADER] as string | undefined) ?? uuidv4();
+      (request.headers[CORRELATION_ID_HEADER] as string | undefined) ??
+      uuidv4();
 
     request.correlationId = correlationId;
     response.setHeader(CORRELATION_ID_HEADER, correlationId);

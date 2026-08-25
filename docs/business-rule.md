@@ -1,4 +1,5 @@
 # Enterprise Business Rules
+
 ## Smart EV Charging Payment Platform
 
 This document defines the authoritative business rules governing customers, NFC/RFID access, wallets, payments, charging sessions, registration, authorization, transactions, integrations, APIs, events, and administrative controls.
@@ -85,7 +86,7 @@ The platform shall enforce the configured minimum wallet balance required for ch
 
 The initial business policy requires a minimum available wallet balance of:
 
-*₦50,000*
+_₦50,000_
 
 The value shall be configurable through authorized administrative controls rather than hardcoded throughout application code.
 
@@ -117,7 +118,7 @@ Concurrent wallet operations shall be protected against race conditions and doub
 
 The minimum customer wallet top-up amount shall initially be:
 
-*₦50,000*
+_₦50,000_
 
 Top-ups below the configured minimum shall be rejected.
 

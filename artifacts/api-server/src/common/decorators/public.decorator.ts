@@ -1,7 +1,7 @@
-import { SetMetadata } from '@nestjs/common';
+import { SetMetadata } from "@nestjs/common";
 
 /** Key used by JwtAuthGuard to check if a route is public */
-export const IS_PUBLIC_KEY = 'isPublic';
+export const IS_PUBLIC_KEY = "isPublic";
 
 /**
  * Marks a route or controller as publicly accessible.

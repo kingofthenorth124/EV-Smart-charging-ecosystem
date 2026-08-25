@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../database/prisma.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../database/prisma.service";
 
 export interface HealthCheckResult {
-  status: 'ok' | 'degraded' | 'down';
+  status: "ok" | "degraded" | "down";
   checks: {
-    database: 'ok' | 'error';
+    database: "ok" | "error";
   };
 }
 
@@ -17,7 +17,7 @@ export class HealthService {
   async check(): Promise<HealthCheckResult> {
     const dbStatus = await this.checkDatabase();
 
-    const status = dbStatus === 'ok' ? 'ok' : 'degraded';
+    const status = dbStatus === "ok" ? "ok" : "degraded";
 
     return {
       status,
@@ -27,13 +27,13 @@ export class HealthService {
     };
   }
 
-  private async checkDatabase(): Promise<'ok' | 'error'> {
+  private async checkDatabase(): Promise<"ok" | "error"> {
     try {
       await this.prisma.$queryRaw`SELECT 1`;
-      return 'ok';
+      return "ok";
     } catch (error) {
-      this.logger.warn('Database health check failed', error);
-      return 'error';
+      this.logger.warn("Database health check failed", error);
+      return "error";
     }
   }
 }

@@ -5,7 +5,7 @@
  * The runtime PrismaClient receives its connection via `datasourceUrl` in
  * PrismaService (see artifacts/api-server/src/modules/database/prisma.service.ts).
  */
-import { defineConfig } from 'prisma/config';
+import { defineConfig } from "prisma/config";
 
 export default defineConfig({
   migrate: {

@@ -5,9 +5,9 @@ import {
   HttpException,
   HttpStatus,
   Logger,
-} from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
-import type { Request, Response } from 'express';
+} from "@nestjs/common";
+import { v4 as uuidv4 } from "uuid";
+import type { Request, Response } from "express";
 
 interface ValidationError {
   property: string;
@@ -46,11 +46,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
     // guard-thrown errors (401, 403, 429) won't have one on the request yet.
     const correlationId =
       request.correlationId ??
-      (request.headers['x-correlation-id'] as string | undefined) ??
+      (request.headers["x-correlation-id"] as string | undefined) ??
       uuidv4();
 
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'Internal server error';
+    let message = "Internal server error";
     let error: string | undefined;
     let details: Array<{ field: string; message: string }> | undefined;
 
@@ -58,35 +58,49 @@ export class HttpExceptionFilter implements ExceptionFilter {
       statusCode = exception.getStatus();
       const exceptionResponse = exception.getResponse();
 
-      if (typeof exceptionResponse === 'string') {
+      if (typeof exceptionResponse === "string") {
         message = exceptionResponse;
-      } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+      } else if (
+        typeof exceptionResponse === "object" &&
+        exceptionResponse !== null
+      ) {
         const body = exceptionResponse as Record<string, unknown>;
-        message = typeof body['message'] === 'string'
-          ? body['message']
-          : Array.isArray(body['message'])
-            ? 'Validation failed'
-            : exception.message;
-        error = typeof body['error'] === 'string' ? body['error'] : undefined;
+        message =
+          typeof body["message"] === "string"
+            ? body["message"]
+            : Array.isArray(body["message"])
+              ? "Validation failed"
+              : exception.message;
+        error = typeof body["error"] === "string" ? body["error"] : undefined;
 
         // Handle class-validator ValidationPipe errors (array of messages)
-        if (Array.isArray(body['message']) && statusCode === HttpStatus.BAD_REQUEST) {
+        if (
+          Array.isArray(body["message"]) &&
+          statusCode === HttpStatus.BAD_REQUEST
+        ) {
           statusCode = HttpStatus.UNPROCESSABLE_ENTITY;
-          message = 'Validation failed';
-          details = this.extractValidationDetails(body['message'] as string[] | ValidationError[]);
+          message = "Validation failed";
+          details = this.extractValidationDetails(
+            body["message"] as string[] | ValidationError[],
+          );
         }
       }
     } else if (exception instanceof Error) {
       // Log unexpected errors but don't expose internals
       this.logger.error(
-        { err: exception, correlationId, path: request.url, method: request.method },
-        'Unhandled exception',
+        {
+          err: exception,
+          correlationId,
+          path: request.url,
+          method: request.method,
+        },
+        "Unhandled exception",
       );
-      message = 'An unexpected error occurred';
+      message = "An unexpected error occurred";
     } else {
       this.logger.error(
         { exception, correlationId, path: request.url },
-        'Non-Error exception thrown',
+        "Non-Error exception thrown",
       );
     }
 
@@ -101,7 +115,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     // Ensure the X-Correlation-ID header is always present on error responses.
     // The CorrelationIdInterceptor only runs for routed handlers; guard
     // rejections (401/403) and 404s bypass it and land here directly.
-    response.setHeader('X-Correlation-ID', correlationId);
+    response.setHeader("X-Correlation-ID", correlationId);
     response.status(statusCode).json(body);
   }
 
@@ -111,9 +125,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (messages.length === 0) return [];
 
     // If messages are plain strings (simple format)
-    if (typeof messages[0] === 'string') {
+    if (typeof messages[0] === "string") {
       return (messages as string[]).map((msg) => ({
-        field: 'unknown',
+        field: "unknown",
         message: msg,
       }));
     }

@@ -5,16 +5,16 @@
  */
 
 export type UserRole =
-  | 'CUSTOMER'
-  | 'ADMIN_OFFICER'
-  | 'SUPER_ADMIN'
-  | 'OPERATIONS'
-  | 'SUPPORT'
-  | 'FINANCE'
-  | 'TECHNICAL'
-  | 'DEVELOPER';
+  | "CUSTOMER"
+  | "ADMIN_OFFICER"
+  | "SUPER_ADMIN"
+  | "OPERATIONS"
+  | "SUPPORT"
+  | "FINANCE"
+  | "TECHNICAL"
+  | "DEVELOPER";
 
-export type UserStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'DEACTIVATED';
+export type UserStatus = "PENDING" | "ACTIVE" | "SUSPENDED" | "DEACTIVATED";
 
 /** Shape of the decoded JWT access token payload */
 export interface JwtPayload {

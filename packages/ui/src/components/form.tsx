@@ -3,9 +3,9 @@
  * Provides accessible label + input + error message layout
  * without coupling to any specific form library.
  */
-import * as React from 'react';
-import { cn } from '../lib/utils';
-import { Label } from './label';
+import * as React from "react";
+import { cn } from "../lib/utils";
+import { Label } from "./label";
 
 // ─── FormField ────────────────────────────────────────────────────────────────
 
@@ -18,13 +18,13 @@ const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
   ({ className, hasError, ...props }, ref) => (
     <div
       ref={ref}
-      data-error={hasError ? 'true' : undefined}
-      className={cn('flex flex-col gap-1.5', className)}
+      data-error={hasError ? "true" : undefined}
+      className={cn("flex flex-col gap-1.5", className)}
       {...props}
     />
   ),
 );
-FormField.displayName = 'FormField';
+FormField.displayName = "FormField";
 
 // ─── FormLabel ────────────────────────────────────────────────────────────────
 
@@ -36,7 +36,7 @@ const FormLabel = React.forwardRef<
   React.ElementRef<typeof Label>,
   FormLabelProps
 >(({ className, required, children, ...props }, ref) => (
-  <Label ref={ref} className={cn('', className)} {...props}>
+  <Label ref={ref} className={cn("", className)} {...props}>
     {children}
     {required && (
       <span aria-hidden="true" className="ml-0.5 text-destructive">
@@ -45,7 +45,7 @@ const FormLabel = React.forwardRef<
     )}
   </Label>
 ));
-FormLabel.displayName = 'FormLabel';
+FormLabel.displayName = "FormLabel";
 
 // ─── FormMessage ──────────────────────────────────────────────────────────────
 
@@ -59,14 +59,14 @@ const FormMessage = React.forwardRef<
       ref={ref}
       role="alert"
       aria-live="polite"
-      className={cn('text-sm font-medium text-destructive', className)}
+      className={cn("text-sm font-medium text-destructive", className)}
       {...props}
     >
       {children}
     </p>
   );
 });
-FormMessage.displayName = 'FormMessage';
+FormMessage.displayName = "FormMessage";
 
 // ─── FormDescription ──────────────────────────────────────────────────────────
 
@@ -74,8 +74,12 @@ const FormDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-  <p ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />
+  <p
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
 ));
-FormDescription.displayName = 'FormDescription';
+FormDescription.displayName = "FormDescription";
 
 export { FormField, FormLabel, FormMessage, FormDescription };

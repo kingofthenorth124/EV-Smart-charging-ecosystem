@@ -1,27 +1,22 @@
-import { type ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ErrorBoundary } from '@/components/error-boundary';
-import { Toaster } from '@/components/ui/toaster';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { AuthProvider } from '@/hooks/use-auth';
-import { GuestRoute, ProtectedRoute } from '@/components/protected-route';
-import NotFound from '@/pages/not-found';
-import Home from '@/pages/home';
-import Charge from '@/pages/charge';
-import TopUp from '@/pages/topup';
-import History from '@/pages/history';
-import Login from '@/pages/login';
-import Register from '@/pages/register';
-import ForgotPassword from '@/pages/forgot-password';
-import ResetPassword from '@/pages/reset-password';
-import AccountSecurity from '@/pages/account-security';
-import AdminUsers from '@/pages/admin-users';
-import {
-  Route,
-  Switch,
-  useLocation,
-  Router as WouterRouter,
-} from 'wouter';
+import { type ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/hooks/use-auth";
+import { GuestRoute, ProtectedRoute } from "@/components/protected-route";
+import NotFound from "@/pages/not-found";
+import Home from "@/pages/home";
+import Charge from "@/pages/charge";
+import TopUp from "@/pages/topup";
+import History from "@/pages/history";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
+import AccountSecurity from "@/pages/account-security";
+import AdminUsers from "@/pages/admin-users";
+import { Route, Switch, useLocation, Router as WouterRouter } from "wouter";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,7 +50,10 @@ function Router() {
           <ProtectedRoute component={AccountSecurity} />
         </Route>
         <Route path="/admin/users">
-          <ProtectedRoute component={AdminUsers} roles={['SUPER_ADMIN', 'ADMIN_OFFICER']} />
+          <ProtectedRoute
+            component={AdminUsers}
+            roles={["SUPER_ADMIN", "ADMIN_OFFICER"]}
+          />
         </Route>
         <Route path="/charge">
           <ProtectedRoute component={Charge} />
@@ -85,7 +83,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <Router />
           </WouterRouter>
           <Toaster />
