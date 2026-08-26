@@ -932,7 +932,7 @@ The UI/UX implementation is complete only when:
 - The frontend compiles successfully.
 - The frontend follows the enterprise monorepo architecture.
 - The frontend conforms to architecture.md.
-- The frontend conforms to business-rules.md.
+- The frontend conforms to business-rule.md.
 - The frontend conforms to development-standards.md.
 
 # Replit Agent Instructions
@@ -941,7 +941,7 @@ Before implementing any frontend functionality, inspect:
 
 /docs/architecture.md
 
-/docs/business-rules.md
+/docs/business-rule.md
 
 /docs/development-standards.md
 
@@ -1003,7 +1003,7 @@ architecture.md defines the enterprise architecture.
 
 # Business Rules
 
-business-rules.md defines authoritative business behavior.
+business-rule.md defines authoritative business behavior.
 
 # Development Standards
 

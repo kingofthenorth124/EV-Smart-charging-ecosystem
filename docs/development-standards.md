@@ -8,8 +8,8 @@ This document is authoritative for implementation standards.
 
 Replit Agent shall follow this document together with:
 
-- /docs/Master-prompt/architecture.md
-- /docs/Master-prompt/business-rules.md
+- /docs/architecture.md
+- /docs/business-rule.md
 - /docs/ui-ux-reference.md
 
 No module may override these standards without an explicitly documented architectural decision.

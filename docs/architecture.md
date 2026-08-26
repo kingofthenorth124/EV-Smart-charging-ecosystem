@@ -90,7 +90,7 @@ Smart-EV-Charging-Platform/
 │
 ├── docs/
 │ ├── architecture.md
-│ ├── business-rules.md
+│ ├── business-rule.md
 │ ├── development-standards.md
 │ └── ui-ux-reference.md
 │
@@ -1180,7 +1180,7 @@ docs/
 At minimum:
 
 - architecture.md
-- business-rules.md
+- business-rule.md
 - development-standards.md
 - ui-ux-reference.md
 
@@ -1406,7 +1406,7 @@ Replit Agent shall treat:
 
 /docs/architecture.md
 
-/docs/business-rules.md
+/docs/business-rule.md
 
 /docs/development-standards.md
 
