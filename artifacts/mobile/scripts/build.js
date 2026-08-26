@@ -152,7 +152,16 @@ async function startMetro(expoPublicDomain, expoPublicReplId) {
 
   metroProcess = spawn(
     "pnpm",
-    ["exec", "expo", "start", "--no-dev", "--minify", "--localhost", "--port", String(METRO_PORT)],
+    [
+      "exec",
+      "expo",
+      "start",
+      "--no-dev",
+      "--minify",
+      "--localhost",
+      "--port",
+      String(METRO_PORT),
+    ],
     {
       stdio: ["ignore", "pipe", "pipe"],
       detached: false,
@@ -386,7 +395,9 @@ async function downloadAssets(assets, timestamp) {
   const failures = [];
 
   const downloadPromises = assets.map(async (asset) => {
-    const tempUrl = new URL(`http://localhost:${METRO_PORT}${asset.originalPath}`);
+    const tempUrl = new URL(
+      `http://localhost:${METRO_PORT}${asset.originalPath}`,
+    );
     const unstablePath = tempUrl.searchParams.get("unstable_path");
 
     if (!unstablePath) {
@@ -459,7 +470,9 @@ function updateBundleUrls(timestamp, baseUrl) {
     bundle = bundle.replace(
       /httpServerLocation:"(\/[^"]+)"/g,
       (_match, capturedPath) => {
-        const tempUrl = new URL(`http://localhost:${METRO_PORT}${capturedPath}`);
+        const tempUrl = new URL(
+          `http://localhost:${METRO_PORT}${capturedPath}`,
+        );
         const unstablePath = tempUrl.searchParams.get("unstable_path");
 
         if (!unstablePath) {
