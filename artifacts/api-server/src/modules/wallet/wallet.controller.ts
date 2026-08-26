@@ -23,7 +23,6 @@ import { Permissions } from "../../common/decorators/permissions.decorator";
 
 @ApiTags("wallet")
 @ApiBearerAuth("BearerAuth")
-
 @Controller("v1/wallet")
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}

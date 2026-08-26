@@ -1,51 +1,51 @@
 // @ts-check
-'use strict';
+"use strict";
 
-const path = require('path');
+const path = require("path");
 
 /** @type {import('jest').Config} */
 const config = {
-  moduleFileExtensions: ['js', 'json', 'ts'],
+  moduleFileExtensions: ["js", "json", "ts"],
 
-  rootDir: 'src',
+  rootDir: "src",
 
-  testRegex: '.*\\.integration\\.spec\\.ts$',
+  testRegex: ".*\\.integration\\.spec\\.ts$",
 
   transform: {
-    '^.+\\.(t|j)s$': [
-      '@swc/jest',
+    "^.+\\.(t|j)s$": [
+      "@swc/jest",
       {
         jsc: {
           parser: {
-            syntax: 'typescript',
+            syntax: "typescript",
             decorators: true,
           },
           transform: {
             decoratorMetadata: true,
           },
-          target: 'es2021',
+          target: "es2021",
         },
       },
     ],
   },
 
-  collectCoverageFrom: ['**/*.(t|j)s'],
+  collectCoverageFrom: ["**/*.(t|j)s"],
 
   // Pin to the Jest environment installed by this package.
   testEnvironment: path.resolve(
     __dirname,
-    'node_modules',
-    'jest-environment-node',
+    "node_modules",
+    "jest-environment-node",
   ),
 
-  setupFiles: ['<rootDir>/test/jest.setup.ts'],
+  setupFiles: ["<rootDir>/test/jest.setup.ts"],
 
   // Jest does not understand the workspace export condition used by
   // @workspace/auth, so resolve it directly to the package source.
   moduleNameMapper: {
-    '^@workspace/auth$': path.resolve(
+    "^@workspace/auth$": path.resolve(
       __dirname,
-      '../../packages/auth/src/index.ts',
+      "../../packages/auth/src/index.ts",
     ),
   },
 

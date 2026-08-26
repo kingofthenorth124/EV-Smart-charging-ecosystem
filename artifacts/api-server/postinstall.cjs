@@ -11,28 +11,32 @@
  * then delete the copy.
  */
 
-const { execSync } = require('child_process');
-const { readFileSync, writeFileSync, unlinkSync } = require('fs');
-const { resolve } = require('path');
+const { execSync } = require("child_process");
+const { readFileSync, writeFileSync, unlinkSync } = require("fs");
+const { resolve } = require("path");
 
 const cwd = __dirname;
-const schemaSource = resolve(cwd, '../../prisma/schema.prisma');
-const tempSchema = resolve(cwd, '.schema-gen-temp.prisma');
+const schemaSource = resolve(cwd, "../../prisma/schema.prisma");
+const tempSchema = resolve(cwd, ".schema-gen-temp.prisma");
 
 // Copy schema, stripping any hardcoded output= lines (pnpm handles resolution)
-const schema = readFileSync(schemaSource, 'utf8');
+const schema = readFileSync(schemaSource, "utf8");
 const cleaned = schema
-  .split('\n')
+  .split("\n")
   .filter((line) => !line.match(/^\s*output\s*=/))
-  .join('\n');
+  .join("\n");
 
 writeFileSync(tempSchema, cleaned);
 
 try {
   execSync(`node_modules/.bin/prisma generate --schema=${tempSchema}`, {
-    stdio: 'inherit',
+    stdio: "inherit",
     cwd,
   });
 } finally {
-  try { unlinkSync(tempSchema); } catch { /* ignore */ }
+  try {
+    unlinkSync(tempSchema);
+  } catch {
+    /* ignore */
+  }
 }

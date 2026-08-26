@@ -841,7 +841,11 @@
         <div class="panel active" id="panel-dashboard">
           <div
             class="nfc-card"
-            onclick="toast('Tap this card on any Camel Mobility OCPP station to start charging')"
+            onclick="
+              toast(
+                'Tap this card on any Camel Mobility OCPP station to start charging',
+              )
+            "
           >
             <div class="card-chip"></div>
             <div class="card-balance-label">Wallet balance</div>
@@ -1251,22 +1255,22 @@
             >
           </div>
           <div class="amt-grid">
-            <button class="amt-btn active" onclick="selectAmt(this,50000)">
+            <button class="amt-btn active" onclick="selectAmt(this, 50000)">
               ₦50,000
             </button>
-            <button class="amt-btn" onclick="selectAmt(this,100000)">
+            <button class="amt-btn" onclick="selectAmt(this, 100000)">
               ₦100,000
             </button>
-            <button class="amt-btn" onclick="selectAmt(this,150000)">
+            <button class="amt-btn" onclick="selectAmt(this, 150000)">
               ₦150,000
             </button>
-            <button class="amt-btn" onclick="selectAmt(this,200000)">
+            <button class="amt-btn" onclick="selectAmt(this, 200000)">
               ₦200,000
             </button>
-            <button class="amt-btn" onclick="selectAmt(this,500000)">
+            <button class="amt-btn" onclick="selectAmt(this, 500000)">
               ₦500,000
             </button>
-            <button class="amt-btn" onclick="selectAmt(this,0)">Custom</button>
+            <button class="amt-btn" onclick="selectAmt(this, 0)">Custom</button>
           </div>
 
           <div class="custom-field" id="custom-field">
@@ -1317,13 +1321,13 @@
         <!-- TRANSACTIONS -->
         <div class="panel" id="panel-transactions">
           <div class="tx-filters">
-            <button class="tf-btn active" onclick="filterTx(this,'all')">
+            <button class="tf-btn active" onclick="filterTx(this, 'all')">
               All
             </button>
-            <button class="tf-btn" onclick="filterTx(this,'charge')">
+            <button class="tf-btn" onclick="filterTx(this, 'charge')">
               Charges
             </button>
-            <button class="tf-btn" onclick="filterTx(this,'topup')">
+            <button class="tf-btn" onclick="filterTx(this, 'topup')">
               Top-ups
             </button>
           </div>

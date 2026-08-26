@@ -20,26 +20,28 @@
  *   pnpm --filter @workspace/api-server run seed:admin
  */
 
-'use strict';
+"use strict";
 
-const { PrismaClient } = require('@prisma/client');
-const { PrismaPg } = require('@prisma/adapter-pg');
-const pg = require('pg');
-const bcrypt = require('bcryptjs');
+const { PrismaClient } = require("@prisma/client");
+const { PrismaPg } = require("@prisma/adapter-pg");
+const pg = require("pg");
+const bcrypt = require("bcryptjs");
 
 // ── Validation ────────────────────────────────────────────────────────────────
 
 const requiredVars = [
-  'ADMIN_BOOTSTRAP_SECRET',
-  'ADMIN_EMAIL',
-  'ADMIN_PHONE',
-  'ADMIN_PASSWORD',
-  'DATABASE_URL',
+  "ADMIN_BOOTSTRAP_SECRET",
+  "ADMIN_EMAIL",
+  "ADMIN_PHONE",
+  "ADMIN_PASSWORD",
+  "DATABASE_URL",
 ];
 
 const missing = requiredVars.filter((k) => !process.env[k]);
 if (missing.length) {
-  console.error(`\n[seed-admin] ❌ Missing required environment variables:\n  ${missing.join('\n  ')}\n`);
+  console.error(
+    `\n[seed-admin] ❌ Missing required environment variables:\n  ${missing.join("\n  ")}\n`,
+  );
   process.exit(1);
 }
 
@@ -53,27 +55,31 @@ const {
 
 if (ADMIN_BOOTSTRAP_SECRET.length < 16) {
   console.error(
-    '\n[seed-admin] ❌ ADMIN_BOOTSTRAP_SECRET must be at least 16 characters.\n',
+    "\n[seed-admin] ❌ ADMIN_BOOTSTRAP_SECRET must be at least 16 characters.\n",
   );
   process.exit(1);
 }
 
 if (ADMIN_PASSWORD.length < 12) {
   console.error(
-    '\n[seed-admin] ❌ ADMIN_PASSWORD must be at least 12 characters.\n',
+    "\n[seed-admin] ❌ ADMIN_PASSWORD must be at least 12 characters.\n",
   );
   process.exit(1);
 }
 
 // Basic email sanity check
 if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ADMIN_EMAIL)) {
-  console.error('\n[seed-admin] ❌ ADMIN_EMAIL does not look like a valid email address.\n');
+  console.error(
+    "\n[seed-admin] ❌ ADMIN_EMAIL does not look like a valid email address.\n",
+  );
   process.exit(1);
 }
 
 // Phone: must be non-empty (any format accepted; uniqueness enforced by DB)
 if (!ADMIN_PHONE || ADMIN_PHONE.trim().length < 4) {
-  console.error('\n[seed-admin] ❌ ADMIN_PHONE must be a non-empty phone number.\n');
+  console.error(
+    "\n[seed-admin] ❌ ADMIN_PHONE must be a non-empty phone number.\n",
+  );
   process.exit(1);
 }
 
@@ -85,7 +91,7 @@ async function seed() {
   const prisma = new PrismaClient({ adapter });
 
   try {
-    console.log('\n[seed-admin] Checking for existing SUPER_ADMIN...');
+    console.log("\n[seed-admin] Checking for existing SUPER_ADMIN...");
 
     const existing = await prisma.user.findUnique({
       where: { email: ADMIN_EMAIL },
@@ -93,7 +99,7 @@ async function seed() {
     });
 
     if (existing) {
-      if (existing.role === 'SUPER_ADMIN') {
+      if (existing.role === "SUPER_ADMIN") {
         console.log(
           `[seed-admin] ✅ Account ${ADMIN_EMAIL} already exists as SUPER_ADMIN — nothing to do.\n`,
         );
@@ -108,15 +114,17 @@ async function seed() {
       await prisma.user.update({
         where: { email: ADMIN_EMAIL },
         data: {
-          role: 'SUPER_ADMIN',
-          status: 'ACTIVE',
+          role: "SUPER_ADMIN",
+          status: "ACTIVE",
           passwordHash,
           phone: ADMIN_PHONE,
           failedLoginAttempts: 0,
           lockedUntil: null,
         },
       });
-      console.log(`[seed-admin] ✅ Account upgraded to SUPER_ADMIN and set ACTIVE.\n`);
+      console.log(
+        `[seed-admin] ✅ Account upgraded to SUPER_ADMIN and set ACTIVE.\n`,
+      );
       return;
     }
 
@@ -126,16 +134,22 @@ async function seed() {
 
     const admin = await prisma.user.create({
       data: {
-        firstName: 'Super',
-        lastName: 'Admin',
+        firstName: "Super",
+        lastName: "Admin",
         email: ADMIN_EMAIL,
         phone: ADMIN_PHONE,
         passwordHash,
-        role: 'SUPER_ADMIN',
-        status: 'ACTIVE',
-        registrationSource: 'ADMIN_SEED',
+        role: "SUPER_ADMIN",
+        status: "ACTIVE",
+        registrationSource: "ADMIN_SEED",
       },
-      select: { id: true, email: true, role: true, status: true, createdAt: true },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        status: true,
+        createdAt: true,
+      },
     });
 
     console.log(`[seed-admin] ✅ SUPER_ADMIN created successfully.`);
@@ -144,7 +158,7 @@ async function seed() {
     console.log(`             Status: ${admin.status}`);
     console.log(`             At:     ${admin.createdAt.toISOString()}`);
     console.log(`\n[seed-admin] Login at /login with: ${admin.email}`);
-    console.log('[seed-admin] ⚠️  Change the password after first login.\n');
+    console.log("[seed-admin] ⚠️  Change the password after first login.\n");
   } finally {
     await prisma.$disconnect();
     await pool.end();
@@ -152,6 +166,6 @@ async function seed() {
 }
 
 seed().catch((err) => {
-  console.error('\n[seed-admin] ❌ Seed failed:', err.message ?? err);
+  console.error("\n[seed-admin] ❌ Seed failed:", err.message ?? err);
   process.exit(1);
 });
