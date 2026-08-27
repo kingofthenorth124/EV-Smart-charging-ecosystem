@@ -1,0 +1,32 @@
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:17:import request = require("supertest");
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:24:import { PrismaService } from "../database/prisma.service";
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:33:let prisma: PrismaService;
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:110:beforeAll(async () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:123:describe("POST /api/v1/auth/register", () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:197:describe("POST /api/v1/auth/login", () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:243:describe("Happy path: full auth lifecycle", () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:290:describe("Account lockout", () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:356:describe("Refresh token theft detection", () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:401:describe("Expired access tokens", () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:427:describe("Role-based access control", () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:492:describe("Password reset flow", () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:604:describe("POST /api/v1/auth/password/change", () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:644:describe("Error response contract", () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:684:describe("Concurrent load behavior", () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:857:describe("Audit log persistence", () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:1161:describe("Rate limiting", () => {
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:1163:  let rlPrisma: PrismaService;
+artifacts/api-server/src/modules/auth/auth.integration.spec.ts:1166:  beforeAll(async () => {
+artifacts/api-server/src/modules/charging/charging.integration.spec.ts:20:import { PrismaService } from "../database/prisma.service";
+artifacts/api-server/src/modules/charging/charging.integration.spec.ts:21:import { WalletService } from "../wallet/wallet.service";
+artifacts/api-server/src/modules/charging/charging.integration.spec.ts:25:let prisma: PrismaService;
+artifacts/api-server/src/modules/charging/charging.integration.spec.ts:26:let walletService: WalletService;
+artifacts/api-server/src/modules/charging/charging.integration.spec.ts:65:  await walletService.getOrCreateWallet(userId);
+artifacts/api-server/src/modules/charging/charging.integration.spec.ts:66:  await walletService.topUp(userId, { amountKobo, method: "CARD" });
+artifacts/api-server/src/modules/charging/charging.integration.spec.ts:69:beforeAll(async () => {
+artifacts/api-server/src/modules/charging/charging.integration.spec.ts:71:  walletService = app.get(WalletService);
+artifacts/api-server/src/modules/charging/charging.integration.spec.ts:84:describe("wallet creation race", () => {
+artifacts/api-server/src/modules/charging/charging.integration.spec.ts:88:      Array.from({ length: 8 }, () => walletService.getOrCreateWallet(userId)),
+artifacts/api-server/src/modules/charging/charging.integration.spec.ts:96:describe("wallet authorization", () => {
+artifacts/api-server/src/modules/charging/charging.integration.spec.ts:119:describe("session start races", () => {
+artifacts/api-server/src/modules/charging/charging.integration.spec.ts:168:describe("session settlement races", () => {
