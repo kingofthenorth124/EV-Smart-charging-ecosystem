@@ -119,7 +119,16 @@ jobs:
         run: pnpm exec prettier --check "**/*.{ts,tsx,js,json,md,yaml,yml}" --ignore-path .gitignore
 
   # ─── Build API ──────────────────────────────────────────────────────────────
-  build-api:
+  
+
+  
+      - 
+
+  # ─── Security Scanning ──────────────────────────────────────────────────────
+  security:
+       
+       
+        build-api:
     name: Build API Server
     runs-on: ubuntu-latest
     needs: [typecheck, lint]
@@ -148,12 +157,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build workspace dependencies
+        run: pnpm -r --filter=!@workspace/api-server run build
+
       - name: Build API
         run: pnpm --filter @workspace/api-server run build
-
-  # ─── Security Scanning ──────────────────────────────────────────────────────
-  security:
-    name: Security Scan
     runs-on: ubuntu-latest
     needs: install
     steps:
