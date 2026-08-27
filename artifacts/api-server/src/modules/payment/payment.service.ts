@@ -63,10 +63,7 @@ export class PaymentService {
     return payment;
   }
 
-  async complete(
-    providerReference: string,
-    correlationId?: string,
-  ) {
+  async complete(providerReference: string, correlationId?: string) {
     const payment = await this.prisma.payment.findUnique({
       where: {
         providerReference,
