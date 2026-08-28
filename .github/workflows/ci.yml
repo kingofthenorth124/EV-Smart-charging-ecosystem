@@ -149,7 +149,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build workspace dependencies
-        run: pnpm -r --filter=!@workspace/api-server run build
+        run: pnpm -r --filter=!@workspace/api-server --filter=!@workspace/mobile run build
 
       - name: Build API
         run: pnpm --filter @workspace/api-server run build
