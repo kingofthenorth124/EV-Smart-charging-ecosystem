@@ -133,9 +133,9 @@ describe("PaymentService", () => {
     it("returns not found for an unknown provider reference", async () => {
       prisma.payment.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.complete("provider-ref-1"),
-      ).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.complete("provider-ref-1")).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
 
     it("does not credit an already completed payment again", async () => {
@@ -180,9 +180,7 @@ describe("PaymentService", () => {
       const tx = {
         payment: {
           updateMany: jest.fn().mockResolvedValue({ count: 1 }),
-          findUniqueOrThrow: jest
-            .fn()
-            .mockResolvedValue(completedPayment),
+          findUniqueOrThrow: jest.fn().mockResolvedValue(completedPayment),
         },
         wallet: {
           findUniqueOrThrow: jest.fn().mockResolvedValue({
@@ -211,10 +209,7 @@ describe("PaymentService", () => {
 
       auditService.log.mockResolvedValue(undefined);
 
-      const result = await service.complete(
-        "provider-ref-1",
-        "corr-1",
-      );
+      const result = await service.complete("provider-ref-1", "corr-1");
 
       expect(result).toEqual(completedPayment);
 
@@ -289,9 +284,7 @@ describe("PaymentService", () => {
       const tx = {
         payment: {
           updateMany: jest.fn().mockResolvedValue({ count: 0 }),
-          findUniqueOrThrow: jest
-            .fn()
-            .mockResolvedValue(alreadyCompleted),
+          findUniqueOrThrow: jest.fn().mockResolvedValue(alreadyCompleted),
         },
         wallet: {
           findUniqueOrThrow: jest.fn(),
