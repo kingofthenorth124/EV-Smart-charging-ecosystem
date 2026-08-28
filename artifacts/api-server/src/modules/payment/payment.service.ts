@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import { randomBytes } from "crypto";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../database/prisma.service";
 import { AuditService } from "../audit/audit.service";
 import { WalletService } from "../wallet/wallet.service";
@@ -63,7 +65,19 @@ export class PaymentService {
     return payment;
   }
 
-  async complete(providerReference: string, correlationId?: string) {
+  async complete(
+    providerReference: string,
+    correlationId?: string,
+  ) {
+    if (
+      typeof providerReference !== "string" ||
+      providerReference.trim().length === 0
+    ) {
+      throw new BadRequestException(
+        "providerReference is required",
+      );
+    }
+
     const payment = await this.prisma.payment.findUnique({
       where: {
         providerReference,
@@ -77,66 +91,84 @@ export class PaymentService {
     /*
      * Idempotency:
      *
-     * A provider may deliver the same webhook more than once.
-     * A payment that is already COMPLETED must never credit the
-     * wallet again.
+     * A payment provider can deliver the same webhook multiple times.
+     * A completed payment must never credit the wallet twice.
      */
     if (payment.status === "COMPLETED") {
       return payment;
     }
 
-    const completed = await this.prisma.$transaction(async (tx) => {
-      const claimed = await tx.payment.updateMany({
-        where: {
-          id: payment.id,
-          status: {
-            in: ["PENDING", "PROCESSING"],
+    const completed = await this.prisma.$transaction(
+      async (tx) => {
+        /*
+         * Atomically claim the payment.
+         *
+         * Only PENDING/PROCESSING payments can transition to COMPLETED.
+         * If another request already claimed it, count === 0 and we
+         * return the current payment without touching the wallet.
+         */
+        const claimed = await tx.payment.updateMany({
+          where: {
+            id: payment.id,
+            status: {
+              in: ["PENDING", "PROCESSING"],
+            },
           },
-        },
-        data: {
-          status: "COMPLETED",
-          providerReference,
-          paidAt: new Date(),
-        },
-      });
-
-      if (claimed.count === 0) {
-        return tx.payment.findUniqueOrThrow({
-          where: { id: payment.id },
+          data: {
+            status: "COMPLETED",
+            providerReference,
+            paidAt: new Date(),
+          },
         });
-      }
 
-      const wallet = await tx.wallet.findUniqueOrThrow({
-        where: { id: payment.walletId },
-      });
+        if (claimed.count === 0) {
+          return tx.payment.findUniqueOrThrow({
+            where: {
+              id: payment.id,
+            },
+          });
+        }
 
-      const updatedWallet = await tx.wallet.update({
-        where: { id: wallet.id },
-        data: {
-          balanceKobo: {
-            increment: payment.amountKobo,
+        const wallet = await tx.wallet.findUniqueOrThrow({
+          where: {
+            id: payment.walletId,
           },
-        },
-      });
+        });
 
-      await tx.walletTransaction.create({
-        data: {
-          walletId: wallet.id,
-          userId: payment.userId,
-          type: "TOPUP",
-          status: "COMPLETED",
-          amountKobo: payment.amountKobo,
-          balanceAfterKobo: updatedWallet.balanceKobo,
-          reference: payment.reference,
-          description: `Wallet top-up via ${payment.method ?? "payment"}`,
-          method: payment.method,
-        },
-      });
+        const updatedWallet = await tx.wallet.update({
+          where: {
+            id: wallet.id,
+          },
+          data: {
+            balanceKobo: {
+              increment: payment.amountKobo,
+            },
+          },
+        });
 
-      return tx.payment.findUniqueOrThrow({
-        where: { id: payment.id },
-      });
-    });
+        await tx.walletTransaction.create({
+          data: {
+            walletId: wallet.id,
+            userId: payment.userId,
+            type: "TOPUP",
+            status: "COMPLETED",
+            amountKobo: payment.amountKobo,
+            balanceAfterKobo: updatedWallet.balanceKobo,
+            reference: payment.reference,
+            description: `Wallet top-up via ${
+              payment.method ?? "payment"
+            }`,
+            method: payment.method,
+          },
+        });
+
+        return tx.payment.findUniqueOrThrow({
+          where: {
+            id: payment.id,
+          },
+        });
+      },
+    );
 
     await this.auditService.log({
       actorId: payment.userId,
