@@ -9,6 +9,7 @@ import {
   OnModuleInit,
 } from "@nestjs/common";
 import { Prisma, type ChargingSession, type Station } from "@prisma/client";
+import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../database/prisma.service";
 import { AuditService } from "../audit/audit.service";
 import { WalletService } from "../wallet/wallet.service";
@@ -55,6 +56,9 @@ type SessionWithStation = ChargingSession & { station: Station };
  * Reference charging network seeded once when the stations table is empty.
  * Live availability is maintained by session start/stop; tariffs in kobo/kWh.
  */
+/** Temporary session-start authorization amount until Tariff Engine integration. */
+const DEFAULT_REQUIRED_AUTHORIZATION_KOBO = 100000; // ₦1,000
+
 const STATION_SEED = [
   {
     name: "Lekki Phase 1 Hub",
@@ -112,6 +116,7 @@ export class ChargingService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
     private readonly walletService: WalletService,
+    private readonly configService: ConfigService,
   ) {}
 
   /** Seed the reference charging network once (empty table only). */
@@ -208,7 +213,14 @@ export class ChargingService implements OnModuleInit {
     correlationId?: string,
   ): Promise<SessionDto> {
     const wallet = await this.walletService.getOrCreateWallet(userId);
-    const minBalance = this.walletService.minBalanceKobo;
+
+    // Temporary authorization amount until the Tariff Engine is available.
+    // The client must never choose this amount.
+    // Later, replace this resolver with the Tariff Engine.
+    const requiredAuthorizationKobo = this.configService.get<number>(
+      "charging.requiredAuthorizationKobo",
+      DEFAULT_REQUIRED_AUTHORIZATION_KOBO,
+    );
 
     if (wallet.status !== "ACTIVE") {
       await this.auditService.log({
@@ -222,7 +234,7 @@ export class ChargingService implements OnModuleInit {
       throw new ForbiddenException("Wallet is suspended — contact support");
     }
 
-    if (wallet.balanceKobo < minBalance) {
+    if (wallet.balanceKobo < requiredAuthorizationKobo) {
       await this.auditService.log({
         actorId: userId,
         action: AUDIT_ACTIONS.SESSION_START_DENIED,
@@ -232,11 +244,16 @@ export class ChargingService implements OnModuleInit {
         metadata: {
           reason: "INSUFFICIENT_BALANCE",
           balanceKobo: wallet.balanceKobo,
-          minBalanceKobo: minBalance,
+          requiredAuthorizationKobo,
         },
       });
+
       throw new HttpException(
-        `Wallet balance is below the ₦${(minBalance / 100).toLocaleString()} minimum required to start charging`,
+        `Insufficient wallet balance. ₦${(
+          wallet.balanceKobo / 100
+        ).toLocaleString()} available; ₦${(
+          requiredAuthorizationKobo / 100
+        ).toLocaleString()} required to start charging`,
         HttpStatus.PAYMENT_REQUIRED,
       );
     }
