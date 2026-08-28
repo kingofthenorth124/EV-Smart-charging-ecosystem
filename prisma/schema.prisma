@@ -189,6 +189,37 @@ model Payment {
   @@map("payments")
 }
 
+model PaymentProviderConfig {
+  id                String   @id @default(cuid())
+  primaryProvider   String
+  secondaryProvider String?
+  tertiaryProvider  String?
+  automaticFailover Boolean  @default(true)
+  updatedBy         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([primaryProvider])
+}
+
+model PaymentRefund {
+  id                String    @id @default(cuid())
+  paymentId         String
+  provider          String
+  providerReference String
+  refundReference   String    @unique
+  amountKobo        Int
+  reason            String
+  status            String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  completedAt       DateTime?
+
+  @@index([paymentId])
+  @@index([provider])
+  @@index([status])
+}
+
 model WalletTransaction {
   id               String            @id @default(cuid())
   walletId         String
