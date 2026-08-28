@@ -65,17 +65,12 @@ export class PaymentService {
     return payment;
   }
 
-  async complete(
-    providerReference: string,
-    correlationId?: string,
-  ) {
+  async complete(providerReference: string, correlationId?: string) {
     if (
       typeof providerReference !== "string" ||
       providerReference.trim().length === 0
     ) {
-      throw new BadRequestException(
-        "providerReference is required",
-      );
+      throw new BadRequestException("providerReference is required");
     }
 
     const payment = await this.prisma.payment.findUnique({
@@ -98,77 +93,73 @@ export class PaymentService {
       return payment;
     }
 
-    const completed = await this.prisma.$transaction(
-      async (tx) => {
-        /*
-         * Atomically claim the payment.
-         *
-         * Only PENDING/PROCESSING payments can transition to COMPLETED.
-         * If another request already claimed it, count === 0 and we
-         * return the current payment without touching the wallet.
-         */
-        const claimed = await tx.payment.updateMany({
-          where: {
-            id: payment.id,
-            status: {
-              in: ["PENDING", "PROCESSING"],
-            },
+    const completed = await this.prisma.$transaction(async (tx) => {
+      /*
+       * Atomically claim the payment.
+       *
+       * Only PENDING/PROCESSING payments can transition to COMPLETED.
+       * If another request already claimed it, count === 0 and we
+       * return the current payment without touching the wallet.
+       */
+      const claimed = await tx.payment.updateMany({
+        where: {
+          id: payment.id,
+          status: {
+            in: ["PENDING", "PROCESSING"],
           },
-          data: {
-            status: "COMPLETED",
-            providerReference,
-            paidAt: new Date(),
-          },
-        });
+        },
+        data: {
+          status: "COMPLETED",
+          providerReference,
+          paidAt: new Date(),
+        },
+      });
 
-        if (claimed.count === 0) {
-          return tx.payment.findUniqueOrThrow({
-            where: {
-              id: payment.id,
-            },
-          });
-        }
-
-        const wallet = await tx.wallet.findUniqueOrThrow({
-          where: {
-            id: payment.walletId,
-          },
-        });
-
-        const updatedWallet = await tx.wallet.update({
-          where: {
-            id: wallet.id,
-          },
-          data: {
-            balanceKobo: {
-              increment: payment.amountKobo,
-            },
-          },
-        });
-
-        await tx.walletTransaction.create({
-          data: {
-            walletId: wallet.id,
-            userId: payment.userId,
-            type: "TOPUP",
-            status: "COMPLETED",
-            amountKobo: payment.amountKobo,
-            balanceAfterKobo: updatedWallet.balanceKobo,
-            reference: payment.reference,
-            description: `Wallet top-up via ${
-              payment.method ?? "payment"
-            }`,
-            method: payment.method,
-          },
-        });
-
+      if (claimed.count === 0) {
         return tx.payment.findUniqueOrThrow({
           where: {
             id: payment.id,
           },
         });
-      },
-    );
+      }
+
+      const wallet = await tx.wallet.findUniqueOrThrow({
+        where: {
+          id: payment.walletId,
+        },
+      });
+
+      const updatedWallet = await tx.wallet.update({
+        where: {
+          id: wallet.id,
+        },
+        data: {
+          balanceKobo: {
+            increment: payment.amountKobo,
+          },
+        },
+      });
+
+      await tx.walletTransaction.create({
+        data: {
+          walletId: wallet.id,
+          userId: payment.userId,
+          type: "TOPUP",
+          status: "COMPLETED",
+          amountKobo: payment.amountKobo,
+          balanceAfterKobo: updatedWallet.balanceKobo,
+          reference: payment.reference,
+          description: `Wallet top-up via ${payment.method ?? "payment"}`,
+          method: payment.method,
+        },
+      });
+
+      return tx.payment.findUniqueOrThrow({
+        where: {
+          id: payment.id,
+        },
+      });
+    });
 
     await this.auditService.log({
       actorId: payment.userId,

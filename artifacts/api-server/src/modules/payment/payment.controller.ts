@@ -39,11 +39,7 @@ export class PaymentController {
     @Body() dto: InitiatePaymentDto,
     @Req() req: Request & { correlationId?: string },
   ) {
-    return this.paymentService.initiate(
-      userId,
-      dto,
-      req.correlationId,
-    );
+    return this.paymentService.initiate(userId, dto, req.correlationId);
   }
 
   /**
@@ -64,9 +60,6 @@ export class PaymentController {
     @Body("providerReference") providerReference: string,
     @Req() req: Request & { correlationId?: string },
   ) {
-    return this.paymentService.complete(
-      providerReference,
-      req.correlationId,
-    );
+    return this.paymentService.complete(providerReference, req.correlationId);
   }
 }

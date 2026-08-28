@@ -47,3 +47,7 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Generated Expo static build output
+artifacts/mobile/static-build/
+artifacts/mobile/expo-env.d.ts
