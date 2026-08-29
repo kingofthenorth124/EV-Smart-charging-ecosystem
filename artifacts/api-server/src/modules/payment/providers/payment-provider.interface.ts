@@ -1,14 +1,7 @@
-export type PaymentProviderName =
-  | "PAYSTACK"
-  | "INTERSWITCH"
-  | "FLUTTERWAVE";
+export type PaymentProviderName = "PAYSTACK" | "INTERSWITCH" | "FLUTTERWAVE";
 
 export type PaymentProviderStatus =
-  | "PENDING"
-  | "PROCESSING"
-  | "SUCCESS"
-  | "FAILED"
-  | "CANCELLED";
+  "PENDING" | "PROCESSING" | "SUCCESS" | "FAILED" | "CANCELLED";
 
 export interface PaymentCustomer {
   userId: string;
@@ -62,11 +55,7 @@ export interface RefundPaymentInput {
 export interface RefundPaymentResult {
   provider: PaymentProviderName;
   refundReference: string;
-  status:
-    | "PENDING"
-    | "PROCESSING"
-    | "COMPLETED"
-    | "FAILED";
+  status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
   amountKobo: number;
   raw?: unknown;
 }
@@ -81,24 +70,16 @@ export interface WebhookResult {
 export interface PaymentProvider {
   readonly name: PaymentProviderName;
 
-  initiate(
-    input: InitiatePaymentInput,
-  ): Promise<InitiatePaymentResult>;
+  initiate(input: InitiatePaymentInput): Promise<InitiatePaymentResult>;
 
-  verify(
-    input: VerifyPaymentInput,
-  ): Promise<VerifyPaymentResult>;
+  verify(input: VerifyPaymentInput): Promise<VerifyPaymentResult>;
 
-  refund(
-    input: RefundPaymentInput,
-  ): Promise<RefundPaymentResult>;
+  refund(input: RefundPaymentInput): Promise<RefundPaymentResult>;
 
   verifyWebhook(
     rawBody: Buffer,
     headers: Record<string, string | undefined>,
   ): boolean;
 
-  parseWebhook(
-    rawBody: Buffer,
-  ): WebhookResult;
+  parseWebhook(rawBody: Buffer): WebhookResult;
 }

@@ -1,11 +1,6 @@
-import {
-  createHmac,
-} from "node:crypto";
+import { createHmac } from "node:crypto";
 
-import {
-  Injectable,
-  ServiceUnavailableException,
-} from "@nestjs/common";
+import { Injectable, ServiceUnavailableException } from "@nestjs/common";
 
 import type {
   InitiatePaymentInput,
@@ -23,36 +18,27 @@ export class PaystackProvider implements PaymentProvider {
   readonly name = "PAYSTACK" as const;
 
   private readonly baseUrl =
-    process.env.PAYSTACK_BASE_URL ??
-    "https://api.paystack.co";
+    process.env.PAYSTACK_BASE_URL ?? "https://api.paystack.co";
 
   private get secretKey(): string {
     const value = process.env.PAYSTACK_SECRET_KEY;
 
     if (!value) {
-      throw new ServiceUnavailableException(
-        "Paystack is not configured",
-      );
+      throw new ServiceUnavailableException("Paystack is not configured");
     }
 
     return value;
   }
 
-  private async request<T>(
-    path: string,
-    init: RequestInit,
-  ): Promise<T> {
-    const response = await fetch(
-      `${this.baseUrl}${path}`,
-      {
-        ...init,
-        headers: {
-          Authorization: `Bearer ${this.secretKey}`,
-          "Content-Type": "application/json",
-          ...(init.headers ?? {}),
-        },
+  private async request<T>(path: string, init: RequestInit): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${this.secretKey}`,
+        "Content-Type": "application/json",
+        ...(init.headers ?? {}),
       },
-    );
+    });
 
     const body = (await response.json()) as T & {
       message?: string;
@@ -67,9 +53,7 @@ export class PaystackProvider implements PaymentProvider {
     return body;
   }
 
-  async initiate(
-    input: InitiatePaymentInput,
-  ): Promise<InitiatePaymentResult> {
+  async initiate(input: InitiatePaymentInput): Promise<InitiatePaymentResult> {
     const body = await this.request<{
       status: boolean;
       data: {
@@ -102,9 +86,7 @@ export class PaystackProvider implements PaymentProvider {
     };
   }
 
-  async verify(
-    input: VerifyPaymentInput,
-  ): Promise<VerifyPaymentResult> {
+  async verify(input: VerifyPaymentInput): Promise<VerifyPaymentResult> {
     const body = await this.request<{
       data: {
         id: number;
@@ -113,12 +95,9 @@ export class PaystackProvider implements PaymentProvider {
         amount: number;
         currency: string;
       };
-    }>(
-      `/transaction/verify/${encodeURIComponent(input.reference)}`,
-      {
-        method: "GET",
-      },
-    );
+    }>(`/transaction/verify/${encodeURIComponent(input.reference)}`, {
+      method: "GET",
+    });
 
     const transaction = body.data;
 
@@ -138,9 +117,7 @@ export class PaystackProvider implements PaymentProvider {
     };
   }
 
-  async refund(
-    input: RefundPaymentInput,
-  ): Promise<RefundPaymentResult> {
+  async refund(input: RefundPaymentInput): Promise<RefundPaymentResult> {
     const body = await this.request<{
       data: {
         id: number;
@@ -150,8 +127,7 @@ export class PaystackProvider implements PaymentProvider {
     }>("/refund", {
       method: "POST",
       body: JSON.stringify({
-        transaction:
-          input.providerReference || input.reference,
+        transaction: input.providerReference || input.reference,
         amount: input.amountKobo,
         currency: "NGN",
         customer_note: input.reason,
@@ -179,27 +155,19 @@ export class PaystackProvider implements PaymentProvider {
     rawBody: Buffer,
     headers: Record<string, string | undefined>,
   ): boolean {
-    const signature =
-      headers["x-paystack-signature"];
+    const signature = headers["x-paystack-signature"];
 
     if (!signature) return false;
 
-    const expected = createHmac(
-      "sha512",
-      this.secretKey,
-    )
+    const expected = createHmac("sha512", this.secretKey)
       .update(rawBody)
       .digest("hex");
 
     return expected === signature;
   }
 
-  parseWebhook(
-    rawBody: Buffer,
-  ): WebhookResult {
-    const payload = JSON.parse(
-      rawBody.toString("utf8"),
-    ) as {
+  parseWebhook(rawBody: Buffer): WebhookResult {
+    const payload = JSON.parse(rawBody.toString("utf8")) as {
       event?: string;
       data?: {
         reference?: string;
@@ -212,9 +180,7 @@ export class PaystackProvider implements PaymentProvider {
       event: payload.event,
       reference: payload.data?.reference,
       providerReference:
-        payload.data?.id !== undefined
-          ? String(payload.data.id)
-          : undefined,
+        payload.data?.id !== undefined ? String(payload.data.id) : undefined,
     };
   }
 }

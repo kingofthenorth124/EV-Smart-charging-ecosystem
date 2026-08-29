@@ -9,10 +9,7 @@ import { FlutterwaveProvider } from "./flutterwave.provider";
 
 @Injectable()
 export class PaymentProviderRegistry {
-  private readonly providers: Map<
-    PaymentProviderName,
-    PaymentProvider
-  >;
+  private readonly providers: Map<PaymentProviderName, PaymentProvider>;
 
   constructor(
     private readonly paystack: PaystackProvider,

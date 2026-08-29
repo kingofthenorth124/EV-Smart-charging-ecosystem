@@ -14,15 +14,9 @@ import { FlutterwaveProvider } from "./providers/flutterwave.provider";
 import { PaymentProviderRegistry } from "./providers/payment-provider.registry";
 
 @Module({
-  imports: [
-    AuditModule,
-    WalletModule,
-  ],
+  imports: [AuditModule, WalletModule],
 
-  controllers: [
-    PaymentController,
-    PaymentProviderConfigController,
-  ],
+  controllers: [PaymentController, PaymentProviderConfigController],
 
   providers: [
     PaymentService,
