@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   Patch,
+  Post,
   Query,
 } from "@nestjs/common";
 import {
@@ -20,6 +21,8 @@ import type { JwtPayload } from "../../common/types/auth.types";
 import { IdentityService } from "./identity.service";
 import { ListUsersQueryDto } from "./dto/list-users-query.dto";
 import { UpdateUserStatusDto } from "./dto/update-user-status.dto";
+import { CreateAdminUserDto } from "./dto/create-admin-user.dto";
+import { RegisterCustomerAdminDto } from "./dto/register-customer-admin.dto";
 
 @ApiTags("users")
 @ApiBearerAuth("BearerAuth")
@@ -43,6 +46,48 @@ export class IdentityController {
     @CurrentUser() actor: JwtPayload,
   ) {
     return this.identityService.findAll(query, actor.sub);
+  }
+
+  /**
+   * POST /api/v1/users/admins
+   * Create an administrative account — Super Admin only.
+   */
+  @Post("admins")
+  @Roles("SUPER_ADMIN")
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: "Create an administrative user" })
+  @ApiResponse({ status: 201, description: "Administrative account created" })
+  @ApiResponse({ status: 403, description: "Super Admin access required" })
+  @ApiResponse({
+    status: 409,
+    description: "Email or phone already registered",
+  })
+  createAdmin(
+    @Body() dto: CreateAdminUserDto,
+    @CurrentUser() actor: JwtPayload,
+  ) {
+    return this.identityService.createAdminUser(dto, actor.sub);
+  }
+
+  /**
+   * POST /api/v1/users/customers
+   * Register a customer — Super Admin or Admin Officer.
+   */
+  @Post("customers")
+  @Roles("SUPER_ADMIN", "ADMIN_OFFICER")
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: "Register a customer as an administrator" })
+  @ApiResponse({ status: 201, description: "Customer account created" })
+  @ApiResponse({ status: 403, description: "Insufficient permissions" })
+  @ApiResponse({
+    status: 409,
+    description: "Email or phone already registered",
+  })
+  createCustomer(
+    @Body() dto: RegisterCustomerAdminDto,
+    @CurrentUser() actor: JwtPayload,
+  ) {
+    return this.identityService.registerCustomerByAdmin(dto, actor.sub);
   }
 
   /**

@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Prisma, type Wallet, type WalletTransaction } from "@prisma/client";
 import { randomBytes } from "crypto";
