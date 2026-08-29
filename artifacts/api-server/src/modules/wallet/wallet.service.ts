@@ -200,19 +200,24 @@ export class WalletService {
         const current = await tx.wallet.findUniqueOrThrow({
           where: { id: wallet.id },
         });
-        const debit = Math.max(0, Math.min(amountKobo, current.balanceKobo));
+        if (current.balanceKobo < amountKobo) {
+          throw new ConflictException(
+            "Insufficient wallet balance to reverse refunded payment",
+          );
+        }
 
         const updated = await tx.wallet.update({
           where: { id: wallet.id },
-          data: { balanceKobo: { decrement: debit } },
+          data: { balanceKobo: { decrement: amountKobo } },
         });
+
         const created = await tx.walletTransaction.create({
           data: {
             walletId: wallet.id,
             userId,
             type: "REFUND",
             status: "COMPLETED",
-            amountKobo: -debit,
+            amountKobo: -amountKobo,
             balanceAfterKobo: updated.balanceKobo,
             reference,
             description,
