@@ -181,6 +181,67 @@ export class WalletService {
   }
 
   /**
+   * Reverse a completed top-up following a provider-confirmed refund.
+   * Mirrors topUp()'s transaction pattern exactly, decrementing instead of
+   * incrementing. Balance floors at zero — a refund can never drive the
+   * wallet negative even if funds were already spent elsewhere.
+   */
+  async debitForRefund(
+    userId: string,
+    amountKobo: number,
+    reference: string,
+    description: string,
+    correlationId?: string,
+  ): Promise<{ transaction: TransactionDto; wallet: WalletSummaryDto }> {
+    const wallet = await this.getOrCreateWallet(userId);
+
+    const [updatedWallet, transaction] = await this.prisma.$transaction(
+      async (tx) => {
+        const current = await tx.wallet.findUniqueOrThrow({
+          where: { id: wallet.id },
+        });
+        const debit = Math.max(0, Math.min(amountKobo, current.balanceKobo));
+
+        const updated = await tx.wallet.update({
+          where: { id: wallet.id },
+          data: { balanceKobo: { decrement: debit } },
+        });
+        const created = await tx.walletTransaction.create({
+          data: {
+            walletId: wallet.id,
+            userId,
+            type: "REFUND",
+            status: "COMPLETED",
+            amountKobo: -debit,
+            balanceAfterKobo: updated.balanceKobo,
+            reference,
+            description,
+          },
+        });
+        return [updated, created] as const;
+      },
+    );
+
+    await this.auditService.log({
+      actorId: userId,
+      action: AUDIT_ACTIONS.WALLET_CHARGED,
+      resource: "wallet_transaction",
+      resourceId: transaction.id,
+      result: "SUCCESS",
+      correlationId,
+      metadata: {
+        amountKobo: -transaction.amountKobo,
+        reference: transaction.reference,
+      },
+    });
+
+    return {
+      transaction: toTransactionDto(transaction),
+      wallet: this.toSummary(updatedWallet),
+    };
+  }
+
+  /**
    * Debit the wallet for a charging session INSIDE an existing transaction.
    * The wallet row is re-read within the transaction so the debit is based on
    * the current balance, never a stale snapshot; balance floors at zero.

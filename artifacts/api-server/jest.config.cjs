@@ -9,7 +9,7 @@ const config = {
 
   rootDir: "src",
 
-  testRegex: ".*\\.integration\\.spec\\.ts$",
+  testRegex: ".*\\.(integration\\.)?spec\\.ts$",
 
   transform: {
     "^.+\\.(t|j)s$": [

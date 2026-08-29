@@ -3,6 +3,7 @@ import { AuditModule } from "../audit/audit.module";
 import { WalletModule } from "../wallet/wallet.module";
 
 import { PaymentController } from "./payment.controller";
+import { PaymentWebhookController } from "./payment-webhook.controller";
 import { PaymentService } from "./payment.service";
 
 import { PaymentProviderConfigController } from "./payment-provider-config.controller";
@@ -16,7 +17,11 @@ import { PaymentProviderRegistry } from "./providers/payment-provider.registry";
 @Module({
   imports: [AuditModule, WalletModule],
 
-  controllers: [PaymentController, PaymentProviderConfigController],
+  controllers: [
+    PaymentController,
+    PaymentWebhookController,
+    PaymentProviderConfigController,
+  ],
 
   providers: [
     PaymentService,

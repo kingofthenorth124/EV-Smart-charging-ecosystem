@@ -3,10 +3,14 @@ import {
   ConflictException,
   NotFoundException,
 } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { PaymentService } from "./payment.service";
+import { PaymentProviderRegistry } from "./payment-provider.registry";
 
 describe("PaymentService", () => {
   let service: PaymentService;
+  let events: EventEmitter2;
+  let providerRegistry: PaymentProviderRegistry;
 
   const prisma = {
     payment: {
@@ -34,10 +38,20 @@ describe("PaymentService", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    events = {
+      emit: jest.fn(),
+    } as unknown as EventEmitter2;
+
+    providerRegistry = {
+      get: jest.fn(),
+    } as unknown as PaymentProviderRegistry;
+
     service = new PaymentService(
       prisma as never,
       walletService as never,
       auditService as never,
+      providerRegistry,
+      events,
     );
   });
 

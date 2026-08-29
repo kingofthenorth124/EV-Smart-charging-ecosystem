@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Req,
 } from "@nestjs/common";
@@ -15,8 +16,11 @@ import {
 import type { Request } from "express";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import { Permissions } from "../../common/decorators/permissions.decorator";
+import { Roles } from "../../common/decorators/roles.decorator";
+import { Public } from "../../common/decorators/public.decorator";
 import { InitiatePaymentDto } from "./dto/initiate-payment.dto";
 import { PaymentResponseDto } from "./dto/payment-response.dto";
+import { RefundPaymentDto } from "./dto/refund-payment.dto";
 import { PaymentService } from "./payment.service";
 
 @ApiTags("payments")
@@ -61,5 +65,18 @@ export class PaymentController {
     @Req() req: Request & { correlationId?: string },
   ) {
     return this.paymentService.complete(providerReference, req.correlationId);
+  }
+
+  @Roles("SUPER_ADMIN")
+  @Post(":id/refund")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Refund a completed payment" })
+  @ApiResponse({ status: 200, description: "Refund initiated" })
+  refund(
+    @Param("id") paymentId: string,
+    @Body() dto: RefundPaymentDto,
+    @Req() req: Request & { correlationId?: string },
+  ) {
+    return this.paymentService.refund(paymentId, dto, req.correlationId);
   }
 }
