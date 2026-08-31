@@ -1,8 +1,4 @@
-import {
-  IsBoolean,
-  IsIn,
-  IsOptional,
-} from "class-validator";
+import { IsBoolean, IsIn, IsOptional } from "class-validator";
 
 export const PAYMENT_PROVIDERS = [
   "PAYSTACK",
@@ -10,8 +6,7 @@ export const PAYMENT_PROVIDERS = [
   "FLUTTERWAVE",
 ] as const;
 
-export type PaymentProvider =
-  (typeof PAYMENT_PROVIDERS)[number];
+export type PaymentProvider = (typeof PAYMENT_PROVIDERS)[number];
 
 export class UpdatePaymentProviderConfigDto {
   @IsIn(PAYMENT_PROVIDERS)

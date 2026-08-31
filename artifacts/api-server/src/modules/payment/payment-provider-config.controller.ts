@@ -22,9 +22,7 @@ import { PaymentProviderConfigService } from "./payment-provider-config.service"
 @ApiBearerAuth("BearerAuth")
 @Controller("v1/developer/payment-providers")
 export class PaymentProviderConfigController {
-  constructor(
-    private readonly configService: PaymentProviderConfigService,
-  ) {}
+  constructor(private readonly configService: PaymentProviderConfigService) {}
 
   @Get()
   @Roles("SUPER_ADMIN")

@@ -210,7 +210,9 @@ export class PaymentService {
     rawBody: Buffer,
     headers: Record<string, string | undefined>,
   ): boolean {
-    return this.providerRegistry.get(providerName).verifyWebhook(rawBody, headers);
+    return this.providerRegistry
+      .get(providerName)
+      .verifyWebhook(rawBody, headers);
   }
 
   /**
@@ -224,10 +226,14 @@ export class PaymentService {
     rawBody: Buffer,
     correlationId?: string,
   ) {
-    const parsed = this.providerRegistry.get(providerName).parseWebhook(rawBody);
+    const parsed = this.providerRegistry
+      .get(providerName)
+      .parseWebhook(rawBody);
 
     if (!parsed.providerReference) {
-      throw new BadRequestException("Webhook payload missing provider reference");
+      throw new BadRequestException(
+        "Webhook payload missing provider reference",
+      );
     }
 
     return this.complete(parsed.providerReference, correlationId);
