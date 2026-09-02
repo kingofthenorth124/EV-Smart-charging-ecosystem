@@ -304,13 +304,16 @@ export class ChargingService implements OnModuleInit {
           include: { station: true },
         });
       });
-    } catch (error) {
+    } catch (error: any) {
       if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
+        error?.code === "P2002" ||
+        error?.meta?.target?.includes("userId")
       ) {
-        throw new ConflictException("A charging session is already active");
+        throw new ConflictException(
+          "A charging session is already active",
+        );
       }
+
       throw error;
     }
 

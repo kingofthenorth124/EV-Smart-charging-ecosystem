@@ -33,6 +33,14 @@ export class EmailService {
   }
 
   async send(options: SendEmailOptions): Promise<void> {
+    if (this.configService.get<string>("nodeEnv") === "test") {
+      this.logger.warn(
+        `[TEST] Email suppressed: ${options.to} | Subject: ${options.subject}`,
+        "EmailService",
+      );
+      return;
+    }
+
     if (!this.apiKey) {
       if (this.configService.get<string>("nodeEnv") !== "production") {
         this.logger.warn(
