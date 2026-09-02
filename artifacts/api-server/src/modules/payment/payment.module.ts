@@ -1,42 +1,44 @@
-import { Module } from "@nestjs/common";
-import { AuditModule } from "../audit/audit.module";
-import { WalletModule } from "../wallet/wallet.module";
+import {Module} from "@nestjs/common";
 
-import { PaymentController } from "./payment.controller";
-import { PaymentWebhookController } from "./payment-webhook.controller";
-import { PaymentService } from "./payment.service";
+import {PaymentService} from "./payment.service";
+import {SettlementService} from "./settlement.service";
+import {RefundService} from "./refund.service";
 
-import { PaymentProviderConfigController } from "./payment-provider-config.controller";
-import { PaymentProviderConfigService } from "./payment-provider-config.service";
+import {WalletModule} from "../wallet/wallet.module";
+import {AuditModule} from "../audit/audit.module";
+import {PaymentProviderRegistry} from "./providers/payment-provider.registry";
+import {PaystackProvider} from "./providers/paystack.provider";
+import {InterswitchProvider} from "./providers/interswitch.provider";
+import {FlutterwaveProvider} from "./providers/flutterwave.provider";
 
-import { PaystackProvider } from "./providers/paystack.provider";
-import { InterswitchProvider } from "./providers/interswitch.provider";
-import { FlutterwaveProvider } from "./providers/flutterwave.provider";
-import { PaymentProviderRegistry } from "./providers/payment-provider.registry";
 
 @Module({
-  imports: [AuditModule, WalletModule],
 
-  controllers: [
-    PaymentController,
-    PaymentWebhookController,
-    PaymentProviderConfigController,
-  ],
+imports:[
+WalletModule,
+AuditModule,
+],
 
-  providers: [
-    PaymentService,
-    PaymentProviderConfigService,
+providers:[
 
-    PaystackProvider,
-    InterswitchProvider,
-    FlutterwaveProvider,
-    PaymentProviderRegistry,
-  ],
+PaymentService,
+SettlementService,
+RefundService,
+PaymentProviderRegistry,
+PaystackProvider,
+InterswitchProvider,
+FlutterwaveProvider
 
-  exports: [
-    PaymentService,
-    PaymentProviderConfigService,
-    PaymentProviderRegistry,
-  ],
+],
+
+exports:[
+
+PaymentService,
+SettlementService,
+RefundService
+
+]
+
 })
+
 export class PaymentModule {}

@@ -289,7 +289,7 @@ export class PaymentService {
           paymentId: payment.id,
           provider: payment.provider,
           providerReference: payment.providerReference ?? "",
-          refundReference: providerResult.refundReference,
+          refundReference: providerResult.refundReference ?? "",
           amountKobo,
           reason: dto.reason,
           status: providerResult.status,

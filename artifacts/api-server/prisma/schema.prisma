@@ -434,57 +434,5 @@ enum AuditResult {
 
 // ───────── Fleet Management ─────────
 
-model Fleet {
-  id String @id @default(cuid())
 
-  name String
 
-  status FleetStatus @default(ACTIVE)
-
-  wallet FleetWallet?
-
-  members FleetMember[]
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@map("fleets")
-}
-
-model FleetMember {
-  id String @id @default(cuid())
-
-  fleetId String
-
-  userId String
-
-  role FleetMemberRole @default(DRIVER)
-
-  fleet Fleet @relation(fields: [fleetId], references: [id], onDelete: Cascade)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@unique([fleetId, userId])
-  @@map("fleet_members")
-}
-
-model FleetWallet {
-  id String @id @default(cuid())
-
-  fleetId String @unique
-
-  balanceKobo Int @default(0)
-
-  status WalletStatus @default(ACTIVE)
-
-  fleet Fleet @relation(fields: [fleetId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
-
-  @@map("fleet_wallets")
-}

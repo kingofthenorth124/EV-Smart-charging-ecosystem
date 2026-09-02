@@ -327,6 +327,7 @@ export class WalletService {
     return paginate(rows.map(toTransactionDto), total, query.page, query.limit);
   }
 
+
   async recentTransactions(
     userId: string,
     take = 5,
@@ -337,5 +338,81 @@ export class WalletService {
       take,
     });
     return rows.map(toTransactionDto);
+  }
+
+  /**
+   * Credit the wallet directly (e.g. a settlement-driven or admin-initiated
+   * credit outside the standard topUp() flow).
+   */
+  async fund(
+    userId: string,
+    amountKobo: number,
+    reference: string,
+  ): Promise<WalletTransaction> {
+    const wallet = await this.getOrCreateWallet(userId);
+
+    const [, transaction] = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.wallet.update({
+        where: { id: wallet.id },
+        data: { balanceKobo: { increment: amountKobo } },
+      });
+      const created = await tx.walletTransaction.create({
+        data: {
+          walletId: wallet.id,
+          userId,
+          type: "TOPUP",
+          status: "COMPLETED",
+          amountKobo,
+          balanceAfterKobo: updated.balanceKobo,
+          reference,
+          description: `Wallet credit (${reference})`,
+        },
+      });
+      return [updated, created] as const;
+    });
+
+    return transaction;
+  }
+
+  /**
+   * Debit the wallet for a settled charging session payment.
+   * Throws ConflictException if the balance is insufficient.
+   */
+  async debit(
+    userId: string,
+    amountKobo: number,
+    reference: string,
+  ): Promise<WalletTransaction> {
+    const wallet = await this.getOrCreateWallet(userId);
+
+    const [, transaction] = await this.prisma.$transaction(async (tx) => {
+      const current = await tx.wallet.findUniqueOrThrow({
+        where: { id: wallet.id },
+      });
+      if (current.balanceKobo < amountKobo) {
+        throw new ConflictException("Insufficient wallet balance");
+      }
+
+      const updated = await tx.wallet.update({
+        where: { id: wallet.id },
+        data: { balanceKobo: { decrement: amountKobo } },
+      });
+
+      const created = await tx.walletTransaction.create({
+        data: {
+          walletId: wallet.id,
+          userId,
+          type: "CHARGE",
+          status: "COMPLETED",
+          amountKobo: -amountKobo,
+          balanceAfterKobo: updated.balanceKobo,
+          reference,
+          description: `Charge settlement (${reference})`,
+        },
+      });
+      return [updated, created] as const;
+    });
+
+    return transaction;
   }
 }

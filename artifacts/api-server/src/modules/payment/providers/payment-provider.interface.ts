@@ -1,4 +1,4 @@
-export type PaymentProviderName = "PAYSTACK" | "INTERSWITCH" | "FLUTTERWAVE";
+export type PaymentProviderName = "PAYSTACK" | "INTERSWITCH" | "FLUTTERWAVE" | "MOCK";
 
 export type PaymentProviderStatus =
   "PENDING" | "PROCESSING" | "SUCCESS" | "FAILED" | "CANCELLED";
