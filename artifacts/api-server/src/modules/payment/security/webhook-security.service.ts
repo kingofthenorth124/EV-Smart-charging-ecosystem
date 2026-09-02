@@ -1,34 +1,30 @@
 import { Injectable } from "@nestjs/common";
-import { createHash } from "crypto";
+import * as crypto from "crypto";
 
 
 @Injectable()
 export class WebhookSecurityService {
 
-  private processed = new Set<string>();
+
+ verifySignature(
+   payload:string,
+   signature:string,
+   secret:string
+ ){
+
+ const hash =
+ crypto
+ .createHmac("sha512",secret)
+ .update(payload)
+ .digest("hex");
 
 
-  generateHash(payload:any):string {
+ return crypto.timingSafeEqual(
+ Buffer.from(hash),
+ Buffer.from(signature)
+ );
 
-    return createHash("sha256")
-      .update(JSON.stringify(payload))
-      .digest("hex");
+ }
 
-  }
-
-
-  isReplay(payload:any):boolean {
-
-    const hash=this.generateHash(payload);
-
-    if(this.processed.has(hash)){
-      return true;
-    }
-
-    this.processed.add(hash);
-
-    return false;
-
-  }
 
 }
