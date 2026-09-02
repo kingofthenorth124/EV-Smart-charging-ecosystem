@@ -52,7 +52,7 @@ export class PrismaService
                 { level: "warn", emit: "stdout" },
               ]
             : [{ level: "error", emit: "stdout" }],
-    });
+    } as any);
 
     this.pool = pool;
   }
