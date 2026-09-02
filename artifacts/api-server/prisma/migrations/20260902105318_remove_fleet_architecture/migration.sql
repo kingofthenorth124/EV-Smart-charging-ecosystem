@@ -1,24 +1,12 @@
--- DropForeignKey
-ALTER TABLE "fleet_members" DROP CONSTRAINT "fleet_members_fleetId_fkey";
+-- Remove Fleet architecture safely
 
--- DropForeignKey
-ALTER TABLE "fleet_members" DROP CONSTRAINT "fleet_members_userId_fkey";
+DROP TABLE IF EXISTS "fleet_wallets" CASCADE;
 
--- DropForeignKey
-ALTER TABLE "fleet_wallets" DROP CONSTRAINT "fleet_wallets_fleetId_fkey";
+DROP TABLE IF EXISTS "fleet_members" CASCADE;
 
--- DropTable
-DROP TABLE "fleets";
+DROP TABLE IF EXISTS "fleets" CASCADE;
 
--- DropTable
-DROP TABLE "fleet_members";
 
--- DropTable
-DROP TABLE "fleet_wallets";
+DROP TYPE IF EXISTS "FleetStatus";
 
--- DropEnum
-DROP TYPE "FleetStatus";
-
--- DropEnum
-DROP TYPE "FleetMemberRole";
-
+DROP TYPE IF EXISTS "FleetMemberRole";
