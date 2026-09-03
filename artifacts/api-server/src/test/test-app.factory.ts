@@ -17,6 +17,10 @@ import { getStorageToken } from "@nestjs/throttler";
 import helmet from "helmet";
 import { AppModule } from "../app.module";
 import { PrismaService } from "../modules/database/prisma.service";
+import { PaystackProvider } from "../modules/payment/providers/paystack.provider";
+import { InterswitchProvider } from "../modules/payment/providers/interswitch.provider";
+import { FlutterwaveProvider } from "../modules/payment/providers/flutterwave.provider";
+import { MockPaymentProvider } from "../modules/payment/providers/mock-payment.provider";
 
 /**
  * No-op throttler storage — increment() always reports totalHits=1 so every
@@ -37,7 +41,13 @@ const noopThrottlerStorage = {
 async function buildApp(
   overrideThrottler: boolean,
 ): Promise<{ app: INestApplication; prisma: PrismaService }> {
-  let builder = Test.createTestingModule({ imports: [AppModule] });
+  let builder = Test.createTestingModule({ imports: [AppModule] })
+    .overrideProvider(PaystackProvider)
+    .useClass(MockPaymentProvider)
+    .overrideProvider(InterswitchProvider)
+    .useClass(MockPaymentProvider)
+    .overrideProvider(FlutterwaveProvider)
+    .useClass(MockPaymentProvider);
 
   if (overrideThrottler) {
     // Override the throttler storage via its DI symbol so every increment()

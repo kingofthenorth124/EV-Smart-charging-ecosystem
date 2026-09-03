@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Prisma, type Wallet, type WalletTransaction } from "@prisma/client";
 import { randomBytes } from "crypto";
@@ -181,6 +186,72 @@ export class WalletService {
   }
 
   /**
+   * Reverse a completed top-up following a provider-confirmed refund.
+   * Mirrors topUp()'s transaction pattern exactly, decrementing instead of
+   * incrementing. Balance floors at zero — a refund can never drive the
+   * wallet negative even if funds were already spent elsewhere.
+   */
+  async debitForRefund(
+    userId: string,
+    amountKobo: number,
+    reference: string,
+    description: string,
+    correlationId?: string,
+  ): Promise<{ transaction: TransactionDto; wallet: WalletSummaryDto }> {
+    const wallet = await this.getOrCreateWallet(userId);
+
+    const [updatedWallet, transaction] = await this.prisma.$transaction(
+      async (tx) => {
+        const current = await tx.wallet.findUniqueOrThrow({
+          where: { id: wallet.id },
+        });
+        if (current.balanceKobo < amountKobo) {
+          throw new ConflictException(
+            "Insufficient wallet balance to reverse refunded payment",
+          );
+        }
+
+        const updated = await tx.wallet.update({
+          where: { id: wallet.id },
+          data: { balanceKobo: { decrement: amountKobo } },
+        });
+
+        const created = await tx.walletTransaction.create({
+          data: {
+            walletId: wallet.id,
+            userId,
+            type: "REFUND",
+            status: "COMPLETED",
+            amountKobo: -amountKobo,
+            balanceAfterKobo: updated.balanceKobo,
+            reference,
+            description,
+          },
+        });
+        return [updated, created] as const;
+      },
+    );
+
+    await this.auditService.log({
+      actorId: userId,
+      action: AUDIT_ACTIONS.WALLET_CHARGED,
+      resource: "wallet_transaction",
+      resourceId: transaction.id,
+      result: "SUCCESS",
+      correlationId,
+      metadata: {
+        amountKobo: -transaction.amountKobo,
+        reference: transaction.reference,
+      },
+    });
+
+    return {
+      transaction: toTransactionDto(transaction),
+      wallet: this.toSummary(updatedWallet),
+    };
+  }
+
+  /**
    * Debit the wallet for a charging session INSIDE an existing transaction.
    * The wallet row is re-read within the transaction so the debit is based on
    * the current balance, never a stale snapshot; balance floors at zero.
@@ -256,6 +327,7 @@ export class WalletService {
     return paginate(rows.map(toTransactionDto), total, query.page, query.limit);
   }
 
+
   async recentTransactions(
     userId: string,
     take = 5,
@@ -266,5 +338,81 @@ export class WalletService {
       take,
     });
     return rows.map(toTransactionDto);
+  }
+
+  /**
+   * Credit the wallet directly (e.g. a settlement-driven or admin-initiated
+   * credit outside the standard topUp() flow).
+   */
+  async fund(
+    userId: string,
+    amountKobo: number,
+    reference: string,
+  ): Promise<WalletTransaction> {
+    const wallet = await this.getOrCreateWallet(userId);
+
+    const [, transaction] = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.wallet.update({
+        where: { id: wallet.id },
+        data: { balanceKobo: { increment: amountKobo } },
+      });
+      const created = await tx.walletTransaction.create({
+        data: {
+          walletId: wallet.id,
+          userId,
+          type: "TOPUP",
+          status: "COMPLETED",
+          amountKobo,
+          balanceAfterKobo: updated.balanceKobo,
+          reference,
+          description: `Wallet credit (${reference})`,
+        },
+      });
+      return [updated, created] as const;
+    });
+
+    return transaction;
+  }
+
+  /**
+   * Debit the wallet for a settled charging session payment.
+   * Throws ConflictException if the balance is insufficient.
+   */
+  async debit(
+    userId: string,
+    amountKobo: number,
+    reference: string,
+  ): Promise<WalletTransaction> {
+    const wallet = await this.getOrCreateWallet(userId);
+
+    const [, transaction] = await this.prisma.$transaction(async (tx) => {
+      const current = await tx.wallet.findUniqueOrThrow({
+        where: { id: wallet.id },
+      });
+      if (current.balanceKobo < amountKobo) {
+        throw new ConflictException("Insufficient wallet balance");
+      }
+
+      const updated = await tx.wallet.update({
+        where: { id: wallet.id },
+        data: { balanceKobo: { decrement: amountKobo } },
+      });
+
+      const created = await tx.walletTransaction.create({
+        data: {
+          walletId: wallet.id,
+          userId,
+          type: "CHARGE",
+          status: "COMPLETED",
+          amountKobo: -amountKobo,
+          balanceAfterKobo: updated.balanceKobo,
+          reference,
+          description: `Charge settlement (${reference})`,
+        },
+      });
+      return [updated, created] as const;
+    });
+
+    return transaction;
   }
 }

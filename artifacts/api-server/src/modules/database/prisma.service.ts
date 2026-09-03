@@ -44,13 +44,15 @@ export class PrismaService
     super({
       adapter,
       log:
-        process.env.NODE_ENV === "development"
-          ? [
-              { level: "error", emit: "stdout" },
-              { level: "warn", emit: "stdout" },
-            ]
-          : [{ level: "error", emit: "stdout" }],
-    });
+        process.env.NODE_ENV === "test"
+          ? []
+          : process.env.NODE_ENV === "development"
+            ? [
+                { level: "error", emit: "stdout" },
+                { level: "warn", emit: "stdout" },
+              ]
+            : [{ level: "error", emit: "stdout" }],
+    } as any);
 
     this.pool = pool;
   }

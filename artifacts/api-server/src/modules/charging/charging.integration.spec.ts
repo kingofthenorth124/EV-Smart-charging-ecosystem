@@ -114,6 +114,43 @@ describe("wallet authorization", () => {
     });
     expect(after.connectorsAvailable).toBe(2);
   });
+
+  it("rejects session start when wallet has less than the ₦1,000 authorization amount", async () => {
+    const userId = await createUser();
+
+    // Fund exactly ₦600 — below the temporary ₦1,000 authorization requirement.
+    await fundWallet(userId, 60000);
+
+    const station = await createStation(1);
+
+    await expect(
+      chargingService.startSession(userId, { stationId: station.id }),
+    ).rejects.toMatchObject({
+      status: 402,
+    });
+
+    // No charging session should have been created.
+    expect(
+      await prisma.chargingSession.count({
+        where: { userId, status: "ACTIVE" },
+      }),
+    ).toBe(0);
+
+    // The connector must not have been claimed.
+    const after = await prisma.station.findUniqueOrThrow({
+      where: { id: station.id },
+    });
+
+    expect(after.connectorsAvailable).toBe(1);
+    expect(after.status).not.toBe("BUSY");
+
+    // Authorization rejection must not debit the wallet.
+    const wallet = await prisma.wallet.findUniqueOrThrow({
+      where: { userId },
+    });
+
+    expect(wallet.balanceKobo).toBe(60000);
+  });
 });
 
 describe("session start races", () => {

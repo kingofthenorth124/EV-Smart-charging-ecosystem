@@ -11,6 +11,8 @@ import { PrismaService } from "../database/prisma.service";
 import { AuditService } from "../audit/audit.service";
 import { AUDIT_ACTIONS } from "./audit-actions";
 import { RegisterUserDto } from "./dto/register-user.dto";
+import { CreateAdminUserDto } from "./dto/create-admin-user.dto";
+import { RegisterCustomerAdminDto } from "./dto/register-customer-admin.dto";
 import { UpdateUserStatusDto } from "./dto/update-user-status.dto";
 import { UserResponseDto } from "./dto/user-response.dto";
 import {
@@ -96,6 +98,168 @@ export class IdentityService {
     this.logger.log(
       { userId: user.id, email: user.email },
       "New user registered",
+    );
+
+    return UserResponseDto.from(user);
+  }
+
+  // ── Administrative registration ──────────────────────────────────────────────
+
+  async createAdminUser(
+    dto: CreateAdminUserDto,
+    actorId: string,
+    correlationId?: string,
+  ): Promise<UserResponseDto> {
+    const existing = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: dto.email }, { phone: dto.phone }],
+      },
+      select: { email: true, phone: true },
+    });
+
+    if (existing) {
+      const field =
+        existing.email === dto.email ? "email address" : "phone number";
+
+      throw new ConflictException(`This ${field} is already registered`);
+    }
+
+    const rounds = this.configService.get<number>("security.bcryptRounds", 12);
+
+    const passwordHash = await bcrypt.hash(dto.password, rounds);
+
+    let user;
+
+    try {
+      user = await this.prisma.user.create({
+        data: {
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          email: dto.email,
+          phone: dto.phone,
+          passwordHash,
+          role: dto.role,
+          status: "ACTIVE",
+          registrationSource: "ADMIN_REGISTER",
+        },
+      });
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002"
+      ) {
+        const target = (e.meta as { target?: string[] } | undefined)?.target;
+
+        const field = target?.includes("email")
+          ? "email address"
+          : "phone number";
+
+        throw new ConflictException(`This ${field} is already registered`);
+      }
+
+      throw e;
+    }
+
+    await this.auditService.log({
+      actorId,
+      action: AUDIT_ACTIONS.ADMIN_USER_CREATED,
+      resource: "user",
+      resourceId: user.id,
+      result: "SUCCESS",
+      correlationId,
+      metadata: {
+        createdRole: dto.role,
+        targetEmail: user.email,
+      },
+    });
+
+    this.logger.log(
+      {
+        userId: user.id,
+        role: user.role,
+        createdBy: actorId,
+      },
+      "Administrative user created",
+    );
+
+    return UserResponseDto.from(user);
+  }
+
+  async registerCustomerByAdmin(
+    dto: RegisterCustomerAdminDto,
+    actorId: string,
+    correlationId?: string,
+  ): Promise<UserResponseDto> {
+    const existing = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: dto.email }, { phone: dto.phone }],
+      },
+      select: { email: true, phone: true },
+    });
+
+    if (existing) {
+      const field =
+        existing.email === dto.email ? "email address" : "phone number";
+
+      throw new ConflictException(`This ${field} is already registered`);
+    }
+
+    const rounds = this.configService.get<number>("security.bcryptRounds", 12);
+
+    const passwordHash = await bcrypt.hash(dto.password, rounds);
+
+    let user;
+
+    try {
+      user = await this.prisma.user.create({
+        data: {
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          email: dto.email,
+          phone: dto.phone,
+          passwordHash,
+          role: "CUSTOMER",
+          status: "ACTIVE",
+          registrationSource: "ADMIN_REGISTER",
+        },
+      });
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002"
+      ) {
+        const target = (e.meta as { target?: string[] } | undefined)?.target;
+
+        const field = target?.includes("email")
+          ? "email address"
+          : "phone number";
+
+        throw new ConflictException(`This ${field} is already registered`);
+      }
+
+      throw e;
+    }
+
+    await this.auditService.log({
+      actorId,
+      action: AUDIT_ACTIONS.CUSTOMER_REGISTERED_BY_ADMIN,
+      resource: "user",
+      resourceId: user.id,
+      result: "SUCCESS",
+      correlationId,
+      metadata: {
+        targetEmail: user.email,
+        registrationSource: "ADMIN_REGISTER",
+      },
+    });
+
+    this.logger.log(
+      {
+        userId: user.id,
+        email: user.email,
+        registeredBy: actorId,
+      },
+      "Customer registered by administrator",
     );
 
     return UserResponseDto.from(user);

@@ -3,6 +3,7 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { LoggerModule } from "nestjs-pino";
 import type { IncomingMessage, ServerResponse } from "http";
 import { configuration, validate } from "./common/config/app.config";
@@ -19,10 +20,14 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { WalletModule } from "./modules/wallet/wallet.module";
 import { ChargingModule } from "./modules/charging/charging.module";
 import { PaymentModule } from "./modules/payment/payment.module";
+import { AuthorizationModule } from "./modules/authorization/authorization.module";
 import { EmailModule } from "./common/email/email.module";
 
 @Module({
   imports: [
+    // ── Domain events ───────────────────────────────────────────────────────
+    EventEmitterModule.forRoot(),
+
     // ── Configuration ─────────────────────────────────────────────────────────
     ConfigModule.forRoot({
       isGlobal: true,
@@ -116,6 +121,7 @@ import { EmailModule } from "./common/email/email.module";
     WalletModule,
     ChargingModule,
     PaymentModule,
+    AuthorizationModule,
   ],
 
   providers: [

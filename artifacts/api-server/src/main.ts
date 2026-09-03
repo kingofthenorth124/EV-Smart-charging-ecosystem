@@ -10,7 +10,10 @@ import helmet from "helmet";
 import { AppModule } from "./app.module";
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+    rawBody: true,
+  });
 
   // ── Logger (Pino) ────────────────────────────────────────────────────────
   app.useLogger(app.get(Logger));

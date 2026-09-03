@@ -1,51 +1,36 @@
-// Camel Mobility Wallet — Prisma Schema
-// Module 1: Enterprise Foundation, Identity & Access Management
-//
-// This schema covers ONLY Module 1 domain entities.
-// Future domains (Wallet, Sessions, NFC, Stations, etc.) are
-// added in their respective modules via migrations.
-//
-// Rules:
-// - All migrations are version-controlled under prisma/migrations/
-// - Never modify production schema manually
-// - Append-only tables (AuditLog) must never be updated or deleted
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  output          = "../node_modules/@prisma/client"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-// ─── User Identity ────────────────────────────────────────────────────────────
-
 model User {
-  id                  String     @id @default(cuid())
+  id                  String               @id @default(cuid())
   firstName           String
   lastName            String
-  email               String     @unique
-  phone               String     @unique
+  email               String               @unique
+  phone               String               @unique
   passwordHash        String
-  role                UserRole   @default(CUSTOMER)
-  status              UserStatus @default(PENDING)
+  role                UserRole             @default(CUSTOMER)
+  status              UserStatus           @default(PENDING)
   /// SELF_REGISTER | ADMIN_REGISTER
-  registrationSource  String     @default("SELF_REGISTER")
-
-  // Security tracking
-  failedLoginAttempts Int        @default(0)
+  registrationSource  String               @default("SELF_REGISTER")
+  failedLoginAttempts Int                  @default(0)
   lockedUntil         DateTime?
   lastLoginAt         DateTime?
   passwordChangedAt   DateTime?
-
-  createdAt           DateTime   @default(now())
-  updatedAt           DateTime   @updatedAt
-
-  refreshTokens       RefreshToken[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  credentials         ChargingCredential[]
+  chargingSessions    ChargingSession?
   passwordResetTokens PasswordResetToken[]
-  wallet              Wallet?
   payments            Payment[]
-  chargingSessions    ChargingSession[]
+  refreshTokens       RefreshToken[]
+  wallet              Wallet?
 
   @@index([email])
   @@index([status])
@@ -53,33 +38,22 @@ model User {
   @@map("users")
 }
 
-// ─── Refresh Token ────────────────────────────────────────────────────────────
-// Opaque refresh tokens are stored as bcrypt hashes, never plaintext.
-// token_family enables detection of refresh token reuse (theft detection):
-// if a revoked token in a family is presented, all tokens in that family
-// are immediately revoked.
-
 model RefreshToken {
-  id         String    @id @default(cuid())
-  userId     String
+  id        String    @id @default(cuid())
+  userId    String
   /// bcrypt hash of the opaque random token
-  tokenHash  String    @unique
+  tokenHash String    @unique
   /// Token family identifier for theft detection
-  family     String
-  expiresAt  DateTime
-  revokedAt  DateTime?
-  createdAt  DateTime  @default(now())
-
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family    String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([family])
   @@map("refresh_tokens")
 }
-
-// ─── Password Reset Token ─────────────────────────────────────────────────────
-// Single-use tokens sent to the user's email for password reset.
-// Stored as bcrypt hash, never plaintext.
 
 model PasswordResetToken {
   id        String    @id @default(cuid())
@@ -89,17 +63,11 @@ model PasswordResetToken {
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())
-
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("password_reset_tokens")
 }
-
-// ─── Audit Log ────────────────────────────────────────────────────────────────
-// Append-only security and operational audit trail.
-// Records MUST NOT be updated or deleted.
-// actorId is a string (not FK) to accommodate 'system' as actor.
 
 model AuditLog {
   id            String      @id @default(cuid())
@@ -126,10 +94,6 @@ model AuditLog {
   @@map("audit_logs")
 }
 
-// ─── System Configuration ─────────────────────────────────────────────────────
-// Configurable platform settings managed through Super Admin controls.
-// Provides a controlled override mechanism for business rule constants.
-
 model SystemConfig {
   id          String   @id @default(cuid())
   key         String   @unique
@@ -142,22 +106,34 @@ model SystemConfig {
   @@map("system_configs")
 }
 
-// ─── Wallet (Module 2) ────────────────────────────────────────────────────────
-// One wallet per user. All amounts are stored in kobo (integer minor units).
-// The backend is the ONLY authoritative source for balances.
+model ChargingCredential {
+  id         String           @id @default(cuid())
+  userId     String
+  type       CredentialType   @default(RFID)
+  identifier String           @unique
+  status     CredentialStatus @default(ACTIVE)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  expiryDate DateTime?
+  lastUsedAt DateTime?
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([identifier])
+  @@index([userId])
+  @@map("charging_credentials")
+}
 
 model Wallet {
-  id           String       @id @default(cuid())
-  userId       String       @unique
+  id           String              @id @default(cuid())
+  userId       String              @unique
   /// Current balance in kobo (NGN minor units)
-  balanceKobo  Int          @default(0)
-  status       WalletStatus @default(ACTIVE)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-
-  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions WalletTransaction[]
+  balanceKobo  Int                 @default(0)
+  status       WalletStatus        @default(ACTIVE)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
   payments     Payment[]
+  transactions WalletTransaction[]
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("wallets")
 }
@@ -178,15 +154,45 @@ model Payment {
   failedAt          DateTime?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet            Wallet        @relation(fields: [walletId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([walletId, createdAt])
   @@index([status])
   @@index([provider])
   @@map("payments")
+}
+
+model PaymentProviderConfig {
+  id                String   @id @default(cuid())
+  primaryProvider   String
+  secondaryProvider String?
+  tertiaryProvider  String?
+  automaticFailover Boolean  @default(true)
+  updatedBy         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([primaryProvider])
+}
+
+model PaymentRefund {
+  id                String    @id @default(cuid())
+  paymentId         String
+  provider          String
+  providerReference String
+  refundReference   String    @unique
+  amountKobo        Int
+  reason            String
+  status            String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  completedAt       DateTime?
+
+  @@index([paymentId])
+  @@index([provider])
+  @@index([status])
 }
 
 model WalletTransaction {
@@ -206,9 +212,8 @@ model WalletTransaction {
   method           String?
   sessionId        String?
   createdAt        DateTime          @default(now())
-
-  wallet  Wallet           @relation(fields: [walletId], references: [id], onDelete: Cascade)
-  session ChargingSession? @relation(fields: [sessionId], references: [id])
+  session          ChargingSession?  @relation(fields: [sessionId], references: [id])
+  wallet           Wallet            @relation(fields: [walletId], references: [id], onDelete: Cascade)
 
   @@index([walletId, createdAt])
   @@index([userId, createdAt])
@@ -216,10 +221,8 @@ model WalletTransaction {
   @@map("wallet_transactions")
 }
 
-// ─── Charging (Module 2) ──────────────────────────────────────────────────────
-
 model Station {
-  id                  String        @id @default(cuid())
+  id                  String            @id @default(cuid())
   name                String
   location            String
   /// Maximum charging power in kW
@@ -229,46 +232,54 @@ model Station {
   connectorsAvailable Int
   /// Energy tariff in kobo per kWh
   tariffKoboPerKwh    Int
-  status              StationStatus @default(AVAILABLE)
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-
-  sessions ChargingSession[]
+  status              StationStatus     @default(AVAILABLE)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  sessions            ChargingSession[]
 
   @@index([status])
   @@map("stations")
 }
 
 model ChargingSession {
-  id            String        @id @default(cuid())
-  userId        String
-  stationId     String
-  status        SessionStatus @default(ACTIVE)
+  id               String              @id @default(cuid())
+  userId           String              @unique(map: "charging_sessions_one_active_per_user", where: raw("(status = 'ACTIVE'::\"SessionStatus\")"))
+  stationId        String
+  status           SessionStatus       @default(ACTIVE)
   /// Energy delivered in Wh (integer to avoid float drift)
-  energyWh      Int           @default(0)
+  energyWh         Int                 @default(0)
   /// Final cost in kobo (0 while active; live cost is computed server-side)
-  costKobo      Int           @default(0)
+  costKobo         Int                 @default(0)
   /// Optional customer spend limit for this session, in kobo
-  limitKobo     Int?
+  limitKobo        Int?
   /// Tariff snapshot at session start, kobo per kWh
   tariffKoboPerKwh Int
   /// Power snapshot at session start, kW
-  powerKw       Float
-  startedAt     DateTime      @default(now())
-  endedAt       DateTime?
+  powerKw          Float
+  startedAt        DateTime            @default(now())
+  endedAt          DateTime?
   /// How the session ended: USER_STOP | LIMIT_REACHED | BALANCE_EXHAUSTED
-  stopReason    String?
-
-  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  station      Station             @relation(fields: [stationId], references: [id])
-  transactions WalletTransaction[]
+  stopReason       String?
+  station          Station             @relation(fields: [stationId], references: [id])
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions     WalletTransaction[]
 
   @@index([userId, startedAt])
   @@index([userId, status])
   @@map("charging_sessions")
 }
 
-// ─── Enumerations ─────────────────────────────────────────────────────────────
+enum CredentialType {
+  RFID
+  APP
+  API_TOKEN
+}
+
+enum CredentialStatus {
+  ACTIVE
+  BLOCKED
+  EXPIRED
+}
 
 enum PaymentStatus {
   PENDING
@@ -310,7 +321,6 @@ enum SessionStatus {
   FAULTED
 }
 
-
 enum UserRole {
   CUSTOMER
   ADMIN_OFFICER
@@ -332,4 +342,78 @@ enum UserStatus {
 enum AuditResult {
   SUCCESS
   FAILURE
+}
+
+// =====================================
+// MODULE 5 OCPP PHASE 1
+// ChargePoint Registry
+// =====================================
+
+enum ChargePointStatus {
+  AVAILABLE
+  PREPARING
+  CHARGING
+  SUSPENDED
+  FINISHING
+  UNAVAILABLE
+  FAULTED
+}
+
+model ChargePoint {
+  id String @id @default(uuid())
+
+  serialNumber String @unique
+
+  vendor String?
+
+  model String?
+
+  firmwareVersion String?
+
+  protocolVersion String @default("OCPP1.6")
+
+  status ChargePointStatus @default(UNAVAILABLE)
+
+  lastHeartbeat DateTime?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  connectors      Connector[]
+  ocppConnections OcppConnection[]
+  heartbeatLogs   HeartbeatLog[]
+}
+
+model Connector {
+  id String @id @default(uuid())
+
+  chargePointId String
+
+  connectorNumber Int
+
+  status ChargePointStatus @default(AVAILABLE)
+
+  chargePoint ChargePoint @relation(fields: [chargePointId], references: [id], onDelete: Cascade)
+
+  @@unique([chargePointId, connectorNumber])
+}
+
+model OcppConnection {
+  id             String      @id @default(uuid())
+  chargePointId  String
+  connected      Boolean     @default(false)
+  connectedAt    DateTime?
+  disconnectedAt DateTime?
+  remoteAddress  String?
+  lastMessageAt  DateTime?
+  chargePoint    ChargePoint @relation(fields: [chargePointId], references: [id], onDelete: Cascade)
+}
+
+model HeartbeatLog {
+  id            String      @id @default(uuid())
+  chargePointId String
+  receivedAt    DateTime    @default(now())
+  status        String
+  chargePoint   ChargePoint @relation(fields: [chargePointId], references: [id], onDelete: Cascade)
 }
