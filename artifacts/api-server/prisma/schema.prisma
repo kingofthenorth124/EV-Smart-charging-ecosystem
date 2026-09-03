@@ -342,3 +342,56 @@ enum AuditResult {
   SUCCESS
   FAILURE
 }
+
+// =====================================
+// MODULE 5 OCPP PHASE 1
+// ChargePoint Registry
+// =====================================
+
+enum ChargePointStatus {
+  AVAILABLE
+  PREPARING
+  CHARGING
+  SUSPENDED
+  FINISHING
+  UNAVAILABLE
+  FAULTED
+}
+
+model ChargePoint {
+  id String @id @default(uuid())
+
+  serialNumber String @unique
+
+  vendor String?
+
+  model String?
+
+  firmwareVersion String?
+
+  protocolVersion String @default("OCPP1.6")
+
+  status ChargePointStatus @default(UNAVAILABLE)
+
+  lastHeartbeat DateTime?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  connectors Connector[]
+}
+
+model Connector {
+  id String @id @default(uuid())
+
+  chargePointId String
+
+  connectorNumber Int
+
+  status ChargePointStatus @default(AVAILABLE)
+
+  chargePoint ChargePoint @relation(fields: [chargePointId], references: [id], onDelete: Cascade)
+
+  @@unique([chargePointId, connectorNumber])
+}
