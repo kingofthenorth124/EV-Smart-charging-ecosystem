@@ -11,6 +11,7 @@ import { BootNotificationHandler } from "./handlers/boot-notification.handler";
 import { HeartbeatHandler } from "./handlers/heartbeat.handler";
 import { StatusNotificationHandler } from "./handlers/status-notification.handler";
 import { AuthorizeHandler } from "./handlers/authorize.handler";
+import { StartTransactionHandler } from "./handlers/start-transaction.handler";
 
 
 @Module({
@@ -29,6 +30,7 @@ import { AuthorizeHandler } from "./handlers/authorize.handler";
     HeartbeatHandler,
     StatusNotificationHandler,
     AuthorizeHandler,
+    StartTransactionHandler,
   ],
 
   exports: [
