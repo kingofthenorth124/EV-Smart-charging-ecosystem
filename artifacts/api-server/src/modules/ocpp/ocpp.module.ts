@@ -12,6 +12,7 @@ import { HeartbeatHandler } from "./handlers/heartbeat.handler";
 import { StatusNotificationHandler } from "./handlers/status-notification.handler";
 import { AuthorizeHandler } from "./handlers/authorize.handler";
 import { StartTransactionHandler } from "./handlers/start-transaction.handler";
+import { MeterValuesHandler } from "./handlers/meter-values.handler";
 
 
 @Module({
@@ -31,6 +32,7 @@ import { StartTransactionHandler } from "./handlers/start-transaction.handler";
     StatusNotificationHandler,
     AuthorizeHandler,
     StartTransactionHandler,
+    MeterValuesHandler,
   ],
 
   exports: [
