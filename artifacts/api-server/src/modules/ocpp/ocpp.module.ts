@@ -13,6 +13,7 @@ import { StatusNotificationHandler } from "./handlers/status-notification.handle
 import { AuthorizeHandler } from "./handlers/authorize.handler";
 import { StartTransactionHandler } from "./handlers/start-transaction.handler";
 import { MeterValuesHandler } from "./handlers/meter-values.handler";
+import { StopTransactionHandler } from "./handlers/stop-transaction.handler";
 
 
 @Module({
@@ -33,6 +34,7 @@ import { MeterValuesHandler } from "./handlers/meter-values.handler";
     AuthorizeHandler,
     StartTransactionHandler,
     MeterValuesHandler,
+    StopTransactionHandler,
   ],
 
   exports: [
