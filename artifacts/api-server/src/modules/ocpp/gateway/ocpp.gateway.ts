@@ -12,10 +12,18 @@ import { OcppConnectionService } from "../services/ocpp-connection.service";
 import { OcppMessageRouter } from "../services/ocpp-message.router";
 import { OcppConnectionRegistry } from "../services/ocpp-connection.registry";
 
+import {
+  parseOcppFrame,
+} from "../core/ocpp-frame.parser";
 
-const CALL = 2;
-const CALL_RESULT = 3;
-const CALL_ERROR = 4;
+import {
+  validateOcppFrame,
+} from "../core/ocpp-frame.validator";
+
+import {
+  OCPP_MESSAGE_TYPE,
+} from "../core/ocpp.constants";
+
 
 
 function extractChargePointId(
@@ -225,20 +233,31 @@ implements OnGatewayConnection, OnGatewayDisconnect {
 
 
 
-    let frame: unknown;
+    let frame;
 
 
     try {
 
-      frame =
+      const decoded =
         JSON.parse(
           raw.toString("utf8"),
         );
 
+
+      frame = parseOcppFrame(
+        decoded,
+      );
+
+
+      validateOcppFrame(
+        frame,
+      );
+
+
     } catch {
 
       this.logger.warn(
-        `Invalid JSON from ${chargePointId}`,
+        `Invalid OCPP frame from ${chargePointId}`,
       );
 
       return;
@@ -247,26 +266,17 @@ implements OnGatewayConnection, OnGatewayDisconnect {
 
 
 
-    if (
-      !Array.isArray(frame) ||
-      frame[0] !== CALL
-    ) {
+    if (frame.type !== "CALL") {
       return;
     }
 
 
 
-    const [
-      ,
+    const {
       uniqueId,
       action,
       payload,
-    ] = frame as [
-      number,
-      string,
-      string,
-      unknown,
-    ];
+    } = frame;
 
 
 
@@ -284,7 +294,7 @@ implements OnGatewayConnection, OnGatewayDisconnect {
 
       client.send(
         JSON.stringify([
-          CALL_RESULT,
+          OCPP_MESSAGE_TYPE.CALL_RESULT,
           uniqueId,
           result,
         ]),
@@ -303,7 +313,7 @@ implements OnGatewayConnection, OnGatewayDisconnect {
 
       client.send(
         JSON.stringify([
-          CALL_ERROR,
+          OCPP_MESSAGE_TYPE.CALL_ERROR,
           uniqueId,
           "InternalError",
           message,
