@@ -10,6 +10,7 @@ import { OcppMessageRouter } from "./services/ocpp-message.router";
 import { BootNotificationHandler } from "./handlers/boot-notification.handler";
 import { HeartbeatHandler } from "./handlers/heartbeat.handler";
 import { StatusNotificationHandler } from "./handlers/status-notification.handler";
+import { AuthorizeHandler } from "./handlers/authorize.handler";
 
 
 @Module({
@@ -27,6 +28,7 @@ import { StatusNotificationHandler } from "./handlers/status-notification.handle
     BootNotificationHandler,
     HeartbeatHandler,
     StatusNotificationHandler,
+    AuthorizeHandler,
   ],
 
   exports: [
