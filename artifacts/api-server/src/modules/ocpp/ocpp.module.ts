@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { DatabaseModule } from "../database/database.module";
 
 import { OcppGateway } from "./gateway/ocpp.gateway";
+import { OcppAuditController } from "./controllers/ocpp-audit.controller";
 
 import { OcppConnectionService } from "./services/ocpp-connection.service";
 import { OcppConnectionRegistry } from "./services/ocpp-connection.registry";
@@ -24,6 +25,10 @@ import { StopTransactionHandler } from "./handlers/stop-transaction.handler";
 @Module({
   imports: [
     DatabaseModule,
+  ],
+
+  controllers: [
+    OcppAuditController,
   ],
 
   providers: [
