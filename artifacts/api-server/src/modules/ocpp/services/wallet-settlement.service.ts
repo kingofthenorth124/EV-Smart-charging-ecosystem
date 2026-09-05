@@ -29,6 +29,7 @@ export class WalletSettlementService {
               wallet: true,
             },
           },
+          transactions: true,
         },
       });
 
@@ -51,6 +52,22 @@ export class WalletSettlementService {
       session.user.wallet;
 
 
+    const existingCharge =
+      session.transactions.find(
+        (transaction) =>
+          transaction.type === "CHARGE",
+      );
+
+
+    if (existingCharge) {
+      this.logger.warn(
+        `Duplicate settlement blocked for session ${sessionId}`,
+      );
+
+      return existingCharge;
+    }
+
+
     const newBalance =
       wallet.balanceKobo - costKobo;
 
@@ -70,7 +87,7 @@ export class WalletSettlementService {
             newBalance,
 
           reference:
-            `CHG-${Date.now()}`,
+            `CHG-OCPP-${sessionId}-${Date.now()}`,
 
           description:
             "EV charging session payment",
