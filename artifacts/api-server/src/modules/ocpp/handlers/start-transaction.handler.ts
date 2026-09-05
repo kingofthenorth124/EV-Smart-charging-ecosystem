@@ -89,6 +89,8 @@ export class StartTransactionHandler {
 
           connectorId: connector.id,
 
+          stationId: connector.stationId,
+
           idTag,
 
           meterStart: meterStart ?? 0,
