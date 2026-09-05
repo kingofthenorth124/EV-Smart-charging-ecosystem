@@ -1,7 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../database/prisma.service";
 import { ChargingSessionBridgeService } from "./charging-session-bridge.service";
-import { OcppBillingService } from "./ocpp-billing.service";
 
 @Injectable()
 export class OcppTransactionReconciliationService {
@@ -14,9 +13,6 @@ export class OcppTransactionReconciliationService {
     private readonly prisma: PrismaService,
     private readonly chargingSessionBridge:
       ChargingSessionBridgeService,
-
-    private readonly billingService:
-      OcppBillingService,
   ) {}
 
 
@@ -64,12 +60,6 @@ export class OcppTransactionReconciliationService {
       energyWh,
     );
 
-    const billing =
-      await this.billingService.settleTransaction(
-        transactionId,
-        energyWh,
-      );
-
     return {
       reconciled: true,
 
@@ -88,8 +78,6 @@ export class OcppTransactionReconciliationService {
 
       stoppedAt:
         transaction.stoppedAt,
-
-      billing,
     };
   }
 }
