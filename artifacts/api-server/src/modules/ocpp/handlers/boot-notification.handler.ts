@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../database/prisma.service";
+import { OcppAuditService } from "../services/ocpp-audit.service";
 
 export interface BootNotificationPayload {
   vendor?: string;
