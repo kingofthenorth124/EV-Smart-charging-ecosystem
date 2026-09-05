@@ -13,6 +13,7 @@ import { OcppTransactionReconciliationService } from "./services/ocpp-transactio
 import { ChargingSessionBridgeService } from "./services/charging-session-bridge.service";
 import { WalletSettlementService } from "./services/wallet-settlement.service";
 import { OcppAuditService } from "./services/ocpp-audit.service";
+import { OcppAuditQueryService } from "./services/ocpp-audit-query.service";
 import { StatusNotificationHandler } from "./handlers/status-notification.handler";
 import { AuthorizeHandler } from "./handlers/authorize.handler";
 import { StartTransactionHandler } from "./handlers/start-transaction.handler";
@@ -38,6 +39,7 @@ import { StopTransactionHandler } from "./handlers/stop-transaction.handler";
     ChargingSessionBridgeService,
     WalletSettlementService,
     OcppAuditService,
+    OcppAuditQueryService,
     StatusNotificationHandler,
     AuthorizeHandler,
     StartTransactionHandler,
