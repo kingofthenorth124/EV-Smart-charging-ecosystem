@@ -55,4 +55,32 @@ export class OcppConnectionRegistry {
 
   }
 
+
+  send(
+    chargePointId: string,
+    payload: string,
+  ): boolean {
+
+    const socket =
+      this.connections.get(
+        chargePointId,
+      );
+
+
+    if (!socket) {
+      return false;
+    }
+
+
+    if (socket.readyState !== 1) {
+      return false;
+    }
+
+
+    socket.send(payload);
+
+    return true;
+  }
+
+
 }
