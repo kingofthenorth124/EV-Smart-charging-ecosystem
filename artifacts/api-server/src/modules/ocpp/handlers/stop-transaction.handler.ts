@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../database/prisma.service";
 import { OcppTransactionReconciliationService } from "../services/ocpp-transaction-reconciliation.service";
+import { OcppAuditService } from "../services/ocpp-audit.service";
 
 @Injectable()
 export class StopTransactionHandler {
@@ -13,6 +14,9 @@ export class StopTransactionHandler {
     private readonly prisma: PrismaService,
     private readonly reconciliation:
       OcppTransactionReconciliationService,
+
+    private readonly auditService:
+      OcppAuditService,
   ) {}
 
 
@@ -66,6 +70,19 @@ export class StopTransactionHandler {
         },
       });
 
+
+    await this.auditService.logTransactionEvent(
+      chargePointId,
+      transaction.transactionId,
+      "STOP_TRANSACTION",
+      "ACCEPTED",
+      {
+        meterStop,
+        reason,
+        energyWh:
+          transaction.energyWh,
+      },
+    );
 
     const reconciliation =
       await this.reconciliation.reconcile(
