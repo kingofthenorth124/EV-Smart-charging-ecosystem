@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../database/prisma.service";
+import { OcppTransactionReconciliationService } from "../services/ocpp-transaction-reconciliation.service";
 
 @Injectable()
 export class StopTransactionHandler {
@@ -7,8 +8,11 @@ export class StopTransactionHandler {
   private readonly logger =
     new Logger(StopTransactionHandler.name);
 
+
   constructor(
     private readonly prisma: PrismaService,
+    private readonly reconciliation:
+      OcppTransactionReconciliationService,
   ) {}
 
 
@@ -40,38 +44,17 @@ export class StopTransactionHandler {
 
 
     const transaction =
-      await this.prisma.ocppTransaction.findUnique({
+      await this.prisma.ocppTransaction.update({
         where: {
           transactionId,
         },
-      });
-
-
-    if (!transaction) {
-
-      this.logger.warn(
-        `Unknown OCPP transaction ${transactionId}`,
-      );
-
-      return {
-        idTagInfo: {
-          status: "Invalid",
-        },
-      };
-    }
-
-
-    const updated =
-      await this.prisma.ocppTransaction.update({
-        where: {
-          id: transaction.id,
-        },
 
         data: {
-          status: "COMPLETED",
-
           meterStop:
-            meterStop ?? transaction.meterStop,
+            meterStop ?? 0,
+
+          status:
+            "COMPLETED",
 
           stoppedAt:
             timestamp
@@ -84,8 +67,14 @@ export class StopTransactionHandler {
       });
 
 
+    const reconciliation =
+      await this.reconciliation.reconcile(
+        transaction.transactionId,
+      );
+
+
     this.logger.log(
-      `OCPP transaction completed ${transactionId}`,
+      `Transaction ${transactionId} reconciled`,
     );
 
 
@@ -94,19 +83,18 @@ export class StopTransactionHandler {
         status: "Accepted",
       },
 
-      transactionId:
-        updated.transactionId,
+      transactionId,
 
       meterStop:
-        updated.meterStop ?? 0,
+        transaction.meterStop,
 
       timestamp:
-        updated.stoppedAt?.toISOString()
-        ?? new Date().toISOString(),
+        transaction.stoppedAt?.toISOString(),
 
       reason:
-        updated.stopReason
-        ?? "Local",
+        transaction.stopReason,
+
+      reconciliation,
     };
   }
 }
