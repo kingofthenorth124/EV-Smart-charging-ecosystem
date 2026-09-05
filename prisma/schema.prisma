@@ -448,6 +448,7 @@ model OcppTransaction {
 
   startedAt      DateTime @default(now())
   stoppedAt      DateTime?
+  stopReason     String?
 
   chargePoint ChargePoint @relation(fields: [chargePointId], references: [id], onDelete: Cascade)
 
