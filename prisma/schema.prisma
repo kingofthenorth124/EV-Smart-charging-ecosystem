@@ -381,9 +381,11 @@ model ChargePoint {
   updatedAt DateTime @updatedAt
 
   connectors      Connector[]
+  ocppTransactions OcppTransaction[]
   ocppConnections OcppConnection[]
   heartbeatLogs   HeartbeatLog[]
 }
+
 
 model Connector {
   id String @id @default(uuid())
@@ -395,6 +397,8 @@ model Connector {
   status ChargePointStatus @default(AVAILABLE)
 
   chargePoint ChargePoint @relation(fields: [chargePointId], references: [id], onDelete: Cascade)
+
+  ocppTransactions OcppTransaction[]
 
   @@unique([chargePointId, connectorNumber])
 }
@@ -416,4 +420,39 @@ model HeartbeatLog {
   receivedAt    DateTime    @default(now())
   status        String
   chargePoint   ChargePoint @relation(fields: [chargePointId], references: [id], onDelete: Cascade)
+}
+
+
+// =====================================
+// MODULE 5 PHASE 3.5
+// OCPP Transaction Lifecycle Context
+// =====================================
+
+model OcppTransaction {
+  id             String   @id @default(cuid())
+
+  transactionId  Int      @unique
+
+  chargePointId  String
+  connectorId    String
+
+  idTag          String?
+
+  meterStart     Int      @default(0)
+  meterStop      Int?
+
+  lastMeterValueAt DateTime?
+  energyWh       Int      @default(0)
+
+  status         String   @default("ACTIVE")
+
+  startedAt      DateTime @default(now())
+  stoppedAt      DateTime?
+
+  chargePoint ChargePoint @relation(fields: [chargePointId], references: [id], onDelete: Cascade)
+
+  connector Connector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@index([chargePointId])
+  @@index([connectorId])
 }
