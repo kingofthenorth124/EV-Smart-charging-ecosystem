@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../database/prisma.service";
+import { WalletSettlementService } from "./wallet-settlement.service";
 
 @Injectable()
 export class ChargingSessionBridgeService {
@@ -10,6 +11,9 @@ export class ChargingSessionBridgeService {
 
   constructor(
     private readonly prisma: PrismaService,
+
+    private readonly walletSettlement:
+      WalletSettlementService,
   ) {}
 
 
@@ -23,6 +27,10 @@ export class ChargingSessionBridgeService {
         where: {
           transactionId,
         },
+
+        include: {
+          station: true,
+        },
       });
 
 
@@ -31,11 +39,6 @@ export class ChargingSessionBridgeService {
         `OCPP transaction ${transactionId} not found`,
       );
     }
-
-
-    this.logger.log(
-      `Bridging OCPP transaction ${transactionId} into charging session`,
-    );
 
 
     const session =
@@ -57,6 +60,13 @@ export class ChargingSessionBridgeService {
     }
 
 
+    const costKobo =
+      Math.ceil(
+        (energyWh / 1000) *
+        ocppTransaction.station.tariffKoboPerKwh,
+      );
+
+
     const updated =
       await this.prisma.chargingSession.update({
         where: {
@@ -65,6 +75,8 @@ export class ChargingSessionBridgeService {
 
         data: {
           energyWh,
+
+          costKobo,
 
           status:
             "COMPLETED",
@@ -75,8 +87,15 @@ export class ChargingSessionBridgeService {
       });
 
 
+    const walletTransaction =
+      await this.walletSettlement.settleCharge(
+        updated.id,
+        costKobo,
+      );
+
+
     this.logger.log(
-      `Charging session ${updated.id} completed`,
+      `Charging session ${updated.id} completed and wallet charged`,
     );
 
 
@@ -89,6 +108,11 @@ export class ChargingSessionBridgeService {
       transactionId,
 
       energyWh,
+
+      costKobo,
+
+      walletTransactionId:
+        walletTransaction.id,
     };
   }
 }
