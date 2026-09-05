@@ -236,6 +236,8 @@ model Station {
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
   sessions            ChargingSession[]
+  connectors          Connector[]
+  ocppTransactions    OcppTransaction[]
 
   @@index([status])
   @@map("stations")
@@ -380,23 +382,25 @@ model ChargePoint {
 
   updatedAt DateTime @updatedAt
 
-  connectors      Connector[]
+  connectors       Connector[]
   ocppTransactions OcppTransaction[]
-  ocppConnections OcppConnection[]
-  heartbeatLogs   HeartbeatLog[]
+  ocppConnections  OcppConnection[]
+  heartbeatLogs    HeartbeatLog[]
 }
-
 
 model Connector {
   id String @id @default(uuid())
 
   chargePointId String
+  stationId     String
 
   connectorNumber Int
 
   status ChargePointStatus @default(AVAILABLE)
 
   chargePoint ChargePoint @relation(fields: [chargePointId], references: [id], onDelete: Cascade)
+
+  station Station @relation(fields: [stationId], references: [id], onDelete: Cascade)
 
   ocppTransactions OcppTransaction[]
 
@@ -422,37 +426,39 @@ model HeartbeatLog {
   chargePoint   ChargePoint @relation(fields: [chargePointId], references: [id], onDelete: Cascade)
 }
 
-
 // =====================================
 // MODULE 5 PHASE 3.5
 // OCPP Transaction Lifecycle Context
 // =====================================
 
 model OcppTransaction {
-  id             String   @id @default(cuid())
+  id String @id @default(cuid())
 
-  transactionId  Int      @unique
+  transactionId Int @unique
 
-  chargePointId  String
-  connectorId    String
+  chargePointId String
+  connectorId   String
+  stationId     String
 
-  idTag          String?
+  idTag String?
 
-  meterStart     Int      @default(0)
-  meterStop      Int?
+  meterStart Int  @default(0)
+  meterStop  Int?
 
   lastMeterValueAt DateTime?
-  energyWh       Int      @default(0)
+  energyWh         Int       @default(0)
 
-  status         String   @default("ACTIVE")
+  status String @default("ACTIVE")
 
-  startedAt      DateTime @default(now())
-  stoppedAt      DateTime?
-  stopReason     String?
+  startedAt  DateTime  @default(now())
+  stoppedAt  DateTime?
+  stopReason String?
 
   chargePoint ChargePoint @relation(fields: [chargePointId], references: [id], onDelete: Cascade)
 
   connector Connector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  station Station @relation(fields: [stationId], references: [id], onDelete: Cascade)
 
   @@index([chargePointId])
   @@index([connectorId])
