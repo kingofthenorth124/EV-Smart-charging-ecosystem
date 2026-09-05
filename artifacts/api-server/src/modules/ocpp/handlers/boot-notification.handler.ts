@@ -18,7 +18,10 @@ const HEARTBEAT_INTERVAL_SECONDS = 60;
 
 @Injectable()
 export class BootNotificationHandler {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: OcppAuditService,
+  ) {}
 
   async handle(
     chargePointId: string,
@@ -45,6 +48,18 @@ export class BootNotificationHandler {
         lastHeartbeat: now,
       },
     });
+
+    await this.auditService.logTransactionEvent(
+      chargePointId,
+      undefined,
+      "BOOT_NOTIFICATION",
+      "ACCEPTED",
+      {
+        vendor: payload.vendor,
+        model: payload.model,
+        firmwareVersion: payload.firmwareVersion,
+      },
+    );
 
     return {
       status: "Accepted",

@@ -12,6 +12,7 @@ import { HeartbeatHandler } from "./handlers/heartbeat.handler";
 import { OcppTransactionReconciliationService } from "./services/ocpp-transaction-reconciliation.service";
 import { ChargingSessionBridgeService } from "./services/charging-session-bridge.service";
 import { WalletSettlementService } from "./services/wallet-settlement.service";
+import { OcppAuditService } from "./services/ocpp-audit.service";
 import { StatusNotificationHandler } from "./handlers/status-notification.handler";
 import { AuthorizeHandler } from "./handlers/authorize.handler";
 import { StartTransactionHandler } from "./handlers/start-transaction.handler";
@@ -36,6 +37,7 @@ import { StopTransactionHandler } from "./handlers/stop-transaction.handler";
     OcppTransactionReconciliationService,
     ChargingSessionBridgeService,
     WalletSettlementService,
+    OcppAuditService,
     StatusNotificationHandler,
     AuthorizeHandler,
     StartTransactionHandler,

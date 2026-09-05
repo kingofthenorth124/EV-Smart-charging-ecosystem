@@ -463,3 +463,31 @@ model OcppTransaction {
   @@index([chargePointId])
   @@index([connectorId])
 }
+
+
+// =====================================
+// MODULE 5 OCPP AUDIT EVENT LEDGER
+// =====================================
+
+model OcppAuditEvent {
+  id             String   @id @default(cuid())
+
+  chargePointId  String
+
+  transactionId  Int?
+
+  connectorId    String?
+
+  action         String
+
+  status         String
+
+  payload        Json?
+
+  createdAt      DateTime @default(now())
+
+  @@index([chargePointId])
+  @@index([transactionId])
+  @@index([action])
+  @@index([createdAt])
+}

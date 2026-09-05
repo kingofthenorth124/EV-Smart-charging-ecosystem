@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../database/prisma.service";
+import { OcppAuditService } from "../services/ocpp-audit.service";
 
 @Injectable()
 export class StartTransactionHandler {
@@ -8,6 +9,7 @@ export class StartTransactionHandler {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly auditService: OcppAuditService,
   ) {}
 
   async handle(
@@ -106,6 +108,18 @@ export class StartTransactionHandler {
 
     this.logger.log(
       `OCPP transaction created ${transaction.transactionId}`,
+    );
+
+    await this.auditService.logTransactionEvent(
+      chargePointId,
+      transaction.transactionId,
+      "START_TRANSACTION",
+      "ACCEPTED",
+      {
+        connectorId,
+        meterStart,
+        idTag,
+      },
     );
 
 
