@@ -176,6 +176,15 @@ export class OcppCommandService {
       );
 
 
+    if (!sent) {
+
+      this.logger.warn(
+        `OCPP command failed dispatch ${action} ${chargePointId}`,
+      );
+
+    }
+
+
     this.logger.log(
       `OCPP command ${action} dispatch to ${chargePointId}: ${sent}`,
     );

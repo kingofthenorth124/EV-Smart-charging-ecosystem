@@ -1,8 +1,12 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import type { WebSocket } from "ws";
 
 @Injectable()
 export class OcppConnectionRegistry {
+
+  private readonly logger =
+    new Logger(OcppConnectionRegistry.name);
+
 
   private readonly connections = new Map<string, WebSocket>();
 
@@ -26,6 +30,10 @@ export class OcppConnectionRegistry {
       chargePointId,
       socket,
     );
+
+    this.logger.log(
+      `OCPP charger connected ${chargePointId}. Active connections=${this.connections.size}`,
+    );
   }
 
 
@@ -34,6 +42,10 @@ export class OcppConnectionRegistry {
   ): void {
 
     this.connections.delete(chargePointId);
+
+    this.logger.log(
+      `OCPP charger removed ${chargePointId}. Active connections=${this.connections.size}`,
+    );
 
   }
 

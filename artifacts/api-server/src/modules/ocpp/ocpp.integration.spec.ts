@@ -346,3 +346,124 @@ describe("OCPP Module Regression", () => {
 
 
 });
+
+
+describe("OCPP Failure Regression", () => {
+
+  let app: any;
+  let commandService: any;
+  let registry: any;
+
+
+  const chargePointId =
+    "016b95c7-6a6f-478f-896d-a79319ef683e";
+
+
+  beforeAll(async () => {
+
+    const result =
+      await createApp();
+
+    app = result.app;
+
+    commandService =
+      app.get(OcppCommandService);
+
+    registry =
+      app.get(OcppConnectionRegistry);
+
+  });
+
+
+  afterAll(async () => {
+
+    await app.close();
+
+  });
+
+
+
+  it("rejects command when charger is offline", async()=>{
+
+    registry.remove(
+      chargePointId,
+    );
+
+
+    const result =
+      await commandService.remoteStartTransaction(
+        chargePointId,
+        1,
+        "OFFLINE_TEST",
+      );
+
+
+    expect(result.accepted)
+      .toBe(false);
+
+  });
+
+
+
+  it("rejects unknown charger", async()=>{
+
+
+    const result =
+      await commandService.remoteStartTransaction(
+        "UNKNOWN-CHARGER",
+        1,
+        "TEST",
+      );
+
+
+    expect(result.accepted)
+      .toBe(false);
+
+
+  });
+
+
+
+  it("replaces old charger connection",()=>{
+
+
+    const oldSocket:any =
+      {
+        readyState:1,
+        close:jest.fn(),
+      };
+
+
+    const newSocket:any =
+      {
+        readyState:1,
+        close:jest.fn(),
+      };
+
+
+    registry.register(
+      chargePointId,
+      oldSocket,
+    );
+
+
+    registry.register(
+      chargePointId,
+      newSocket,
+    );
+
+
+    expect(oldSocket.close)
+      .toHaveBeenCalled();
+
+
+    expect(
+      registry.get(chargePointId),
+    )
+      .toBe(newSocket);
+
+
+  });
+
+
+});
