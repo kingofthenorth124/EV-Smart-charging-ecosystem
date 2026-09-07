@@ -2,6 +2,7 @@ import { INestApplication } from "@nestjs/common";
 import { createApp } from "../../test/test-app.factory";
 import { OcppCommandService } from "./services/ocpp-command.service";
 import { OcppConnectionRegistry } from "./services/ocpp-connection.registry";
+import { OcppPendingCommandService } from "./services/ocpp-pending-command.service";
 import { OcppMessageRouter } from "./services/ocpp-message.router";
 
 
@@ -465,5 +466,89 @@ describe("OCPP Failure Regression", () => {
 
   });
 
+
+});
+
+
+describe("OCPP Pending Command Lifecycle", () => {
+
+  let app: any;
+
+
+  beforeAll(async () => {
+
+    const result =
+      await createApp();
+
+    app =
+      result.app;
+
+  });
+
+
+  afterAll(async () => {
+
+    await app.close();
+
+  });
+
+
+  it("resolves pending command when CALL_RESULT arrives", async () => {
+
+    const pending =
+      app.get(OcppPendingCommandService);
+
+
+    const messageId =
+      "test-message-001";
+
+
+    const response =
+      pending.register(
+        messageId,
+        "RemoteStartTransaction",
+        5000,
+      );
+
+
+    pending.resolve(
+      messageId,
+      {
+        status:"Accepted",
+      },
+    );
+
+
+    await expect(response)
+      .resolves
+      .toEqual({
+        status:"Accepted",
+      });
+
+  });
+
+
+
+  it("times out missing CALL_RESULT", async () => {
+
+    const pending =
+      app.get(OcppPendingCommandService);
+
+
+    const response =
+      pending.register(
+        "timeout-message",
+        "RemoteStopTransaction",
+        50,
+      );
+
+
+    await expect(response)
+      .rejects
+      .toThrow(
+        "OCPP timeout",
+      );
+
+  });
 
 });
