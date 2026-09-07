@@ -1,6 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { AuthorizationService } from "../../authorization/authorization.service";
 import { PrismaService } from "../../database/prisma.service";
 import { OcppAuditService } from "../services/ocpp-audit.service";
+import { ChargingAuthorizationPolicyService } from "../services/charging-authorization-policy.service";
 
 @Injectable()
 export class StartTransactionHandler {
@@ -10,6 +12,8 @@ export class StartTransactionHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: OcppAuditService,
+    private readonly authorizationService: AuthorizationService,
+    private readonly chargingPolicy: ChargingAuthorizationPolicyService,
   ) {}
 
   async handle(
@@ -23,6 +27,41 @@ export class StartTransactionHandler {
       meterStart,
       timestamp,
     } = payload;
+
+
+    let authorization;
+
+    try {
+
+      authorization =
+        await this.authorizationService.authorize(
+          idTag,
+        );
+
+
+      await this.chargingPolicy.canStartCharging(
+        authorization.userId,
+      );
+
+    } catch(error) {
+
+      this.logger.error(
+        `Charging authorization failed during StartTransaction: ${idTag}`,
+      );
+
+      this.logger.error(
+        error instanceof Error
+          ? error.stack
+          : JSON.stringify(error),
+      );
+
+      return {
+        idTagInfo:{
+          status:"Invalid",
+        },
+        transactionId:0,
+      };
+    }
 
 
     if (!connectorId || !idTag) {
@@ -83,9 +122,10 @@ export class StartTransactionHandler {
     const transaction =
       await this.prisma.ocppTransaction.create({
         data: {
-          transactionId: Math.floor(
-            Date.now() / 1000,
-          ),
+          transactionId:
+            Math.floor(
+              Math.random() * 1000000000,
+            ),
 
           chargePointId,
 

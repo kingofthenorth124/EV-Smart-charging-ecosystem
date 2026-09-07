@@ -1,6 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../database/prisma.service";
 import { OcppAuditService } from "../services/ocpp-audit.service";
+import { ChargingAuthorizationPolicyService } from "../services/charging-authorization-policy.service";
+import { OcppCommandService } from "../services/ocpp-command.service";
 
 @Injectable()
 export class MeterValuesHandler {
@@ -10,6 +12,8 @@ export class MeterValuesHandler {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: OcppAuditService,
+    private readonly chargingPolicy: ChargingAuthorizationPolicyService,
+    private readonly commandService: OcppCommandService,
   ) {}
 
   async handle(
@@ -22,7 +26,6 @@ export class MeterValuesHandler {
       transactionId,
       meterValue,
     } = payload;
-
 
     this.logger.log(
       `MeterValues received from ${chargePointId} connector ${connectorId}`,
@@ -39,13 +42,11 @@ export class MeterValuesHandler {
       },
     );
 
-
     if (!transactionId || !meterValue) {
       return {
         accepted: false,
       };
     }
-
 
     const transaction =
       await this.prisma.ocppTransaction.findUnique({
@@ -53,7 +54,6 @@ export class MeterValuesHandler {
           transactionId,
         },
       });
-
 
     if (!transaction) {
       this.logger.warn(
@@ -65,21 +65,17 @@ export class MeterValuesHandler {
       };
     }
 
-
     const samples = Array.isArray(meterValue)
       ? meterValue
       : [];
 
-
     let energyWh =
       transaction.energyWh;
-
 
     for (const entry of samples) {
 
       const values =
         entry.sampledValue ?? [];
-
 
       for (const sample of values) {
 
@@ -91,7 +87,6 @@ export class MeterValuesHandler {
           const parsed =
             Number(sample.value);
 
-
           if (!Number.isNaN(parsed)) {
             energyWh = Math.floor(parsed);
           }
@@ -99,23 +94,42 @@ export class MeterValuesHandler {
       }
     }
 
-
     await this.prisma.ocppTransaction.update({
       where: {
         id: transaction.id,
       },
-
       data: {
         energyWh,
         lastMeterValueAt: new Date(),
       },
     });
 
-
     this.logger.log(
       `Transaction ${transactionId} energy updated ${energyWh}Wh`,
     );
 
+    try {
+      const permission =
+        await this.chargingPolicy.canContinueCharging(
+          transactionId,
+          energyWh,
+        );
+
+
+      if (!permission.allowed) {
+
+        this.logger.warn(
+          `Wallet depleted, stopping transaction ${transactionId}`,
+        );
+
+        await this.commandService.remoteStopTransaction(
+          chargePointId,
+          transactionId,
+        );
+      }
+
+    } catch (error) {
+}
 
     return {
       accepted: true,

@@ -1,5 +1,6 @@
 import { OcppPendingCommandService } from "./services/ocpp-pending-command.service";
 import { Module } from "@nestjs/common";
+import { AuthorizationModule } from "../authorization/authorization.module";
 import { DatabaseModule } from "../database/database.module";
 
 import { OcppGateway } from "./gateway/ocpp.gateway";
@@ -23,11 +24,13 @@ import { AuthorizeHandler } from "./handlers/authorize.handler";
 import { StartTransactionHandler } from "./handlers/start-transaction.handler";
 import { MeterValuesHandler } from "./handlers/meter-values.handler";
 import { StopTransactionHandler } from "./handlers/stop-transaction.handler";
+import { ChargingAuthorizationPolicyService } from "./services/charging-authorization-policy.service";
 
 
 @Module({
   imports: [
     DatabaseModule,
+    AuthorizationModule,
   ],
 
   controllers: [
@@ -37,6 +40,7 @@ import { StopTransactionHandler } from "./handlers/stop-transaction.handler";
 
   providers: [
     OcppPendingCommandService,
+    ChargingAuthorizationPolicyService,
     OcppGateway,
 
     OcppConnectionService,

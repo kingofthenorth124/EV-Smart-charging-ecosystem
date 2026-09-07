@@ -8,7 +8,12 @@ import { OcppMessageRouter } from "./services/ocpp-message.router";
 
 describe("OCPP Module Regression", () => {
 
+  let remoteStopSpy: jest.SpyInstance;
+
   let app: INestApplication;
+  let prisma: any;
+  let testUserId: string;
+  let activeTransactionId: number;
   let commandService: OcppCommandService;
   let registry: OcppConnectionRegistry;
 
@@ -22,6 +27,62 @@ describe("OCPP Module Regression", () => {
     send: jest.fn(),
   } as any);
 
+  const createChargingTransaction = async () => {
+
+    await prisma.wallet.update({
+      where:{
+        userId:testUserId,
+      },
+      data:{
+        balanceKobo:100000,
+      },
+    });
+    const router =
+      app.get(OcppMessageRouter);
+const result =
+      await router.route(
+        chargePointId,
+        "StartTransaction",
+        {
+          connectorId:1,
+          idTag:"TEST123",
+          meterStart:0,
+          timestamp:
+            new Date().toISOString(),
+        },
+      );
+if (!result.transactionId) {
+      throw new Error(
+        "Failed to create charging transaction fixture: "
+        + JSON.stringify(result),
+      );
+    }
+
+
+    return result.transactionId;
+  };
+
+
+
+  beforeEach(() => {
+
+    remoteStopSpy =
+      jest.spyOn(
+        OcppCommandService.prototype,
+        "remoteStopTransaction",
+      )
+      .mockResolvedValue({
+        accepted:true,
+      } as any);
+
+  });
+
+
+  afterEach(() => {
+
+    remoteStopSpy?.mockRestore();
+
+  });
 
 
   beforeAll(async () => {
@@ -31,6 +92,58 @@ describe("OCPP Module Regression", () => {
 
     app =
       result.app;
+
+    prisma =
+      result.prisma;
+
+    const testUser =
+      await prisma.user.upsert({
+        where: {
+          email: "rfid-test@example.com",
+        },
+
+        update: {},
+
+        create: {
+          firstName: "Test",
+          lastName: "RFID",
+          email: "rfid-test@example.com",
+          phone: "08000000001",
+          passwordHash: "test",
+          status: "ACTIVE",
+
+          wallet: {
+            create: {
+              balanceKobo: 100000,
+              status: "ACTIVE",
+            },
+          },
+
+          credentials: {
+            create: {
+              identifier: "TEST123",
+              status: "ACTIVE",
+            },
+          },
+        },
+      });
+
+    testUserId = testUser.id;
+
+
+    await prisma.chargingCredential.upsert({
+      where: {
+        identifier: "TEST123",
+      },
+
+      update: {},
+
+      create: {
+        identifier: "TEST123",
+        userId: testUser.id,
+        status: "ACTIVE",
+      },
+    });
 
     commandService =
       app.get(OcppCommandService);
@@ -151,6 +264,82 @@ describe("OCPP Module Regression", () => {
 
 
 
+
+    it("StartTransaction rejects unknown RFID", async () => {
+
+      const router =
+        app.get(OcppMessageRouter);
+
+
+      const result =
+        await router.route(
+          chargePointId,
+          "StartTransaction",
+          {
+            connectorId:1,
+            idTag:"UNKNOWN_RFID_CARD",
+            meterStart:0,
+          },
+        );
+
+
+      expect(
+        result.idTagInfo.status,
+      )
+        .toBe("Invalid");
+
+
+      expect(
+        result.transactionId,
+      )
+        .toBe(0);
+
+    });
+
+
+
+    it("StartTransaction rejects RFID with insufficient wallet balance", async () => {
+
+      await prisma.wallet.update({
+        where:{
+          userId: testUserId,
+        },
+        data:{
+          balanceKobo: 500,
+        },
+      });
+
+
+      const router =
+        app.get(OcppMessageRouter);
+
+
+      const result =
+        await router.route(
+          chargePointId,
+          "StartTransaction",
+          {
+            connectorId:1,
+            idTag:"TEST123",
+            meterStart:0,
+          },
+        );
+
+
+      expect(
+        result.idTagInfo.status,
+      )
+        .toBe("Invalid");
+
+
+      expect(
+        result.transactionId,
+      )
+        .toBe(0);
+
+    });
+
+
     it("StartTransaction accepted", async () => {
 
       const router =
@@ -174,8 +363,99 @@ describe("OCPP Module Regression", () => {
       expect(result.transactionId)
         .toBeDefined();
 
+
+      activeTransactionId =
+        result.transactionId;
+
     });
 
+
+
+
+    it("MeterValues stops charging when prepaid wallet is depleted", async () => {
+
+      const router =
+        app.get(OcppMessageRouter);
+
+
+      await prisma.wallet.update({
+        where: {
+          userId: testUserId,
+        },
+        data: {
+          balanceKobo: 100000,
+        },
+      });
+
+
+      const start =
+        await router.route(
+          chargePointId,
+          "StartTransaction",
+          {
+            connectorId:1,
+            idTag:"TEST123",
+            meterStart:0,
+            timestamp:
+              new Date().toISOString(),
+          },
+        );
+
+
+      const transactionId =
+        start.transactionId;
+await prisma.wallet.update({
+        where:{
+          userId:testUserId,
+        },
+        data:{
+          balanceKobo:1,
+        },
+      });
+
+
+      const handlerCommandService =
+        app.get(OcppCommandService);
+
+      const commandSpy =
+        jest
+          .spyOn(
+            handlerCommandService,
+            "remoteStopTransaction",
+          )
+          .mockResolvedValue({
+            accepted:true,
+          } as any);
+const result =
+        await router.route(
+          chargePointId,
+          "MeterValues",
+          {
+            connectorId:1,
+            transactionId,
+            meterValue:[
+              {
+                sampledValue:[
+                  {
+                    value:"50000",
+                    unit:"Wh",
+                  },
+                ],
+              },
+            ],
+          },
+        );
+
+
+      expect(result.accepted)
+        .toBeDefined();
+expect(commandSpy)
+        .toHaveBeenCalled();
+
+
+      commandSpy.mockRestore();
+
+    });
 
 
     it("MeterValues accepted", async () => {
@@ -184,18 +464,22 @@ describe("OCPP Module Regression", () => {
         app.get(OcppMessageRouter);
 
 
+      const transactionId =
+        await createChargingTransaction();
+
+
       const result =
         await router.route(
           chargePointId,
           "MeterValues",
           {
             connectorId:1,
-            transactionId:1788760657,
+            transactionId,
             meterValue:[
               {
                 sampledValue:[
                   {
-                    value:"2500",
+                    value:"250000",
                     unit:"Wh",
                   },
                 ],
@@ -218,12 +502,16 @@ describe("OCPP Module Regression", () => {
         app.get(OcppMessageRouter);
 
 
+      const transactionId =
+        await createChargingTransaction();
+
+
       const result =
         await router.route(
           chargePointId,
           "StopTransaction",
           {
-            transactionId:1788760657,
+            transactionId,
             meterStop:5000,
             reason:"Local",
           },
@@ -281,10 +569,14 @@ describe("OCPP Module Regression", () => {
 
     it("RemoteStopTransaction dispatches", async()=>{
 
+      const transactionId =
+        await createChargingTransaction();
+
+
       const result =
         await commandService.remoteStopTransaction(
           chargePointId,
-          1788760657,
+          transactionId,
         );
 
 
@@ -472,7 +764,7 @@ describe("OCPP Failure Regression", () => {
 
 describe("OCPP Pending Command Lifecycle", () => {
 
-  let app: any;
+  let pending: OcppPendingCommandService;
 
 
   beforeAll(async () => {
@@ -480,24 +772,19 @@ describe("OCPP Pending Command Lifecycle", () => {
     const result =
       await createApp();
 
-    app =
-      result.app;
+    pending =
+      result.app.get(OcppPendingCommandService);
 
   });
 
 
-  afterAll(async () => {
 
-    await app.close();
 
-  });
+
+
 
 
   it("resolves pending command when CALL_RESULT arrives", async () => {
-
-    const pending =
-      app.get(OcppPendingCommandService);
-
 
     const messageId =
       "test-message-001";
@@ -530,10 +817,6 @@ describe("OCPP Pending Command Lifecycle", () => {
 
 
   it("times out missing CALL_RESULT", async () => {
-
-    const pending =
-      app.get(OcppPendingCommandService);
-
 
     const response =
       pending.register(
