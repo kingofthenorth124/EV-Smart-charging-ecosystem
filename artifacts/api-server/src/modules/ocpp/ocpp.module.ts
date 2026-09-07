@@ -1,3 +1,4 @@
+import { OcppPendingCommandService } from "./services/ocpp-pending-command.service";
 import { Module } from "@nestjs/common";
 import { DatabaseModule } from "../database/database.module";
 
@@ -35,6 +36,7 @@ import { StopTransactionHandler } from "./handlers/stop-transaction.handler";
   ],
 
   providers: [
+    OcppPendingCommandService,
     OcppGateway,
 
     OcppConnectionService,

@@ -1,3 +1,4 @@
+import { OcppPendingCommandService } from "../services/ocpp-pending-command.service";
 import { Injectable, Logger } from "@nestjs/common";
 import {
   OnGatewayConnection,
@@ -88,6 +89,7 @@ implements OnGatewayConnection, OnGatewayDisconnect {
 
 
   constructor(
+    private readonly pendingCommands: OcppPendingCommandService,
     private readonly connectionService:
       OcppConnectionService,
 

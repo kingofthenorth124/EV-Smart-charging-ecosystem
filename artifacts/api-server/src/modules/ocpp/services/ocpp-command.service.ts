@@ -3,6 +3,7 @@ import { OcppConnectionRegistry } from "./ocpp-connection.registry";
 import { buildCallFrame } from "../core/ocpp-frame.builder";
 import { OcppAuditService } from "./ocpp-audit.service";
 import { PrismaService } from "../../database/prisma.service";
+import { OcppPendingCommandService } from "./ocpp-pending-command.service";
 
 
 @Injectable()
@@ -21,6 +22,9 @@ export class OcppCommandService {
 
     private readonly prisma:
       PrismaService,
+
+    private readonly pendingCommands:
+      OcppPendingCommandService,
   ) {}
 
 
