@@ -1,4 +1,4 @@
-import { Logger } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -11,6 +11,7 @@ import type { WebSocket } from "ws";
 import { OcppConnectionService } from "../services/ocpp-connection.service";
 import { OcppMessageRouter } from "../services/ocpp-message.router";
 import { OcppConnectionRegistry } from "../services/ocpp-connection.registry";
+import { PrismaService } from "../../database/prisma.service";
 
 import {
   parseOcppFrame,
@@ -72,12 +73,9 @@ function validateProtocol(
 
 
 
-@WebSocketGateway({
-  path: "/ocpp",
-})
+@Injectable()
 export class OcppGateway
 implements OnGatewayConnection, OnGatewayDisconnect {
-
 
   private readonly logger =
     new Logger(OcppGateway.name);
@@ -98,7 +96,14 @@ implements OnGatewayConnection, OnGatewayDisconnect {
 
     private readonly registry:
       OcppConnectionRegistry,
-  ) {}
+
+    private readonly prisma: PrismaService,
+  ) {
+    this.logger.log("OCPP Gateway booted");
+    this.logger.log(
+      `Prisma check chargePoint=${typeof this.prisma?.chargePoint}`,
+    );
+  }
 
 
 
@@ -106,6 +111,11 @@ implements OnGatewayConnection, OnGatewayDisconnect {
     client: WebSocket,
     request: IncomingMessage,
   ): Promise<void> {
+
+    this.logger.log(
+      `Incoming websocket request ${request.url} protocol=${request.headers["sec-websocket-protocol"]}`,
+    );
+
 
 
     if (!validateProtocol(request)) {
@@ -124,60 +134,57 @@ implements OnGatewayConnection, OnGatewayDisconnect {
     const chargePointId =
       extractChargePointId(request);
 
-
-
     if (!chargePointId) {
-
       this.logger.warn(
-        "Rejected connection without charge point id",
+        `Rejected connection without charge point id. URL=${request.url}`,
       );
-
       client.close();
-
       return;
     }
 
+    try {
+      const chargePoint = await this.prisma.chargePoint.findUnique({
+        where: { serialNumber: chargePointId },
+      });
 
-
-    this.chargePointBySocket.set(
-      client,
-      chargePointId,
-    );
-
-
-
-    this.registry.register(
-      chargePointId,
-      client,
-    );
-
-
-
-    await this.connectionService.register(
-      chargePointId,
-      client,
-      request.socket.remoteAddress,
-    );
-
-
-
-    client.on(
-      "message",
-      (raw: Buffer) => {
-
-        void this.handleMessage(
-          client,
-          chargePointId,
-          raw,
+      if (!chargePoint) {
+        this.logger.warn(
+          `Rejected connection: unknown charge point ${chargePointId}`,
         );
+        client.close();
+        return;
+      }
 
-      },
-    );
+      const internalId = chargePoint.id;
+
+      this.chargePointBySocket.set(client, internalId);
+      this.registry.register(internalId, client);
+
+      client.on("error", (error) => {
+        this.logger.error(`WebSocket error ${error.message}`);
+      });
 
 
-    this.logger.log(
-      `OCPP charger connected: ${chargePointId}`,
-    );
+
+      await this.connectionService.register(
+        internalId,
+        client,
+        request.socket.remoteAddress,
+      );
+
+      client.on("message", (raw: Buffer) => {
+        void this.handleMessage(client, internalId, raw);
+      });
+
+      this.logger.log(
+        `OCPP charger connected: ${chargePointId} (${internalId})`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `handleConnection failed for ${chargePointId}: ${(error as Error).message}`,
+      );
+      client.close();
+    }
   }
 
 

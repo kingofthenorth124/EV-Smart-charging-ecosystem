@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { OcppConnectionRegistry } from "./ocpp-connection.registry";
 import { buildCallFrame } from "../core/ocpp-frame.builder";
 import { OcppAuditService } from "./ocpp-audit.service";
+import { PrismaService } from "../../database/prisma.service";
 
 
 @Injectable()
@@ -17,6 +18,9 @@ export class OcppCommandService {
 
     private readonly auditService:
       OcppAuditService,
+
+    private readonly prisma:
+      PrismaService,
   ) {}
 
 
@@ -131,9 +135,43 @@ export class OcppCommandService {
       );
 
 
+    const chargePoint =
+      await this.prisma.chargePoint.findUnique({
+        where: {
+          id: chargePointId,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+
+    if (!chargePoint) {
+      this.logger.warn(
+        `Cannot dispatch ${action}: unknown charge point ${chargePointId}`,
+      );
+
+      await this.auditService.logEvent({
+        chargePointId,
+        action,
+        status: "FAILED",
+        payload,
+      });
+
+      return {
+        accepted: false,
+        chargePointId,
+        action,
+        payload,
+        frame,
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+
     const sent =
       this.registry.send(
-        chargePointId,
+        chargePoint.id,
         frame,
       );
 

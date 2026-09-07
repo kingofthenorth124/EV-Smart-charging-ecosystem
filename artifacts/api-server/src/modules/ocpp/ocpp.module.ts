@@ -31,6 +31,7 @@ import { StopTransactionHandler } from "./handlers/stop-transaction.handler";
 
   controllers: [
     OcppAuditController,
+    OcppCommandController,
   ],
 
   providers: [
@@ -48,7 +49,6 @@ import { StopTransactionHandler } from "./handlers/stop-transaction.handler";
     OcppAuditService,
     OcppAuditQueryService,
     OcppCommandService,
-    OcppCommandController,
     StatusNotificationHandler,
     AuthorizeHandler,
     StartTransactionHandler,

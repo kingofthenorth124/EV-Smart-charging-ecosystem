@@ -60,7 +60,7 @@ export class StartTransactionHandler {
     const connector =
       await this.prisma.connector.findFirst({
         where: {
-          id: connectorId,
+          connectorNumber: connectorId,
           chargePointId,
         },
       });

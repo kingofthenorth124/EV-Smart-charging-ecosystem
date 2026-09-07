@@ -4,10 +4,13 @@
  */
 import "reflect-metadata";
 import { NestFactory } from "@nestjs/core";
+import { OcppWsAdapter } from "./modules/ocpp/adapters/ocpp-ws.adapter";
 import { BadRequestException, ValidationPipe } from "@nestjs/common";
 import { Logger } from "nestjs-pino";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
+import { startOcppServer } from "./modules/ocpp/bootstrap/ocpp-server";
+import { OcppGateway } from "./modules/ocpp/gateway/ocpp.gateway";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
@@ -89,7 +92,31 @@ async function bootstrap(): Promise<void> {
 
   // ── Listen ────────────────────────────────────────────────────────────────
   const port = parseInt(process.env.PORT ?? "3000", 10);
+  app.useWebSocketAdapter(
+    new OcppWsAdapter(app),
+  );
+
+  console.log("WS adapter enabled");
+
+
+  const httpServer = app.getHttpServer();
+
+  httpServer.on("upgrade", (request: import("http").IncomingMessage) => {
+    console.log(
+      "RAW WS UPGRADE:",
+      request.url,
+      request.headers["sec-websocket-protocol"],
+    );
+  });
+
   await app.listen(port, "0.0.0.0");
+
+  const ocppGateway = app.get(OcppGateway);
+
+  startOcppServer(
+    app.getHttpServer(),
+    ocppGateway,
+  );
 
   const logger = app.get(Logger);
   logger.log(`🐪 Camel Mobility API listening on port ${port}`, "Bootstrap");

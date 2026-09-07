@@ -22,9 +22,11 @@ import { ChargingModule } from "./modules/charging/charging.module";
 import { PaymentModule } from "./modules/payment/payment.module";
 import { AuthorizationModule } from "./modules/authorization/authorization.module";
 import { EmailModule } from "./common/email/email.module";
+import { OcppModule } from "./modules/ocpp/ocpp.module";
 
 @Module({
   imports: [
+
     // ── Domain events ───────────────────────────────────────────────────────
     EventEmitterModule.forRoot(),
 
@@ -122,6 +124,7 @@ import { EmailModule } from "./common/email/email.module";
     ChargingModule,
     PaymentModule,
     AuthorizationModule,
+    OcppModule,
   ],
 
   providers: [
