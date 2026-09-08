@@ -51,3 +51,11 @@ Thumbs.db
 # Generated Expo static build output
 artifacts/mobile/static-build/
 artifacts/mobile/expo-env.d.ts
+
+# OCPP local test scripts
+artifacts/api-server/test-charger.js
+artifacts/api-server/check-charger.js
+artifacts/api-server/create-test-charger.js
+artifacts/api-server/create-test-connector.js
+artifacts/api-server/create-test-customer.js
+artifacts/api-server/fix-test-rfid.js
