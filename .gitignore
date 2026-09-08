@@ -59,3 +59,7 @@ artifacts/api-server/create-test-charger.js
 artifacts/api-server/create-test-connector.js
 artifacts/api-server/create-test-customer.js
 artifacts/api-server/fix-test-rfid.js
+
+# OCPP test runner backups
+artifacts/api-server/run-ocpp-tests.sh
+artifacts/api-server/test-charger.backup.js
