@@ -321,17 +321,6 @@ if (!result.transactionId) {
         },
       });
 
-    console.log(
-      "TEST123 OWNER",
-      JSON.stringify(
-        {
-          userId:credentialCheck?.userId,
-          wallet:credentialCheck?.user?.wallet?.balanceKobo,
-        },
-        null,
-        2
-      )
-    );
 
 
       const router =
