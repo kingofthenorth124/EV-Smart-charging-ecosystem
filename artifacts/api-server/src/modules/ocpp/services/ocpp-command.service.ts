@@ -1,226 +1,258 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { OcppConnectionRegistry } from "./ocpp-connection.registry";
-import { buildCallFrame } from "../core/ocpp-frame.builder";
-import { OcppAuditService } from "./ocpp-audit.service";
-import { PrismaService } from "../../database/prisma.service";
-import { OcppPendingCommandService } from "./ocpp-pending-command.service";
-
+import { Injectable, Logger } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 
 @Injectable()
 export class OcppCommandService {
 
-  private readonly logger =
-    new Logger(OcppCommandService.name);
+  private readonly logger = new Logger(OcppCommandService.name);
+
+  private prisma: PrismaClient;
 
 
-  constructor(
-    private readonly registry:
-      OcppConnectionRegistry,
+  constructor() {
 
-    private readonly auditService:
-      OcppAuditService,
-
-    private readonly prisma:
-      PrismaService,
-
-    private readonly pendingCommands:
-      OcppPendingCommandService,
-  ) {}
-
-
-  /**
-   * Send RemoteStartTransaction
-   */
-  async remoteStartTransaction(
-    chargePointId: string,
-    connectorId: number,
-    idTag: string,
-  ) {
-
-    return this.sendCommand(
-      chargePointId,
-      "RemoteStartTransaction",
-      {
-        connectorId,
-        idTag,
-      },
-    );
-  }
-
-
-  /**
-   * Send RemoteStopTransaction
-   */
-  async remoteStopTransaction(
-    chargePointId: string,
-    transactionId: number,
-  ) {
-
-    return this.sendCommand(
-      chargePointId,
-      "RemoteStopTransaction",
-      {
-        transactionId,
-      },
-    );
-  }
-
-
-  /**
-   * Reset charger
-   */
-  async reset(
-    chargePointId: string,
-    type: "Hard" | "Soft" = "Soft",
-  ) {
-
-    return this.sendCommand(
-      chargePointId,
-      "Reset",
-      {
-        type,
-      },
-    );
-  }
-
-
-  /**
-   * Unlock connector
-   */
-  async unlockConnector(
-    chargePointId: string,
-    connectorId: number,
-  ) {
-
-    return this.sendCommand(
-      chargePointId,
-      "UnlockConnector",
-      {
-        connectorId,
-      },
-    );
-  }
-
-
-  /**
-   * Change charger availability
-   */
-  async changeAvailability(
-    chargePointId: string,
-    connectorId: number,
-    type: "Operative" | "Inoperative",
-  ) {
-
-    return this.sendCommand(
-      chargePointId,
-      "ChangeAvailability",
-      {
-        connectorId,
-        type,
-      },
-    );
-  }
-
-
-  /**
-   * Central command dispatcher
-   * Gateway integration comes next
-   */
-  private async sendCommand(
-    chargePointId: string,
-    action: string,
-    payload: any,
-  ) {
-
-    const frame =
-      buildCallFrame(
-        action,
-        payload,
-      );
-
-
-    const chargePoint =
-      await this.prisma.chargePoint.findUnique({
-        where: {
-          id: chargePointId,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-
-    if (!chargePoint) {
-      this.logger.warn(
-        `Cannot dispatch ${action}: unknown charge point ${chargePointId}`,
-      );
-
-      await this.auditService.logEvent({
-        chargePointId,
-        action,
-        status: "FAILED",
-        payload,
-      });
-
-      return {
-        accepted: false,
-        chargePointId,
-        action,
-        payload,
-        frame,
-        timestamp: new Date().toISOString(),
-      };
-    }
-
-
-    const sent =
-      this.registry.send(
-        chargePoint.id,
-        frame,
-      );
-
-
-    if (!sent) {
-
-      this.logger.warn(
-        `OCPP command failed dispatch ${action} ${chargePointId}`,
-      );
-
-    }
-
-
-    this.logger.log(
-      `OCPP command ${action} dispatch to ${chargePointId}: ${sent}`,
-    );
-
-
-    await this.auditService.logEvent({
-      chargePointId,
-
-      action,
-
-      status:
-        sent
-          ? "SENT"
-          : "FAILED",
-
-      payload,
+    const pool = new pg.Pool({
+      connectionString: process.env.DATABASE_URL,
     });
 
 
-    return {
-      accepted: sent,
+    this.prisma = new PrismaClient({
+      adapter: new PrismaPg(pool),
+    });
 
-      chargePointId,
-
-      action,
-
-      payload,
-
-      frame,
-
-      timestamp:
-        new Date().toISOString(),
-    };
   }
+
+
+
+  async createCommand(data: {
+
+    chargePointId: string;
+
+    command: string;
+
+    payload?: any;
+
+  }) {
+
+
+    const command =
+      await this.prisma.ocppCommand.create({
+
+        data: {
+
+          chargePointId: data.chargePointId,
+
+          command: data.command,
+
+          payload: data.payload,
+
+          status: "PENDING",
+
+        },
+
+      });
+
+
+    this.logger.log(
+      `Created OCPP command ${command.id}`
+    );
+
+
+    return command;
+
+  }
+
+
+
+
+  async markSent(id:string){
+
+    return this.prisma.ocppCommand.update({
+
+      where:{
+        id
+      },
+
+      data:{
+
+        status:"SENT",
+
+        sentAt:new Date(),
+
+      },
+
+    });
+
+  }
+
+
+
+
+  async markCompleted(
+    id:string,
+    response:any
+  ){
+
+    return this.prisma.ocppCommand.update({
+
+      where:{
+        id
+      },
+
+      data:{
+
+        status:"ACCEPTED",
+
+        response,
+
+        completedAt:new Date(),
+
+      },
+
+    });
+
+  }
+
+
+
+
+
+  async markFailed(
+    id:string,
+    response:any
+  ){
+
+    return this.prisma.ocppCommand.update({
+
+      where:{
+        id
+      },
+
+      data:{
+
+        status:"FAILED",
+
+        response,
+
+        completedAt:new Date(),
+
+      },
+
+    });
+
+  }
+
+
+
+
+  async getPending(){
+
+    return this.prisma.ocppCommand.findMany({
+
+      where:{
+        status:"PENDING"
+      },
+
+      orderBy:{
+        createdAt:"asc"
+      }
+
+    });
+
+  }
+
+
+
+  async remoteStartTransaction(
+    chargePointId: string,
+    connectorId: number,
+    idTag: string
+  ) {
+
+    return this.createCommand({
+      chargePointId,
+      command: "RemoteStartTransaction",
+      payload: {
+        connectorId,
+        idTag
+      }
+    });
+
+  }
+
+
+
+  async remoteStopTransaction(
+    chargePointId: string,
+    transactionId: number
+  ) {
+
+    return this.createCommand({
+      chargePointId,
+      command: "RemoteStopTransaction",
+      payload: {
+        transactionId
+      }
+    });
+
+  }
+
+
+
+  async reset(
+    chargePointId: string,
+    type: "Soft" | "Hard" = "Soft"
+  ) {
+
+    return this.createCommand({
+      chargePointId,
+      command: "Reset",
+      payload: {
+        type
+      }
+    });
+
+  }
+
+
+
+  async unlockConnector(
+    chargePointId: string,
+    connectorId: number
+  ) {
+
+    return this.createCommand({
+      chargePointId,
+      command: "UnlockConnector",
+      payload: {
+        connectorId
+      }
+    });
+
+  }
+
+
+
+  async changeAvailability(
+    chargePointId: string,
+    connectorId: number,
+    type: "Operative" | "Inoperative"
+  ) {
+
+    return this.createCommand({
+      chargePointId,
+      command: "ChangeAvailability",
+      payload: {
+        connectorId,
+        type
+      }
+    });
+
+  }
+
+
+
+
 }
