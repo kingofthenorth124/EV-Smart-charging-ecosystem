@@ -150,6 +150,65 @@ export class StartTransactionHandler {
       `OCPP transaction created ${transaction.transactionId}`,
     );
 
+    /*
+     * MODULE 5 PHASE 3:
+     * Automatically create charging session
+     * when OCPP StartTransaction succeeds.
+     */
+
+    const credential =
+      await this.prisma.chargingCredential.findUnique({
+        where:{
+          identifier:idTag,
+        },
+        include:{
+          user:true,
+        },
+      });
+
+
+    if (credential) {
+
+      const station =
+        await this.prisma.station.findUnique({
+          where:{
+            id: transaction.stationId,
+          },
+        });
+
+
+      if (station) {
+
+        await this.prisma.chargingSession.create({
+          data:{
+            userId:
+              credential.userId,
+
+            stationId:
+              station.id,
+
+            status:
+              "ACTIVE",
+
+            energyWh:
+              0,
+
+            costKobo:
+              0,
+
+            tariffKoboPerKwh:
+              station.tariffKoboPerKwh,
+
+            powerKw:
+              station.powerKw,
+          },
+        });
+
+      }
+
+    }
+
+
     await this.auditService.logTransactionEvent(
       chargePointId,
       transaction.transactionId,
