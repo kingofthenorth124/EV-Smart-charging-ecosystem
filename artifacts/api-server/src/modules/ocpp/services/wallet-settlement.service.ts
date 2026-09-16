@@ -68,8 +68,15 @@ export class WalletSettlementService {
     }
 
 
+    const settledCostKobo =
+      Math.min(
+        costKobo,
+        wallet.balanceKobo,
+      );
+
+
     const newBalance =
-      wallet.balanceKobo - costKobo;
+      wallet.balanceKobo - settledCostKobo;
 
 
     const transaction =
@@ -81,7 +88,7 @@ export class WalletSettlementService {
           type: "CHARGE",
 
           amountKobo:
-            -costKobo,
+            -settledCostKobo,
 
           balanceAfterKobo:
             newBalance,
@@ -110,7 +117,7 @@ export class WalletSettlementService {
 
 
     this.logger.log(
-      `Wallet charged ${costKobo} kobo for session ${sessionId}`,
+      `Wallet charged ${settledCostKobo} kobo for session ${sessionId}`,
     );
 
 
