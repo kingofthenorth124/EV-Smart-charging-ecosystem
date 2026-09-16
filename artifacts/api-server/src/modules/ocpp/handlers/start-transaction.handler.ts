@@ -179,6 +179,23 @@ export class StartTransactionHandler {
 
       if (station) {
 
+        const existingSession =
+          await this.prisma.chargingSession.findFirst({
+            where:{
+              userId: credential.userId,
+              status:"ACTIVE",
+            },
+          });
+
+
+        if (existingSession) {
+
+          this.logger.warn(
+            `Active charging session already exists for user ${credential.userId}`
+          );
+
+        } else {
+
         await this.prisma.chargingSession.create({
           data:{
             userId:
@@ -203,6 +220,8 @@ export class StartTransactionHandler {
               station.powerKw,
           },
         });
+
+        }
 
       }
 

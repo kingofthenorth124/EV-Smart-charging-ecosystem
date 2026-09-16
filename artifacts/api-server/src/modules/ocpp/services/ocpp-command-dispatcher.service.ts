@@ -1,7 +1,5 @@
+import { PrismaService } from "../../database/prisma.service";
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
 
 import { OcppConnectionRegistry } from './ocpp-connection.registry';
 
@@ -13,23 +11,10 @@ export class OcppCommandDispatcherService {
     new Logger(OcppCommandDispatcherService.name);
 
 
-  private prisma: PrismaClient;
-
-
   constructor(
-    private readonly connectionRegistry: OcppConnectionRegistry
-  ) {
-
-    const pool = new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
-    });
-
-
-    this.prisma = new PrismaClient({
-      adapter: new PrismaPg(pool),
-    });
-
-  }
+    private readonly prisma: PrismaService,
+    private readonly connectionRegistry: OcppConnectionRegistry,
+  ) {}
 
 
 
