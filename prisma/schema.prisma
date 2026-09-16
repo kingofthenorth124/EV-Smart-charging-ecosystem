@@ -266,6 +266,8 @@ model ChargingSession {
   user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions     WalletTransaction[]
 
+  ocppTransaction OcppTransaction?
+
   @@index([userId, startedAt])
   @@index([userId, status])
   @@map("charging_sessions")
@@ -459,6 +461,10 @@ model OcppTransaction {
   connector Connector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
 
   station Station @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  chargingSessionId String? @unique
+
+  chargingSession ChargingSession? @relation(fields: [chargingSessionId], references: [id], onDelete: SetNull)
 
   @@index([chargePointId])
   @@index([connectorId])
