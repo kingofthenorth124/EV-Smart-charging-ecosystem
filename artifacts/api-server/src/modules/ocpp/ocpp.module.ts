@@ -19,6 +19,7 @@ import { OcppAuditService } from "./services/ocpp-audit.service";
 import { OcppAuditQueryService } from "./services/ocpp-audit-query.service";
 import { OcppCommandService } from "./services/ocpp-command.service";
 import { OcppCommandDispatcherService } from "./services/ocpp-command-dispatcher.service";
+import { OcppCommandExecutorService } from "./services/ocpp-command-executor.service";
 
 
 import { OcppCommandController } from "./controllers/ocpp-command.controller";
@@ -59,6 +60,7 @@ import { ChargingAuthorizationPolicyService } from "./services/charging-authoriz
     OcppAuditQueryService,
     OcppCommandService,
     OcppCommandDispatcherService,
+    OcppCommandExecutorService,
     StatusNotificationHandler,
     AuthorizeHandler,
     StartTransactionHandler,
