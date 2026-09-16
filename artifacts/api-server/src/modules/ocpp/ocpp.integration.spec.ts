@@ -835,3 +835,154 @@ describe("OCPP Pending Command Lifecycle", () => {
   });
 
 });
+
+
+describe("OCPP Command Response Reconciliation", () => {
+
+
+  let responseService: any;
+  let responsePrisma: any;
+  let responseApp: INestApplication;
+  const responseChargePointId =
+    "016b95c7-6a6f-478f-896d-a79319ef683e";
+
+
+
+  beforeAll(async () => {
+
+    const result =
+      await createApp();
+
+    responseApp =
+      result.app;
+
+    responsePrisma =
+      result.prisma;
+
+    responseService =
+      responseApp.get(
+        require("./services/ocpp-command-response.service")
+        .OcppCommandResponseService
+      );
+
+  });
+
+
+  afterAll(async () => {
+
+    await responseApp.close();
+
+  });
+
+
+
+
+  it("marks command COMPLETED after CALL_RESULT response", async () => {
+
+
+    const command =
+      await responsePrisma.ocppCommand.create({
+
+        data: {
+
+          chargePointId: responseChargePointId,
+
+          command:
+            "RemoteStartTransaction",
+
+          payload:{
+            connectorId:1,
+          },
+
+          status:
+            "SENT",
+
+        },
+
+      });
+
+
+
+    const updated =
+      await responseService.handleResponse(
+        command.id,
+        {
+          status:
+            "Accepted",
+        },
+      );
+
+
+
+    expect(updated.status)
+      .toBe("COMPLETED");
+
+
+    expect(updated.response)
+      .toEqual({
+        status:"Accepted",
+      });
+
+
+  });
+
+
+
+  it("marks command FAILED after CALL_ERROR response", async () => {
+
+
+    const command =
+      await responsePrisma.ocppCommand.create({
+
+        data: {
+
+          chargePointId: responseChargePointId,
+
+          command:
+            "RemoteStopTransaction",
+
+          payload:{
+            transactionId:123,
+          },
+
+          status:
+            "SENT",
+
+        },
+
+      });
+
+
+
+    const updated =
+      await responseService.markFailed(
+        command.id,
+        {
+          errorCode:
+            "InternalError",
+
+          description:
+            "Charger rejected request",
+        },
+      );
+
+
+
+    expect(updated.status)
+      .toBe("FAILED");
+
+
+    expect(updated.response)
+      .toEqual({
+        errorCode:
+          "InternalError",
+
+        description:
+          "Charger rejected request",
+      });
+
+
+  });
+
+
+});
