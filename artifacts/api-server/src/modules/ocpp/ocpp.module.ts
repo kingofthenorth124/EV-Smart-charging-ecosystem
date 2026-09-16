@@ -18,6 +18,9 @@ import { WalletSettlementService } from "./services/wallet-settlement.service";
 import { OcppAuditService } from "./services/ocpp-audit.service";
 import { OcppAuditQueryService } from "./services/ocpp-audit-query.service";
 import { OcppCommandService } from "./services/ocpp-command.service";
+import { OcppCommandDispatcherService } from "./services/ocpp-command-dispatcher.service";
+
+
 import { OcppCommandController } from "./controllers/ocpp-command.controller";
 import { StatusNotificationHandler } from "./handlers/status-notification.handler";
 import { AuthorizeHandler } from "./handlers/authorize.handler";
@@ -55,6 +58,7 @@ import { ChargingAuthorizationPolicyService } from "./services/charging-authoriz
     OcppAuditService,
     OcppAuditQueryService,
     OcppCommandService,
+    OcppCommandDispatcherService,
     StatusNotificationHandler,
     AuthorizeHandler,
     StartTransactionHandler,
