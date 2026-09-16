@@ -1,5 +1,6 @@
 import { OcppPendingCommandService } from "../services/ocpp-pending-command.service";
 import { Injectable, Logger } from "@nestjs/common";
+import { OcppCommandResponseService } from "../services/ocpp-command-response.service";
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -89,6 +90,9 @@ implements OnGatewayConnection, OnGatewayDisconnect {
 
 
   constructor(
+
+    private readonly commandResponseService: OcppCommandResponseService,
+
     private readonly pendingCommands: OcppPendingCommandService,
     private readonly connectionService:
       OcppConnectionService,
@@ -273,6 +277,32 @@ implements OnGatewayConnection, OnGatewayDisconnect {
 
     }
 
+
+
+    if (frame.type === "CALL_RESULT") {
+
+      await this.commandResponseService.handleResponse(
+        frame.uniqueId,
+        frame.payload,
+      );
+
+      return;
+    }
+
+
+    if (frame.type === "CALL_ERROR") {
+
+      await this.commandResponseService.markFailed(
+        frame.uniqueId,
+        {
+          errorCode: frame.errorCode,
+          errorDescription: frame.errorDescription,
+          details: frame.details,
+        },
+      );
+
+      return;
+    }
 
 
     if (frame.type !== "CALL") {
