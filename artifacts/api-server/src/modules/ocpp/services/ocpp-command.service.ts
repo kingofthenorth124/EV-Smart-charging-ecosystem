@@ -255,4 +255,18 @@ export class OcppCommandService {
 
 
 
+
+  async getCommand(commandId: string) {
+
+    return this.prisma.ocppCommand.findUnique({
+      where: {
+        id: commandId,
+      },
+    });
+
+  }
+
+
+
+
 }
