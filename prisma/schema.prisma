@@ -388,6 +388,8 @@ model ChargePoint {
   ocppTransactions OcppTransaction[]
   ocppConnections  OcppConnection[]
   heartbeatLogs    HeartbeatLog[]
+
+  ocppCommands OcppCommand[]
 }
 
 model Connector {
@@ -497,3 +499,41 @@ model OcppAuditEvent {
   @@index([action])
   @@index([createdAt])
 }
+
+
+// =====================================
+// MODULE 5 PHASE 4.1 OCPP COMMAND QUEUE
+// =====================================
+
+model OcppCommand {
+
+  id String @id @default(cuid())
+
+  chargePointId String
+
+  command String
+
+  payload Json?
+
+  status String @default("PENDING")
+
+  response Json?
+
+  createdAt DateTime @default(now())
+
+  sentAt DateTime?
+
+  completedAt DateTime?
+
+
+  chargePoint ChargePoint @relation(fields: [chargePointId], references: [id], onDelete: Cascade)
+
+
+  @@index([chargePointId])
+
+  @@index([status])
+
+  @@index([command])
+
+}
+
