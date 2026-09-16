@@ -1,31 +1,26 @@
+import { PrismaService } from "../../database/prisma.service";
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
 
 
 @Injectable()
 export class OcppCommandResponseService {
 
+
   private readonly logger = new Logger(
     OcppCommandResponseService.name
   );
 
-  private prisma: PrismaClient;
+  private readonly prisma: PrismaService;
 
 
-  constructor() {
+  constructor(
+    prismaService: PrismaService,
+  ) {
 
-    const pool = new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
-    });
-
-
-    this.prisma = new PrismaClient({
-      adapter: new PrismaPg(pool),
-    });
+    this.prisma = prismaService;
 
   }
+
 
 
   /**
@@ -52,6 +47,17 @@ export class OcppCommandResponseService {
       );
 
       return null;
+
+    }
+
+
+    if (command.status !== "SENT") {
+
+      this.logger.warn(
+        `Ignoring duplicate response for command ${commandId} with status ${command.status}`
+      );
+
+      return command;
 
     }
 
@@ -94,6 +100,36 @@ export class OcppCommandResponseService {
     commandId: string,
     error: any,
   ) {
+
+
+    const command =
+      await this.prisma.ocppCommand.findUnique({
+        where: {
+          id: commandId,
+        },
+      });
+
+
+    if (!command) {
+
+      this.logger.warn(
+        `Cannot fail missing command ${commandId}`
+      );
+
+      return null;
+
+    }
+
+
+    if (command.status !== "SENT") {
+
+      this.logger.warn(
+        `Ignoring failure update for command ${commandId} with status ${command.status}`
+      );
+
+      return command;
+
+    }
 
 
     return this.prisma.ocppCommand.update({

@@ -1,28 +1,31 @@
+import { PrismaService } from "../../database/prisma.service";
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
+import { OcppConnectionRegistry } from "./ocpp-connection.registry";
 
 @Injectable()
 export class OcppCommandService {
 
+
   private readonly logger = new Logger(OcppCommandService.name);
 
-  private prisma: PrismaClient;
+  private readonly prisma: PrismaService;
+
+  private registry: OcppConnectionRegistry;
 
 
-  constructor() {
+  constructor(
+    private readonly prismaService: PrismaService,
+    registry: OcppConnectionRegistry,
+  ) {
 
-    const pool = new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
-    });
-
-
-    this.prisma = new PrismaClient({
-      adapter: new PrismaPg(pool),
-    });
+    this.prisma = prismaService;
+    this.registry = registry;
 
   }
+
+
+
+
 
 
 
@@ -37,33 +40,101 @@ export class OcppCommandService {
   }) {
 
 
+    const charger =
+      await this.prisma.chargePoint.findUnique({
+        where:{
+          id:data.chargePointId,
+        },
+      });
+
+
+    if (!charger) {
+
+      return {
+        accepted:false,
+        reason:"Unknown charger",
+      };
+
+    }
+
+
+    if (!this.registry.isConnected(data.chargePointId)) {
+
+      return {
+        accepted:false,
+        reason:"Charger offline",
+      };
+
+    }
+
+
+
+
+    const socket =
+      this.registry.get(
+        charger.id,
+      );
+
+
+
+    if (!socket) {
+
+      this.logger.warn(
+        `Offline charger rejected ${charger.id}`,
+      );
+
+
+      return {
+        accepted:false,
+        reason:"CHARGER_OFFLINE",
+      };
+
+    }
+
+
+
     const command =
       await this.prisma.ocppCommand.create({
 
         data: {
 
-          chargePointId: data.chargePointId,
+          chargePointId:
+            charger.id,
 
-          command: data.command,
+          command:
+            data.command,
 
-          payload: data.payload,
+          payload:
+            data.payload,
 
-          status: "PENDING",
+          status:
+            "PENDING",
 
         },
 
       });
 
 
+
     this.logger.log(
-      `Created OCPP command ${command.id}`
+      `Created OCPP command ${command.id}`,
     );
 
 
-    return command;
+    if (
+      command &&
+      "accepted" in command && command.accepted === false
+    ) {
+      return command;
+    }
+
+
+    return {
+      accepted:true,
+      command,
+    };
 
   }
-
 
 
 
@@ -171,14 +242,29 @@ export class OcppCommandService {
     idTag: string
   ) {
 
-    return this.createCommand({
-      chargePointId,
-      command: "RemoteStartTransaction",
-      payload: {
-        connectorId,
-        idTag
-      }
-    });
+    const command =
+      await this.createCommand({
+        chargePointId,
+        command: "RemoteStartTransaction",
+        payload: {
+          connectorId,
+          idTag
+        }
+      });
+
+
+    if (
+      command &&
+      "accepted" in command && command.accepted === false
+    ) {
+      return command;
+    }
+
+
+    return {
+      accepted:true,
+      command,
+    };
 
   }
 
@@ -189,13 +275,28 @@ export class OcppCommandService {
     transactionId: number
   ) {
 
-    return this.createCommand({
-      chargePointId,
-      command: "RemoteStopTransaction",
-      payload: {
-        transactionId
-      }
-    });
+    const command =
+      await this.createCommand({
+        chargePointId,
+        command: "RemoteStopTransaction",
+        payload: {
+          transactionId
+        }
+      });
+
+
+    if (
+      command &&
+      "accepted" in command && command.accepted === false
+    ) {
+      return command;
+    }
+
+
+    return {
+      accepted:true,
+      command,
+    };
 
   }
 
@@ -206,13 +307,28 @@ export class OcppCommandService {
     type: "Soft" | "Hard" = "Soft"
   ) {
 
-    return this.createCommand({
-      chargePointId,
-      command: "Reset",
-      payload: {
-        type
-      }
-    });
+    const command =
+      await this.createCommand({
+        chargePointId,
+        command: "Reset",
+        payload:{
+          type
+        }
+      });
+
+
+    if (
+      command &&
+      "accepted" in command && command.accepted === false
+    ) {
+      return command;
+    }
+
+
+    return {
+      accepted:true,
+      command,
+    };
 
   }
 
@@ -223,13 +339,28 @@ export class OcppCommandService {
     connectorId: number
   ) {
 
-    return this.createCommand({
-      chargePointId,
-      command: "UnlockConnector",
-      payload: {
-        connectorId
-      }
-    });
+    const command =
+      await this.createCommand({
+        chargePointId,
+        command:"UnlockConnector",
+        payload:{
+          connectorId
+        }
+      });
+
+
+    if (
+      command &&
+      "accepted" in command && command.accepted === false
+    ) {
+      return command;
+    }
+
+
+    return {
+      accepted:true,
+      command,
+    };
 
   }
 
@@ -241,14 +372,29 @@ export class OcppCommandService {
     type: "Operative" | "Inoperative"
   ) {
 
-    return this.createCommand({
-      chargePointId,
-      command: "ChangeAvailability",
-      payload: {
-        connectorId,
-        type
-      }
-    });
+    const command =
+      await this.createCommand({
+        chargePointId,
+        command:"ChangeAvailability",
+        payload:{
+          connectorId,
+          type
+        }
+      });
+
+
+    if (
+      command &&
+      "accepted" in command && command.accepted === false
+    ) {
+      return command;
+    }
+
+
+    return {
+      accepted:true,
+      command,
+    };
 
   }
 

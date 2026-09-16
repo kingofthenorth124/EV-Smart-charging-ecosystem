@@ -27,6 +27,78 @@ describe("OCPP Module Regression", () => {
     send: jest.fn(),
   } as any);
 
+
+
+  const createRegisteredChargerFixture = async () => {
+
+    const station =
+      await prisma.station.create({
+        data:{
+          name:"Test OCPP Station",
+          location:"Test Location",
+          powerKw:22,
+          connectorType:"Type2",
+          connectorsTotal:1,
+          connectorsAvailable:1,
+          tariffKoboPerKwh:100,
+          status:"AVAILABLE",
+        },
+      });
+
+
+    const existingChargePoint =
+      await prisma.chargePoint.findUnique({
+        where:{
+          serialNumber:chargePointId,
+        },
+      });
+
+
+const chargePoint =
+      existingChargePoint ||
+      await prisma.chargePoint.create({
+        data:{
+          serialNumber:chargePointId,
+          vendor:"Test Vendor",
+          model:"Test Charger",
+          protocolVersion:"OCPP1.6",
+          status:"AVAILABLE",
+        },
+      });
+
+
+    await prisma.connector.upsert({
+
+      where:{
+        chargePointId_connectorNumber:{
+          chargePointId: chargePoint.id,
+          connectorNumber: 1,
+        },
+      },
+
+      update:{
+        stationId: station.id,
+        status:"AVAILABLE",
+      },
+
+      create:{
+        chargePointId:chargePoint.id,
+        stationId:station.id,
+        connectorNumber:1,
+        status:"AVAILABLE",
+      },
+
+    });
+
+
+    return {
+      station,
+      chargePoint,
+    };
+
+  };
+
+
   const createChargingTransaction = async () => {
 
     await prisma.wallet.update({
@@ -64,6 +136,23 @@ if (!result.transactionId) {
 
 
 
+  beforeEach(async () => {
+
+    await prisma.chargingSession.updateMany({
+      where:{
+        userId:testUserId,
+        status:"ACTIVE",
+      },
+      data:{
+        status:"STOPPED",
+        endedAt:new Date(),
+      },
+    });
+
+  });
+
+
+
   beforeEach(() => {
 
     remoteStopSpy =
@@ -85,6 +174,50 @@ if (!result.transactionId) {
   });
 
 
+
+  const createRegisteredChargePoint = async () => {
+
+    const station =
+      await prisma.station.findFirst();
+
+
+    const chargePoint =
+      await prisma.chargePoint.upsert({
+
+        where:{
+          serialNumber: chargePointId,
+        },
+
+        update:{},
+
+        create:{
+
+          serialNumber: chargePointId,
+
+          vendor:"TestVendor",
+
+          model:"TestModel",
+
+          status:"AVAILABLE",
+
+          connectors:{
+            create:{
+              connectorNumber:1,
+              stationId:station.id,
+              status:"AVAILABLE",
+            },
+          },
+
+        },
+
+      });
+
+
+    return chargePoint;
+
+  };
+
+
   beforeAll(async () => {
 
     const result =
@@ -95,6 +228,9 @@ if (!result.transactionId) {
 
     prisma =
       result.prisma;
+
+
+    await createRegisteredChargerFixture();
 
     const testUser =
       await prisma.user.upsert({
@@ -136,7 +272,10 @@ if (!result.transactionId) {
         identifier: "TEST123",
       },
 
-      update: {},
+      update: {
+        userId: testUser.id,
+        status: "ACTIVE",
+      },
 
       create: {
         identifier: "TEST123",
@@ -167,6 +306,33 @@ if (!result.transactionId) {
 
 
     it("BootNotification accepted", async () => {
+
+    const credentialCheck =
+      await prisma.chargingCredential.findUnique({
+        where:{
+          identifier:"TEST123",
+        },
+        include:{
+          user:{
+            include:{
+              wallet:true,
+            },
+          },
+        },
+      });
+
+    console.log(
+      "TEST123 OWNER",
+      JSON.stringify(
+        {
+          userId:credentialCheck?.userId,
+          wallet:credentialCheck?.user?.wallet?.balanceKobo,
+        },
+        null,
+        2
+      )
+    );
+
 
       const router =
         app.get(OcppMessageRouter);
@@ -530,7 +696,9 @@ expect(commandSpy)
   describe("Server → Charger commands", () => {
 
 
-    beforeEach(() => {
+    beforeEach(async () => {
+
+      await createRegisteredChargePoint();
 
       registry.register(
         chargePointId,
@@ -652,6 +820,50 @@ describe("OCPP Failure Regression", () => {
     "016b95c7-6a6f-478f-896d-a79319ef683e";
 
 
+
+  const createRegisteredChargePoint = async () => {
+
+    const station =
+      await prisma.station.findFirst();
+
+
+    const chargePoint =
+      await prisma.chargePoint.upsert({
+
+        where:{
+          serialNumber: chargePointId,
+        },
+
+        update:{},
+
+        create:{
+
+          serialNumber: chargePointId,
+
+          vendor:"TestVendor",
+
+          model:"TestModel",
+
+          status:"AVAILABLE",
+
+          connectors:{
+            create:{
+              connectorNumber:1,
+              stationId:station.id,
+              status:"AVAILABLE",
+            },
+          },
+
+        },
+
+      });
+
+
+    return chargePoint;
+
+  };
+
+
   beforeAll(async () => {
 
     const result =
@@ -767,6 +979,50 @@ describe("OCPP Pending Command Lifecycle", () => {
   let pending: OcppPendingCommandService;
 
 
+
+  const createRegisteredChargePoint = async () => {
+
+    const station =
+      await prisma.station.findFirst();
+
+
+    const chargePoint =
+      await prisma.chargePoint.upsert({
+
+        where:{
+          serialNumber: chargePointId,
+        },
+
+        update:{},
+
+        create:{
+
+          serialNumber: chargePointId,
+
+          vendor:"TestVendor",
+
+          model:"TestModel",
+
+          status:"AVAILABLE",
+
+          connectors:{
+            create:{
+              connectorNumber:1,
+              stationId:station.id,
+              status:"AVAILABLE",
+            },
+          },
+
+        },
+
+      });
+
+
+    return chargePoint;
+
+  };
+
+
   beforeAll(async () => {
 
     const result =
@@ -846,6 +1102,50 @@ describe("OCPP Command Response Reconciliation", () => {
   const responseChargePointId =
     "016b95c7-6a6f-478f-896d-a79319ef683e";
 
+
+
+
+  const createRegisteredChargePoint = async () => {
+
+    const station =
+      await prisma.station.findFirst();
+
+
+    const chargePoint =
+      await prisma.chargePoint.upsert({
+
+        where:{
+          serialNumber: chargePointId,
+        },
+
+        update:{},
+
+        create:{
+
+          serialNumber: chargePointId,
+
+          vendor:"TestVendor",
+
+          model:"TestModel",
+
+          status:"AVAILABLE",
+
+          connectors:{
+            create:{
+              connectorNumber:1,
+              stationId:station.id,
+              status:"AVAILABLE",
+            },
+          },
+
+        },
+
+      });
+
+
+    return chargePoint;
+
+  };
 
 
   beforeAll(async () => {
